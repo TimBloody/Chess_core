@@ -205,7 +205,18 @@ PyQt-слой. UI отображает состояние и отправляе�
 - Фабрики `classic_chess`, `cylindrical_chess`, `duck_chess` и `kyoto_shogi` возвращают рабочие `GameMode`: классика имеет стартовую позицию и castling rights, cylinder использует cylinder rays, duck требует move+blocker, Kyoto имеет стартовую позицию, hands/drop faces и flip-after-move.
 - `GameMode.initial_state()` создаёт полную `GameState`; `GameState.apply_turn()` обрабатывает move/capture, promotion, castling, en passant, drops/hands, transforms, duck blocker, configured transitions и turn order.
 - `MoveGenerator` реализует classic pseudo/legal v1: leap/slide/pawn, блокировку лучей, double step, capture, promotion, en passant, castling и фильтрацию собственного шаха. `generate_legal_for_square(state, Square|index)` генерирует и проверяет только выбранную фигуру, сохраняя фильтрацию шаха/связок; `has_any_legal()` останавливается на первой легальной фигуре. Публичные запросы `is_square_attacked`, `is_in_check`, `is_checkmate`, `is_stalemate` используются без привязки к `mode.id`; взятие короля запрещается для ruleset с `VictoryKind.CHECKMATE`.
-- `GameState.clone()` копирует данные позиции и mutable state фигур, но разделяет position-independent `extras["mode"]`; это важно для быстрых legality probes и не позволяет снова делать `deepcopy` больших ray/mask tables на каждый кандидат.
+- `GameState.clone(include_history=True)` копирует данные позиции; `include_history=False` даёт position-only snapshot для replay/movegen probes.
+- `GameState.apply_turn(turn, record_history=True)` коммитит историю атомарно после всех actions turn.
+- `core.notation` поддерживает FEN и форматирование ходов (`NotationStyle.FROM_TO` / `PIECE_SQUARE`, drop `@`, duck `@square`, composite `·`).
+- `app/game_record.py` — `GameRecord`: journal полных `Turn`, `live_revision`/`view_revision`, `go_to()`, `undo_last_turn()`, `move_log`.
+- `LocalGameService` использует `GameRecord`, поддерживает `undo()`, `go_to_revision()`, `go_live()`, `load_position()`, `play_turn(Turn)`, `move_log`; `Ctrl+Z` в UI.
+- `BoardEditorService` имеет `state`, `set_side_to_move`, `to_playable_state()`, `load_start_position()`, `clear_board()`, `piece_types_for_palette()`.
+- `app/clock.py` — `GameClockService` + `ClockSnapshot` (Fischer/Bronstein/Byoyomi/Sudden death).
+- `infra/clock_sync.py` — `ClockProjection` для локальной интерполяции без polling.
+- `infra/network_messages.py` — `StateEnvelope`, `UndoRequest`/`UndoDecision`/`UndoResolved`.
+- `infra/engines/` — discovery UCI/USI, subprocess client; бинарники в `../engines/`, не в exe. См. `docs/ENGINES.md`.
+- `infra/paths.py` — единый resolver assets/masks/engines для dev и frozen.
+- Application-тесты: `tests/app/` (editor, game, game_record, clock); infra: `tests/infra/`; UI widgets: `tests/ui/`.
 - Основной набор классических регрессий находится в `tests/core/test_classical_chess.py`: blockers/knight jumps, check evasions, pins, discovered/double check, mate/stalemate, castling through check, en passant exposing check, promotion и headless Scholar's Mate.
 - Контрактные тесты находятся в `tests/core/test_board_contract.py`; запуск: `pytest tests/core/test_board_contract.py`.
 - Тесты topology находятся в `tests/core/test_topology.py`; запуск: `pytest tests/core/test_topology.py`.
@@ -218,7 +229,7 @@ PyQt-слой. UI отображает состояние и отправляе�
 - `BoardEditorService.validate_for_mode()` поддерживает пользовательский callback `validator(state) -> list[str]` и встроенную проверку `require_one_king_per_side` для ровно одного `king` у `white` и `black`.
 - `MemoryTrainingService.grade_reconstruction()` сравнивает клетки по индексам, учитывая только `piece_type.name` и `side`.
 - `core.notation.parse_fen/to_fen` поддерживают FEN chess-like позиций; editor импортирует/экспортирует FEN, `PuzzleService.load_from_fen()` создаёт `GameState`.
-- `LocalGameService` хранит состояние локальной партии, выдаёт legal moves, применяет только legal `MoveAction` и сообщает `GameStatus` (`ACTIVE`, `CHECK`, `CHECKMATE`, `STALEMATE`). Интерактивный контракт: `legal_moves_for_square(index)` заменяет cache текущего выбора, `selected_moves` читает его, `play_selected(move)` валидирует по cache без повторной генерации всей стороны; move/reset/clear/reselection инвалидируют соответствующие caches, status кэширован по service revision.
+- `LocalGameService` — journal-backed локальная партия с undo, навигацией по revision и загрузкой позиции из редактора.
 - Application-тесты находятся в `tests/app/test_editor.py`; запуск: `pytest tests/app/` из активированного окружения или `.\.venv\Scripts\python.exe -m pytest tests/app/`.
 
 ## Текущие стабильные UI contracts
@@ -237,12 +248,17 @@ PyQt-слой. UI отображает состояние и отправляе�
 - Корневой `play_classic.py` — отдельный launcher локальной классики на одном устройстве. Он сам добавляет `src` в import path и не зависит от текущей рабочей директории для поиска SVG.
 - `app_entry.main()` вызывает `register_builtin_modes()`, затем читает `default_registry.list_modes()` и передаёт mode id в `MainWindow`.
 - `UiSession` в `ui/mode_picker.py` хранит выбранный `mode_id`; `ModePicker` обновляет его при выборе режима.
-- `MainWindow` показывает кнопки `Локальная игра`, `Редактор`, `Задачи`, `По памяти`; локальная страница — рабочая click-to-move доска через `LocalGameService`, остальные страницы пока UI-заглушки. Локальная страница показывает ход/шах/мат/пат, выбранную фигуру и legal destinations, имеет reset/quit; promotion в UI автоматически выбирает ферзя.
+- `MainWindow` — локальная игра с sidebar (часы, eval bar, move list), рабочий `EditorWidget` с запуском партии из позиции; задачи/память — заглушки.
+- `LocalGameWidget` — splitter board + sidebar; `MoveListWidget` кликабелен для просмотра архивных позиций; `Ctrl+Z` undo; `F` flip; часы обновляются локальным `QTimer` без сетевых tick-запросов.
+- `ui/editor.py` — `EditorWidget` с палитрой, FEN import/export, валидацией и сигналом `play_requested(GameState)`.
+- `ui/widgets/move_list.py`, `game_clock.py`, `evaluation_bar.py` — presentation-only виджеты.
+- `ui/engine_bridge.py` — non-blocking engine analysis через `QThread`.
 
 ## Текущие stable network contracts
 
 - `infra.network.StateMessage` и `TurnMessage` — transport-neutral сообщения.
-- `GameServer` — in-memory mock на двух клиентов: назначает white/black, проверяет сторону отправителя, применяет `Turn` через core и рассылает cloned `GameState`.
+- `GameServer` — in-memory mock с `revision`, legality check, `StateEnvelope`, confirmable undo (`UndoRequest` → opponent confirm → `UndoResolved`), optional `GameClockService`.
+- `docs/COMMON_GAME_CONTRACTS.md` — shared DTO для revision, undo, clocks, engines.
 - `GameClient`/`NetworkSession` дают тестируемую основу для будущего socket/LAN adapter без переноса правил в infrastructure.
 
 ## Команды
@@ -313,9 +329,11 @@ $env:QT_QPA_PLATFORM="offscreen"; .\.venv\Scripts\python.exe -m pytest tests/tes
 
 ## Текущий следующий разумный шаг
 
-Roadmap v1 закрыт тестами. Следующие отдельные этапы: socket transport поверх network messages; UI редактора/задач/памяти поверх готовых services; movegen v2 (полный shogi/drop generation, Chess960 castling, draw counters/repetition и variant-specific victory evaluation); PGN/SFEN.
+Общие системы партии v1 реализованы (record, undo, clocks, editor, engines infra, widgets). Следующие этапы: socket transport; полноценный engine UI wiring; movegen v2 (shogi drops, crazyhouse); PGN/SFEN export; сетевая игра с confirmable undo в UI.
 
-Полная проверка: `.\.venv\Scripts\python.exe -m pytest -q` (61 test на 2026-08-05), затем offscreen smoke с `QT_QPA_PLATFORM=offscreen`.
+Полная проверка: `.\.venv\Scripts\python.exe -m pytest -q` (80 tests), затем offscreen smoke с `QT_QPA_PLATFORM=offscreen`.
+
+Git-репозиторий инициализирован; внешние engine binaries и runtime clock state не входят в exe bundle.
 
 Установка пакета в venv:
 
