@@ -1,0 +1,6 @@
+Metadata-Version: 2.4
+Name: chess-core
+Version: 0.0.1
+Summary: Configurable multi-variant chess and shogi core
+Requires-Python: >=3.11
+Requires-Dist: PyQt6>=6.11.0

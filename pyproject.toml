@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chess-core"
+version = "0.0.1"
+description = "Configurable multi-variant chess and shogi core"
+requires-python = ">=3.11"
+dependencies = [
+    "PyQt6>=6.11.0",
+]
+
+[project.scripts]
+chess-core = "chess_core.ui.app_entry:main"
+chess-classic = "play_classic:main"
+
+[tool.setuptools.package-data]
+"chess_core" = ["data/masks/*.json"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -1,0 +1,11 @@
+{
+  "engines": [
+    {
+      "id": "stockfish",
+      "name": "Stockfish",
+      "path": "../engines/stockfish/stockfish.exe",
+      "protocol": "uci",
+      "variants": ["chess"]
+    }
+  ]
+}

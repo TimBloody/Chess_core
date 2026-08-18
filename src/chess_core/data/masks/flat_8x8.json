@@ -1,0 +1,4101 @@
+{
+  "mode_id": "flat_8x8",
+  "rays": [
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 0
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 0
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 0
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 0
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 254,
+      "origin_index": 0
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 0
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 72340172838076672,
+      "origin_index": 0
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 9241421688590303744,
+      "origin_index": 0
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 1
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 1
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 1
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 1,
+      "origin_index": 1
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 252,
+      "origin_index": 1
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 256,
+      "origin_index": 1
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 144680345676153344,
+      "origin_index": 1
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 36099303471055872,
+      "origin_index": 1
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 2
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 2
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 2
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 3,
+      "origin_index": 2
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 248,
+      "origin_index": 2
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 66048,
+      "origin_index": 2
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 289360691352306688,
+      "origin_index": 2
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 141012904183808,
+      "origin_index": 2
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 3
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 3
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 3
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 7,
+      "origin_index": 3
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 240,
+      "origin_index": 3
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 16909312,
+      "origin_index": 3
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 578721382704613376,
+      "origin_index": 3
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 550831656960,
+      "origin_index": 3
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 4
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 4
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 4
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 15,
+      "origin_index": 4
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 224,
+      "origin_index": 4
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 4328785920,
+      "origin_index": 4
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 1157442765409226752,
+      "origin_index": 4
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 2151686144,
+      "origin_index": 4
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 5
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 5
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 5
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 31,
+      "origin_index": 5
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 192,
+      "origin_index": 5
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 1108169199616,
+      "origin_index": 5
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 2314885530818453504,
+      "origin_index": 5
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 8404992,
+      "origin_index": 5
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 6
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 6
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 6
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 63,
+      "origin_index": 6
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 128,
+      "origin_index": 6
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 283691315109888,
+      "origin_index": 6
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 4629771061636907008,
+      "origin_index": 6
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 32768,
+      "origin_index": 6
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 7
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 7
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 7
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 127,
+      "origin_index": 7
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 7
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 72624976668147712,
+      "origin_index": 7
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 9259542123273814016,
+      "origin_index": 7
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 7
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 8
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 1,
+      "origin_index": 8
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 2,
+      "origin_index": 8
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 8
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 65024,
+      "origin_index": 8
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 8
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 72340172838076416,
+      "origin_index": 8
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 4620710844295151616,
+      "origin_index": 8
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 1,
+      "origin_index": 9
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 2,
+      "origin_index": 9
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 4,
+      "origin_index": 9
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 256,
+      "origin_index": 9
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 64512,
+      "origin_index": 9
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 65536,
+      "origin_index": 9
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 144680345676152832,
+      "origin_index": 9
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 9241421688590303232,
+      "origin_index": 9
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 2,
+      "origin_index": 10
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 4,
+      "origin_index": 10
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 8,
+      "origin_index": 10
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 768,
+      "origin_index": 10
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 63488,
+      "origin_index": 10
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 16908288,
+      "origin_index": 10
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 289360691352305664,
+      "origin_index": 10
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 36099303471054848,
+      "origin_index": 10
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 4,
+      "origin_index": 11
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 8,
+      "origin_index": 11
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 16,
+      "origin_index": 11
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 1792,
+      "origin_index": 11
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 61440,
+      "origin_index": 11
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 4328783872,
+      "origin_index": 11
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 578721382704611328,
+      "origin_index": 11
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 141012904181760,
+      "origin_index": 11
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 8,
+      "origin_index": 12
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 16,
+      "origin_index": 12
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 32,
+      "origin_index": 12
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 3840,
+      "origin_index": 12
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 57344,
+      "origin_index": 12
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 1108169195520,
+      "origin_index": 12
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 1157442765409222656,
+      "origin_index": 12
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 550831652864,
+      "origin_index": 12
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 16,
+      "origin_index": 13
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 32,
+      "origin_index": 13
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 64,
+      "origin_index": 13
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 7936,
+      "origin_index": 13
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 49152,
+      "origin_index": 13
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 283691315101696,
+      "origin_index": 13
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 2314885530818445312,
+      "origin_index": 13
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 2151677952,
+      "origin_index": 13
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 32,
+      "origin_index": 14
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 64,
+      "origin_index": 14
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 128,
+      "origin_index": 14
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 16128,
+      "origin_index": 14
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 32768,
+      "origin_index": 14
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 72624976668131328,
+      "origin_index": 14
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 4629771061636890624,
+      "origin_index": 14
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 8388608,
+      "origin_index": 14
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 64,
+      "origin_index": 15
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 128,
+      "origin_index": 15
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 15
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 32512,
+      "origin_index": 15
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 15
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 145249953336262656,
+      "origin_index": 15
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 9259542123273781248,
+      "origin_index": 15
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 15
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 16
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 257,
+      "origin_index": 16
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 516,
+      "origin_index": 16
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 16
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 16646144,
+      "origin_index": 16
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 16
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 72340172838010880,
+      "origin_index": 16
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 2310355422147510272,
+      "origin_index": 16
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 256,
+      "origin_index": 17
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 514,
+      "origin_index": 17
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 1032,
+      "origin_index": 17
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 65536,
+      "origin_index": 17
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 16515072,
+      "origin_index": 17
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 16777216,
+      "origin_index": 17
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 144680345676021760,
+      "origin_index": 17
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 4620710844295020544,
+      "origin_index": 17
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 513,
+      "origin_index": 18
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 1028,
+      "origin_index": 18
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 2064,
+      "origin_index": 18
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 196608,
+      "origin_index": 18
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 16252928,
+      "origin_index": 18
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 4328521728,
+      "origin_index": 18
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 289360691352043520,
+      "origin_index": 18
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 9241421688590041088,
+      "origin_index": 18
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 1026,
+      "origin_index": 19
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 2056,
+      "origin_index": 19
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 4128,
+      "origin_index": 19
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 458752,
+      "origin_index": 19
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 15728640,
+      "origin_index": 19
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 1108168671232,
+      "origin_index": 19
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 578721382704087040,
+      "origin_index": 19
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 36099303470530560,
+      "origin_index": 19
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 2052,
+      "origin_index": 20
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 4112,
+      "origin_index": 20
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 8256,
+      "origin_index": 20
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 983040,
+      "origin_index": 20
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 14680064,
+      "origin_index": 20
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 283691314053120,
+      "origin_index": 20
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 1157442765408174080,
+      "origin_index": 20
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 141012903133184,
+      "origin_index": 20
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 4104,
+      "origin_index": 21
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 8224,
+      "origin_index": 21
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 16512,
+      "origin_index": 21
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 2031616,
+      "origin_index": 21
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 12582912,
+      "origin_index": 21
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 72624976666034176,
+      "origin_index": 21
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 2314885530816348160,
+      "origin_index": 21
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 550829555712,
+      "origin_index": 21
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 8208,
+      "origin_index": 22
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 16448,
+      "origin_index": 22
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 32768,
+      "origin_index": 22
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 4128768,
+      "origin_index": 22
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 8388608,
+      "origin_index": 22
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 145249953332068352,
+      "origin_index": 22
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 4629771061632696320,
+      "origin_index": 22
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 2147483648,
+      "origin_index": 22
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 16416,
+      "origin_index": 23
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 32896,
+      "origin_index": 23
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 23
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 8323072,
+      "origin_index": 23
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 23
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 290499906664136704,
+      "origin_index": 23
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 9259542123265392640,
+      "origin_index": 23
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 23
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 24
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 65793,
+      "origin_index": 24
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 132104,
+      "origin_index": 24
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 24
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 4261412864,
+      "origin_index": 24
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 24
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 72340172821233664,
+      "origin_index": 24
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 1155177711056977920,
+      "origin_index": 24
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 65536,
+      "origin_index": 25
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 131586,
+      "origin_index": 25
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 264208,
+      "origin_index": 25
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 16777216,
+      "origin_index": 25
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 4227858432,
+      "origin_index": 25
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 4294967296,
+      "origin_index": 25
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 144680345642467328,
+      "origin_index": 25
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 2310355422113955840,
+      "origin_index": 25
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 131328,
+      "origin_index": 26
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 263172,
+      "origin_index": 26
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 528416,
+      "origin_index": 26
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 50331648,
+      "origin_index": 26
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 4160749568,
+      "origin_index": 26
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 1108101562368,
+      "origin_index": 26
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 289360691284934656,
+      "origin_index": 26
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 4620710844227911680,
+      "origin_index": 26
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 262657,
+      "origin_index": 27
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 526344,
+      "origin_index": 27
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 1056832,
+      "origin_index": 27
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 117440512,
+      "origin_index": 27
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 4026531840,
+      "origin_index": 27
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 283691179835392,
+      "origin_index": 27
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 578721382569869312,
+      "origin_index": 27
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 9241421688455823360,
+      "origin_index": 27
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 525314,
+      "origin_index": 28
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 1052688,
+      "origin_index": 28
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 2113664,
+      "origin_index": 28
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 251658240,
+      "origin_index": 28
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 3758096384,
+      "origin_index": 28
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 72624976397598720,
+      "origin_index": 28
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 1157442765139738624,
+      "origin_index": 28
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 36099303202095104,
+      "origin_index": 28
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 1050628,
+      "origin_index": 29
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 2105376,
+      "origin_index": 29
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 4227072,
+      "origin_index": 29
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 520093696,
+      "origin_index": 29
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 3221225472,
+      "origin_index": 29
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 145249952795197440,
+      "origin_index": 29
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 2314885530279477248,
+      "origin_index": 29
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 141012366262272,
+      "origin_index": 29
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 2101256,
+      "origin_index": 30
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 4210752,
+      "origin_index": 30
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 8388608,
+      "origin_index": 30
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 1056964608,
+      "origin_index": 30
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 2147483648,
+      "origin_index": 30
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 290499905590394880,
+      "origin_index": 30
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 4629771060558954496,
+      "origin_index": 30
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 549755813888,
+      "origin_index": 30
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 4202512,
+      "origin_index": 31
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 8421504,
+      "origin_index": 31
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 31
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 2130706432,
+      "origin_index": 31
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 31
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 580999811180789760,
+      "origin_index": 31
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 9259542121117908992,
+      "origin_index": 31
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 31
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 32
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 16843009,
+      "origin_index": 32
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 33818640,
+      "origin_index": 32
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 32
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 1090921693184,
+      "origin_index": 32
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 32
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 72340168526266368,
+      "origin_index": 32
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 577588851233521664,
+      "origin_index": 32
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 16777216,
+      "origin_index": 33
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 33686018,
+      "origin_index": 33
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 67637280,
+      "origin_index": 33
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 4294967296,
+      "origin_index": 33
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 1082331758592,
+      "origin_index": 33
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 1099511627776,
+      "origin_index": 33
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 144680337052532736,
+      "origin_index": 33
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 1155177702467043328,
+      "origin_index": 33
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 33619968,
+      "origin_index": 34
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 67372036,
+      "origin_index": 34
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 135274560,
+      "origin_index": 34
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 12884901888,
+      "origin_index": 34
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 1065151889408,
+      "origin_index": 34
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 283673999966208,
+      "origin_index": 34
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 289360674105065472,
+      "origin_index": 34
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 2310355404934086656,
+      "origin_index": 34
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 67240192,
+      "origin_index": 35
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 134744072,
+      "origin_index": 35
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 270549120,
+      "origin_index": 35
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 30064771072,
+      "origin_index": 35
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 1030792151040,
+      "origin_index": 35
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 72624942037860352,
+      "origin_index": 35
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 578721348210130944,
+      "origin_index": 35
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 4620710809868173312,
+      "origin_index": 35
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 134480385,
+      "origin_index": 36
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 269488144,
+      "origin_index": 36
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 541097984,
+      "origin_index": 36
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 64424509440,
+      "origin_index": 36
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 962072674304,
+      "origin_index": 36
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 145249884075720704,
+      "origin_index": 36
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 1157442696420261888,
+      "origin_index": 36
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 9241421619736346624,
+      "origin_index": 36
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 268960770,
+      "origin_index": 37
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 538976288,
+      "origin_index": 37
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 1082130432,
+      "origin_index": 37
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 133143986176,
+      "origin_index": 37
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 824633720832,
+      "origin_index": 37
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 290499768151441408,
+      "origin_index": 37
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 2314885392840523776,
+      "origin_index": 37
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 36099165763141632,
+      "origin_index": 37
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 537921540,
+      "origin_index": 38
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 1077952576,
+      "origin_index": 38
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 2147483648,
+      "origin_index": 38
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 270582939648,
+      "origin_index": 38
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 549755813888,
+      "origin_index": 38
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 580999536302882816,
+      "origin_index": 38
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 4629770785681047552,
+      "origin_index": 38
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 140737488355328,
+      "origin_index": 38
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 1075843080,
+      "origin_index": 39
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 2155905152,
+      "origin_index": 39
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 39
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 545460846592,
+      "origin_index": 39
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 39
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 1161999072605765632,
+      "origin_index": 39
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 9259541571362095104,
+      "origin_index": 39
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 39
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 40
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 4311810305,
+      "origin_index": 40
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 8657571872,
+      "origin_index": 40
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 40
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 279275953455104,
+      "origin_index": 40
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 40
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 72339069014638592,
+      "origin_index": 40
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 288793326105133056,
+      "origin_index": 40
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 4294967296,
+      "origin_index": 41
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 8623620610,
+      "origin_index": 41
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 17315143744,
+      "origin_index": 41
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 1099511627776,
+      "origin_index": 41
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 277076930199552,
+      "origin_index": 41
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 281474976710656,
+      "origin_index": 41
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 144678138029277184,
+      "origin_index": 41
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 577586652210266112,
+      "origin_index": 41
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 8606711808,
+      "origin_index": 42
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 17247241220,
+      "origin_index": 42
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 34630287488,
+      "origin_index": 42
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 3298534883328,
+      "origin_index": 42
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 272678883688448,
+      "origin_index": 42
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 72620543991349248,
+      "origin_index": 42
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 289356276058554368,
+      "origin_index": 42
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 1155173304420532224,
+      "origin_index": 42
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 17213489152,
+      "origin_index": 43
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 34494482440,
+      "origin_index": 43
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 69260574720,
+      "origin_index": 43
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 7696581394432,
+      "origin_index": 43
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 263882790666240,
+      "origin_index": 43
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 145241087982698496,
+      "origin_index": 43
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 578712552117108736,
+      "origin_index": 43
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 2310346608841064448,
+      "origin_index": 43
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 34426978560,
+      "origin_index": 44
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 68988964880,
+      "origin_index": 44
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 138521083904,
+      "origin_index": 44
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 16492674416640,
+      "origin_index": 44
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 246290604621824,
+      "origin_index": 44
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 290482175965396992,
+      "origin_index": 44
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 1157425104234217472,
+      "origin_index": 44
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 4620693217682128896,
+      "origin_index": 44
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 68853957121,
+      "origin_index": 45
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 137977929760,
+      "origin_index": 45
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 277025390592,
+      "origin_index": 45
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 34084860461056,
+      "origin_index": 45
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 211106232532992,
+      "origin_index": 45
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 580964351930793984,
+      "origin_index": 45
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 2314850208468434944,
+      "origin_index": 45
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 9241386435364257792,
+      "origin_index": 45
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 137707914242,
+      "origin_index": 46
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 275955859520,
+      "origin_index": 46
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 549755813888,
+      "origin_index": 46
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 69269232549888,
+      "origin_index": 46
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 140737488355328,
+      "origin_index": 46
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 1161928703861587968,
+      "origin_index": 46
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 4629700416936869888,
+      "origin_index": 46
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 36028797018963968,
+      "origin_index": 46
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 275415828484,
+      "origin_index": 47
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 551911719040,
+      "origin_index": 47
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 47
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 139637976727552,
+      "origin_index": 47
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 47
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 2323857407723175936,
+      "origin_index": 47
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 9259400833873739776,
+      "origin_index": 47
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 47
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 48
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 1103823438081,
+      "origin_index": 48
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 2216338399296,
+      "origin_index": 48
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 48
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 71494644084506624,
+      "origin_index": 48
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 48
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 72057594037927936,
+      "origin_index": 48
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 144115188075855872,
+      "origin_index": 48
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 1099511627776,
+      "origin_index": 49
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 2207646876162,
+      "origin_index": 49
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 4432676798592,
+      "origin_index": 49
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 281474976710656,
+      "origin_index": 49
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 70931694131085312,
+      "origin_index": 49
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 72057594037927936,
+      "origin_index": 49
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 144115188075855872,
+      "origin_index": 49
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 288230376151711744,
+      "origin_index": 49
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 2203318222848,
+      "origin_index": 50
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 4415293752324,
+      "origin_index": 50
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 8865353596928,
+      "origin_index": 50
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 844424930131968,
+      "origin_index": 50
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 69805794224242688,
+      "origin_index": 50
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 144115188075855872,
+      "origin_index": 50
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 288230376151711744,
+      "origin_index": 50
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 576460752303423488,
+      "origin_index": 50
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 4406653222912,
+      "origin_index": 51
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 8830587504648,
+      "origin_index": 51
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 17730707128320,
+      "origin_index": 51
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 1970324836974592,
+      "origin_index": 51
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 67553994410557440,
+      "origin_index": 51
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 288230376151711744,
+      "origin_index": 51
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 576460752303423488,
+      "origin_index": 51
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 1152921504606846976,
+      "origin_index": 51
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 8813306511360,
+      "origin_index": 52
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 17661175009296,
+      "origin_index": 52
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 35461397479424,
+      "origin_index": 52
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 4222124650659840,
+      "origin_index": 52
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 63050394783186944,
+      "origin_index": 52
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 576460752303423488,
+      "origin_index": 52
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 1152921504606846976,
+      "origin_index": 52
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 2305843009213693952,
+      "origin_index": 52
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 17626613022976,
+      "origin_index": 53
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 35322350018592,
+      "origin_index": 53
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 70918499991552,
+      "origin_index": 53
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 8725724278030336,
+      "origin_index": 53
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 54043195528445952,
+      "origin_index": 53
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 1152921504606846976,
+      "origin_index": 53
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 2305843009213693952,
+      "origin_index": 53
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 4611686018427387904,
+      "origin_index": 53
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 35253226045953,
+      "origin_index": 54
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 70644700037184,
+      "origin_index": 54
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 140737488355328,
+      "origin_index": 54
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 17732923532771328,
+      "origin_index": 54
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 36028797018963968,
+      "origin_index": 54
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 2305843009213693952,
+      "origin_index": 54
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 4611686018427387904,
+      "origin_index": 54
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 9223372036854775808,
+      "origin_index": 54
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 70506452091906,
+      "origin_index": 55
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 141289400074368,
+      "origin_index": 55
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 55
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 35747322042253312,
+      "origin_index": 55
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 55
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 4611686018427387904,
+      "origin_index": 55
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 9223372036854775808,
+      "origin_index": 55
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 55
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 56
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 282578800148737,
+      "origin_index": 56
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 567382630219904,
+      "origin_index": 56
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 56
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 18302628885633695744,
+      "origin_index": 56
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 56
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 56
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 56
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 281474976710656,
+      "origin_index": 57
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 565157600297474,
+      "origin_index": 57
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 1134765260439552,
+      "origin_index": 57
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 72057594037927936,
+      "origin_index": 57
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 18158513697557839872,
+      "origin_index": 57
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 57
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 57
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 57
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 564049465049088,
+      "origin_index": 58
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 1130315200594948,
+      "origin_index": 58
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 2269530520813568,
+      "origin_index": 58
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 216172782113783808,
+      "origin_index": 58
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 17870283321406128128,
+      "origin_index": 58
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 58
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 58
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 58
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 1128103225065472,
+      "origin_index": 59
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 2260630401189896,
+      "origin_index": 59
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 4539061024849920,
+      "origin_index": 59
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 504403158265495552,
+      "origin_index": 59
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 17293822569102704640,
+      "origin_index": 59
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 59
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 59
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 59
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 2256206466908160,
+      "origin_index": 60
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 4521260802379792,
+      "origin_index": 60
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 9078117754732544,
+      "origin_index": 60
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 1080863910568919040,
+      "origin_index": 60
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 16140901064495857664,
+      "origin_index": 60
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 60
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 60
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 60
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 4512412933881856,
+      "origin_index": 61
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 9042521604759584,
+      "origin_index": 61
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 18155135997837312,
+      "origin_index": 61
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 2233785415175766016,
+      "origin_index": 61
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 13835058055282163712,
+      "origin_index": 61
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 61
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 61
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 61
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 9024825867763968,
+      "origin_index": 62
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 18085043209519168,
+      "origin_index": 62
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 36028797018963968,
+      "origin_index": 62
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 4539628424389459968,
+      "origin_index": 62
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 9223372036854775808,
+      "origin_index": 62
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 62
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 62
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 62
+    },
+    {
+      "direction": [
+        -1,
+        -1
+      ],
+      "mask": 18049651735527937,
+      "origin_index": 63
+    },
+    {
+      "direction": [
+        0,
+        -1
+      ],
+      "mask": 36170086419038336,
+      "origin_index": 63
+    },
+    {
+      "direction": [
+        1,
+        -1
+      ],
+      "mask": 0,
+      "origin_index": 63
+    },
+    {
+      "direction": [
+        -1,
+        0
+      ],
+      "mask": 9151314442816847872,
+      "origin_index": 63
+    },
+    {
+      "direction": [
+        1,
+        0
+      ],
+      "mask": 0,
+      "origin_index": 63
+    },
+    {
+      "direction": [
+        -1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 63
+    },
+    {
+      "direction": [
+        0,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 63
+    },
+    {
+      "direction": [
+        1,
+        1
+      ],
+      "mask": 0,
+      "origin_index": 63
+    }
+  ]
+}
