@@ -11,5 +11,8 @@ build/
 dist/
 *.spec
 
+# Heavy third-party and custom engine binaries stay local and outside exe bundles.
+/engines/
+
 .env
 .env.*

@@ -121,31 +121,56 @@ PyQt-слой. UI отображает состояние и отправляе�
   - `PyQt6==6.11.0`
   - `PyQt6-Qt6==6.11.1`
   - `PyQt6_sip==13.12.0`
+  - `pyqtgraph==0.14.0` + `numpy` для интерактивных дашбордов
 - `.gitignore` - исключает `.venv`, кеши Python, кеши тестов/линтеров и артефакты сборки.
 - `docs/ARCHITECTURE.md` - черновик архитектуры.
 - `assets/README.md` - источники ассетов.
 - `assets/lichess/pieces/cburnett/` - SVG-фигуры Lichess, 12 файлов.
 - `assets/lichess/board/` - `light_square.svg` и `dark_square.svg`.
-- `assets/lishogi/pieces/standard/shogi_bnw/` - официальный стандартный набор фигур сёги Lishogi, 60 SVG-файлов.
+- `assets/lishogi/pieces/standard/kanji_brown/` — деревянный набор по умолчанию (Lishogi `kanji_brown`, только `0*`).
+- `assets/lishogi/pieces/standard/shogi_bnw/` - опциональный стилизованный набор Lishogi. На доске используются только `0*` (незакрашенные клинья); сторона задаётся поворотом на 180°.
+- `assets/lishogi/pieces/dobutsu/dobutsu/` - зверюшки Dobutsu с Lishogi (`0FU` цыплёнок, `0HI` жираф, `0KA` слон, `0OU` лев, `0TO` курица).
+- `assets/variants/duck.svg` - простая иконка утки для Duck Chess (не из Lichess).
+- `assets/ui/move.svg`, `assets/ui/eraser.svg` — иконки инструментов редактора доски.
 - `pyproject.toml` - пакет `chess-core`, `src` layout, `pip install -e .`
-- **Каркас кода** (`src/chess_core/`):
-  - `core/board.py`, `piece.py`, `gamemode.py` — обязательные точки входа в ядро
-  - `core/bitboard.py`, `topology.py`, `rays.py`, `move.py`, `turn.py`, `rules.py`, `state.py`, `registry.py`, `movegen.py`
-  - `modes/chess.py`, `modes/shogi.py` — фабрики режимов (заглушки)
-  - `app/editor.py`, `puzzles.py`, `memory.py`
-  - `ui/app_entry.py`, `ui/main_window.py`, `ui/mode_picker.py` — начальный PyQt6 UI shell
-  - `infra/network.py`
-  - `tools/mask_builder.py`, `data/masks/` — хранение/сборка битовых масок
-  - `tests/` — тесты (пока пустой пакет)
+- **Код** (`src/chess_core/`):
+  - `core/` — board, piece, gamemode, bitboard, topology, rays, move, turn, rules, castling, chess960, blockers, state, registry, movegen, notation/sfen/pgn
+  - `modes/chess.py` — classic, chess960, crazyhouse, cylindrical, duck, two_move, fairytale, three_check, king_of_the_hill (рабочие v1); giveaway/minichess ещё dummy
+  - `modes/variant_composition.py` — `compose_chess_mode`, `registry.get("chess+…")`; victory аддитивны, остальные оси exclusive; duck несовместим с two_move и three_check
+  - `modes/chess_rules.py` — `ChessPromotionRule` (пешка на последней горизонтали обязана превратиться)
+  - `modes/crazyhouse_rules.py` — `CrazyhouseDropRule`
+  - `modes/shogi.py` — shogi, minishogi, kyoto_shogi, dobutsu_shogi (рабочие v1)
+  - `modes/shogi_rules.py` — общие `ShogiDropRule`, `ShogiPromotionRule`, `KyotoFlipTransform`, `KyotoDropRule`, `facing_start_cells`
+  - `app/` — game, game_record, editor, clock, puzzles, memory, engine
+  - `app/training/` — учебные мини-игры: запоминание (фигура / последовательность / позиция) и лабиринт фигуры
+- `app/rating/` — чистые Elo-формулы, адаптивный K-фактор и симуляция пула игроков
+  - `ui/` — PyQt6 shell, local game, editor, widgets, engine bridge
+  - `ui/training/` — страница «Обучение»: хаб, MemoryTrainingWidget, MazeTrainingWidget
+- `ui/experiments/` — PyQtGraph-дашборды; `experiments/` — отдельные launcher и документация
+  - `infra/network.py`, `infra/engines/`, `infra/paths.py`
+  - `tools/mask_builder.py`, `data/masks/flat_8x8.json`, `cylinder_8x8.json`
+  - `tests/` — core/app/infra/ui; полный прогон: `pytest -q`
 
-Примечание: точного набора с именем `segi` в Lishogi не найдено. Сейчас скачан официальный набор `standard/shogi_bnw`. Если автор попросит другой стиль, заменить или добавить отдельной папкой.
+Примечание: точного набора с именем `segi` в Lishogi не найдено. По умолчанию деревянный `kanji_brown`; стилизованный `shogi_bnw` остаётся опцией в UI.
 
 ## Расширение режимов (обязательно для агентов)
 
-- Новая механика = новые или составные поля в `GameMode` (`TurnScenario`, `PieceTransform`, `DropRule`, `VictoryCondition`), а не ветвления в генераторе ходов.
-- Киото-сёги: 5x5, flip-after-move для всех фигур кроме короля, сброс с выбором стороны фишки — см. `modes/shogi.py` и `KyotoFlipTransform`.
+- Новая механика = новые или составные поля в `GameMode` (`TurnScenario`, `PieceTransform`, `DropRule`, `CastlingRule`, `VictoryCondition`), а не ветвления в генераторе ходов.
+- Киото-сёги: 5x5, flip-after-move для всех фигур кроме короля, сброс с выбором стороны фишки — см. `modes/shogi.py` и `KyotoFlipTransform` / `KyotoDropRule` в `modes/shogi_rules.py`.
+- Стандартные сёги / minishogi / dobutsu: общие `ShogiDropRule` + `ShogiPromotionRule` + `facing_start_cells`. Sente = `PieceSide.BLACK` (последняя горизонталь, первые ходят чёрные, UI смотрит от чёрных, SVG `assets/lishogi/...`). Не ветвить movegen по `mode.id`.
+- 9x9 сёги: nifu, мёртвые сбросы (пешка/копьё на последней, конь на двух последних), учифудзумэ, зона промоции 3 ранга.
+- Minishogi: 5x5, зона промоции 1 ранг, те же ограничения сбросов, старт KGSBR + пешка перед королём.
+- Dobutsu: 3x4, лев royal (`is_royal`), взятие льва или безопасный try; цыплёнок обязано превращаться в курицу на последней горизонтали; без nifu/учифу.
 - Цилиндрические шахматы: `CylindricalFilesTopology`, те же фигуры что классика.
-- Duck-chess: `TurnScenario` с `PLACE_BLOCKER` после хода.
+- Chess960: `core/chess960.py` Scharnagl 0..959; `chess960(518)` = классическая расстановка; рокировка FIDE на клетки c/g через `Chess960CastlingRule`, не хардкод e1. `chess960()` без аргумента выбирает случайный id.
+- Crazyhouse: `CrazyhouseDropRule` + `HandsState`; ход `MOVE_OR_DROP`; пешку нельзя сбросить на rank 0 / last; превращение помечает `piece.state["promoted_from"]`, взятие кладёт в руку исходный тип (обычно pawn). Нет нифу/учифудзумэ.
+- Duck Chess: `TurnScenario` MOVE затем `PLACE_BLOCKER`; победа `VictoryKind.KING_CAPTURE` (шаха/мата нет); `lose_on_no_legal_moves=False` — сторона без ходов побеждает. Утка вне доски на старте, не может остаться на той же клетке. Movegen не фильтрует самошах, если victory не `CHECKMATE`.
+- Two-move: `DoubleMoveTurnPolicy` — первый ход белых один; далее два; шах обрывает очередь; старт под шахом — один ход. `LocalGameService` pending-actions (duck blocker через `waiting_for_blocker`).
+- Fairytale: `FairytaleFileResolver` — a/h ладья, b/g конь, c/f слон; d/e свой тип; ферзь/король/пешка без смены. Resolver используется и в атаках.
+- Three-check: `VictoryKind.THREE_CHECK` + `ThreeCheckCounter`; extras `checks_given`; `VARIANT_WIN` при пороге 3.
+- King of the Hill: `KING_REACHES_ZONE` + `target_zone_mask` центра 8×8 (d4/e4/d5/e5); dobutsu без маски остаётся last-rank.
+- Композиция chess-family: `compose_chess_mode` / `default_registry.get("chess+fairytale+three_check")`. ModePicker — чекбоксы модификаторов. Сёги/giveaway/minichess не композятся этим API.
+- `GameState.apply_turn(..., validate_scenario=False)` — только для проб movegen (неполный turn). Обычные ходы партии всегда с scenario.
 - Сетевая игра: только `infra/network.py` синхронизирует `GameState`/`Turn`; правила остаются в `core`.
 
 ## Как работать с проектом
@@ -190,6 +215,7 @@ PyQt-слой. UI отображает состояние и отправляе�
 
 - `Square.index(files)` использует row-major индексацию: `rank * files + file`.
 - `Square.from_index(index, files, ranks)` выполняет обратное преобразование и валидирует границы.
+- `PieceSide.opponent()`, `forward_delta()`, `last_rank(ranks)`, `ranks_ahead(rank, ranks)` задают геометрию сторон на прямоугольной доске; `NEUTRAL` бросает `ValueError`.
 - `BoardShape.cell_count` возвращает `files * ranks`; размеры доски должны быть положительными.
 - `Board.shape`, `Board.is_on_board(square)` и `Board.all_squares_mask()` реализованы для произвольной доски `m x n`.
 - `BitMask` поддерживает `&`, `|`, `~`, `intersect`, `union`, `without`; `BitboardSet.mask_for_square(index)` возвращает `1 << index`.
@@ -200,57 +226,84 @@ PyQt-слой. UI отображает состояние и отправляе�
 - `RayBuilder(shape, topology).build_line(origin, direction)` строит конечный луч на пустой доске по `Topology.step`; `direction` не может быть `(0, 0)`, origin не включается в mask, циклы топологии останавливаются при повторном входе в уже посещённую клетку.
 - `RayBuilder.build_all_directions(directions)` строит `RayTable` для всех клеток доски и всех переданных направлений.
 - `RayTable.load(list[Ray])` загружает готовые лучи; `ray_mask(origin_index, direction)` возвращает int-mask для пары `(origin, direction)`; `rays()` возвращает сохранённые `Ray` для сериализации.
-- `GameModeBuilder` конфигурирует shape/topology/catalog/turn order/scenario/victory, стартовые клетки/extras, drops, promotion, legality, transitions, rays и masks; режимы не определяются ветвлениями по `mode.id` внутри core.
-- `modes/catalog.py` содержит рабочие move patterns классических фигур и фигур Kyoto; `PieceCatalog` реализует register/get/all_types/resolve_move_mask_key.
-- Фабрики `classic_chess`, `cylindrical_chess`, `duck_chess` и `kyoto_shogi` возвращают рабочие `GameMode`: классика имеет стартовую позицию и castling rights, cylinder использует cylinder rays, duck требует move+blocker, Kyoto имеет стартовую позицию, hands/drop faces и flip-after-move.
-- `GameMode.initial_state()` создаёт полную `GameState`; `GameState.apply_turn()` обрабатывает move/capture, promotion, castling, en passant, drops/hands, transforms, duck blocker, configured transitions и turn order.
-- `MoveGenerator` реализует classic pseudo/legal v1: leap/slide/pawn, блокировку лучей, double step, capture, promotion, en passant, castling и фильтрацию собственного шаха. `generate_legal_for_square(state, Square|index)` генерирует и проверяет только выбранную фигуру, сохраняя фильтрацию шаха/связок; `has_any_legal()` останавливается на первой легальной фигуре. Публичные запросы `is_square_attacked`, `is_in_check`, `is_checkmate`, `is_stalemate` используются без привязки к `mode.id`; взятие короля запрещается для ruleset с `VictoryKind.CHECKMATE`.
+- `GameModeBuilder` конфигурирует shape/topology/catalog/turn order/scenario/victory, стартовые клетки/extras, drops, promotion, legality, transitions, rays и masks, а также `starting_side` / `default_view_side` / `asset_family` / `facing_opponent` / `is_dummy` / `modifier_ids` / `turn_policy` / `move_resolver`; режимы не определяются ветвлениями по `mode.id` внутри core.
+- `GameMode.victory_conditions()`, `victory_kinds()`, `protects_royal()`, `allows_royal_capture()`, `lose_on_no_legal_moves()` читают набор `VictoryCondition` без копирования этой логики в movegen/app.
+- `BoardState.iter_occupied()` даёт только занятые клетки; `drop_square_is_empty(state, index)` — общая проверка дропа на пустую клетку доски.
+- `modes/catalog.py` содержит рабочие move patterns классических фигур и фигур сёги (включая промоции, horse/dragon, dobutsu). `PieceType` имеет `is_royal`, `asset_key`, `demotes_to`, `sfen_symbol`. `PieceCatalog` реализует register/get/all_types/resolve_move_mask_key.
+- Фабрики `classic_chess`, `cylindrical_chess`, `chess960`, `crazyhouse`, `duck_chess`, `shogi`, `minishogi`, `kyoto_shogi` и `dobutsu_shogi` возвращают рабочие `GameMode`. Классика и шахматные варианты: старт, `StandardCastlingRule`/`Chess960CastlingRule` и `ChessPromotionRule` (пешка обязана превратиться на последней горизонтали — не хардкод в movegen). Crazyhouse: руки и `CrazyhouseDropRule`. Duck: move+blocker и `KING_CAPTURE`. Cylinder: cylinder rays. Сёги: чёрные (sente) ходят первыми; Kyoto — hands/drop faces и flip-after-move; 9x9/mini — `ShogiDropRule`+`ShogiPromotionRule`; dobutsu — capture/try.
+- `GameMode.initial_state()` создаёт полную `GameState`; `GameState.apply_turn()` обрабатывает move/capture, promotion (`promoted_from`), castling через `CastlingRule`, en passant, drops/hands (demote), transforms, duck blocker, configured transitions и turn order.
+- `MoveGenerator` реализует classic pseudo/legal v1: leap/slide/pawn, блокировку лучей, double step, capture, promotion через `PromotionRule`, en passant, castling (`CastlingRule`) и drops (`DropRule`). Нет fallback на `StandardCastlingRule`, если правило не задано. Фильтрация собственного шаха если `mode.protects_royal()`. `generate_legal_for_square` на пустой клетке возвращает только дропы на неё (не пересчитывая все дропы доски). `generate_legal_drops` — только легальные сбросы. `has_any_legal` выходит на первом легальном ходе, не регенерируя дропы по каждой клетке. Публичные запросы `is_square_attacked`, `is_in_check`, `is_checkmate`, `is_stalemate` без привязки к `mode.id`; взятие royal запрещается при защите короля, кроме `KING_CAPTURE`. Сёги-промоция через `PromotionRule` (в зону / внутри / из зоны; обязательная для неподвижных). Учифудзумэ — флаг `ShogiDropRule.forbid_pawn_drop_mate`.
 - `GameState.clone(include_history=True)` копирует данные позиции; `include_history=False` даёт position-only snapshot для replay/movegen probes.
 - `GameState.apply_turn(turn, record_history=True)` коммитит историю атомарно после всех actions turn.
-- `core.notation` поддерживает FEN и форматирование ходов (`NotationStyle.FROM_TO` / `PIECE_SQUARE`, drop `@`, duck `@square`, composite `·`).
+- `core.notation` поддерживает FEN и форматирование ходов (`NotationStyle.FROM_TO` / `PIECE_SQUARE`, drop `@`, duck `@square`, composite `·`). `PIECE_SQUARE` для шахмат пишет canonical SAN: `x`, file/rank/full-square disambiguation только среди легальных ходов, `O-O`/`O-O-O`, `=Q`, `+`/`#`; en passant экспортируется по PGN без суффикса `e.p.`. `encode_board_placement(state, token_for_piece)` общий для FEN и SFEN.
 - `app/game_record.py` — `GameRecord`: journal полных `Turn`, `live_revision`/`view_revision`, `go_to()`, `undo_last_turn()`, `move_log`.
 - `LocalGameService` использует `GameRecord`, поддерживает `undo()`, `go_to_revision()`, `go_live()`, `load_position()`, `play_turn(Turn)`, `move_log`; `Ctrl+Z` в UI.
+- `LocalGameService(..., allow_temporary_variations=True)` разрешает начать ветку из архивной позиции; основная линия хранится отдельно до `return_to_mainline()`, после чего временная ветка удаляется.
 - `BoardEditorService` имеет `state`, `set_side_to_move`, `to_playable_state()`, `load_start_position()`, `clear_board()`, `piece_types_for_palette()`.
-- `app/clock.py` — `GameClockService` + `ClockSnapshot` (Fischer/Bronstein/Byoyomi/Sudden death).
+- `app/clock.py` — `GameClockService` + `ClockSnapshot` (Fischer/Bronstein/Byoyomi/Sudden death). Часы **не тикают** до первого завершённого хода (`has_started`); затем ходит очередь соперника. `pause()` / `resume()` / `is_paused`; `resume()` до первого хода не запускает отсчёт; pause идемпотентен и замораживает remaining.
 - `infra/clock_sync.py` — `ClockProjection` для локальной интерполяции без polling.
 - `infra/network_messages.py` — `StateEnvelope`, `UndoRequest`/`UndoDecision`/`UndoResolved`.
-- `infra/engines/` — discovery UCI/USI, subprocess client; бинарники в `../engines/`, не в exe. См. `docs/ENGINES.md`.
+- `infra/engines/` — discovery UCI/USI, subprocess client; тяжёлые бинарники/модели лежат в корневой Git-ignored `engines/` (`public/` для общедоступных, `custom/` для собственных) и не входят в exe. См. `docs/ENGINES.md`.
 - `infra/paths.py` — единый resolver assets/masks/engines для dev и frozen.
+- `infra/pgn_storage.py` — сохранение UTF-8 PGN в корневую `output/` (или `CHESS_CORE_OUTPUT_DIR`), ChessBase metadata через стандартные PGN-теги; существующие файлы не перезаписываются.
 - Application-тесты: `tests/app/` (editor, game, game_record, clock); infra: `tests/infra/`; UI widgets: `tests/ui/`.
 - Основной набор классических регрессий находится в `tests/core/test_classical_chess.py`: blockers/knight jumps, check evasions, pins, discovered/double check, mate/stalemate, castling through check, en passant exposing check, promotion и headless Scholar's Mate.
 - Контрактные тесты находятся в `tests/core/test_board_contract.py`; запуск: `pytest tests/core/test_board_contract.py`.
 - Тесты topology находятся в `tests/core/test_topology.py`; запуск: `pytest tests/core/test_topology.py`.
 - Тесты rays находятся в `tests/core/test_rays.py`; они проверяют flat/cylinder rank/file лучи от e4 (`index == 28`) на 8x8.
+- Варианты: `tests/core/test_chess960.py`, `test_crazyhouse.py`, `test_duck_chess.py`, `test_variant_modes.py`, `test_shogi_modes.py`, `test_dummy_chess_variants.py`, `test_three_check.py`, `test_king_of_the_hill.py`, `test_fairytale.py`, `test_two_move.py`, `test_variant_composition.py`.
 
 ## Текущие стабильные application contracts
 
 - `BoardEditorService.new_empty_position()` создаёт `GameState` с `BoardState` для `mode.board`, `side_to_move=PieceSide.WHITE` и пустыми клетками (`None`) по всем индексам доски.
 - `BoardEditorService.set_piece(square_index, piece_id, side)` и `remove_piece(square_index)` редактируют текущую позицию по row-major индексу; индекс валидируется через `Square.from_index`.
-- `BoardEditorService.validate_for_mode()` поддерживает пользовательский callback `validator(state) -> list[str]` и встроенную проверку `require_one_king_per_side` для ровно одного `king` у `white` и `black`.
+- `BoardEditorService.validate_for_mode()` поддерживает пользовательский callback `validator(state) -> list[str]` и встроенную проверку `require_one_king_per_side` для ровно одной royal-фигуры у `white` и `black` (король, лев и т.п.).
+- `BoardEditorService.load_state(state)` клонирует позицию в редактор; shape должен совпадать с текущим режимом.
 - `MemoryTrainingService.grade_reconstruction()` сравнивает клетки по индексам, учитывая только `piece_type.name` и `side`.
-- `core.notation.parse_fen/to_fen` поддерживают FEN chess-like позиций; editor импортирует/экспортирует FEN, `PuzzleService.load_from_fen()` создаёт `GameState`.
-- `LocalGameService` — journal-backed локальная партия с undo, навигацией по revision и загрузкой позиции из редактора.
-- Application-тесты находятся в `tests/app/test_editor.py`; запуск: `pytest tests/app/` из активированного окружения или `.\.venv\Scripts\python.exe -m pytest tests/app/`.
+- `app/training/memory.py` — три формата запоминания:
+  - `ShapeMemoryService` — связная фигура на поле `n×n`, оценка Jaccard / точное совпадение;
+  - `SequenceMemoryService` — клетки вспыхивают по одной, оценка по общему префиксу;
+  - `PositionMemoryService` — случайная позиция выбранного `GameMode`; `compare()` даёт extra/mismatch/missed и score. UI после проверки показывает правильный ответ и эти подсветки.
+- `app/training/maze.py` — лабиринт одной белой фигуры (`knight/bishop/rook/queen/king`). Белые точки — нейтральные blocker-клетки (нельзя вставать и скользить сквозь них, конь перепрыгивает). Чёрные фигуры статичны и их нужно съесть. `avoid_checks=True` запрещает клетки под боем оставшихся чёрных (образец Train with Magnus). Ходы считаются через `MoveGenerator.generate_pseudo_legal`, не через legal-фильтр шаха. Генератор **собирает решение с конца**: последняя жертва ставится первой (её некому защищать), герой отходит назад только на безопасные клетки; препятствия размещаются до прогулки. Поэтому лабиринт проходим по построению, а не отбором случайных позиций. В режиме без боя: жертва не того же типа, что герой; ферзь среди чёрных только против коня; слон ест только свой цвет (все цели на цвете маршрута). Взаимные защиты отсекаются тем, что клетка взятия не атакована оставшимися фигурами.
+- `core.notation.parse_fen/to_fen` — FEN chess-like позиций.
+- `core.sfen.parse_sfen/to_sfen` — SFEN для сёги-подобных режимов (`b`=`BLACK`=sente, руки, `+` промоция; буквы могут переопределяться `PieceType.sfen_symbol`). Первая строка SFEN — последняя горизонталь (как в FEN).
+- `core.pgn` — экспорт/импорт PGN; `LocalGameService.export_pgn()` / `import_pgn()`; составные ходы через `·`.
+- PGN-экспорт пишет Seven Tag Roster первым, экранирует значения тегов и корректно нумерует запись, начатую ходом чёрных из `SetUp/FEN`.
+- PGN-парсер принимает canonical SAN и распространённую длинную/FIDE-запись (`Nbd7`, `N8d7`, `Nb8d7`, `Ng1-f3`), необязательные `x`, `e.p.`, варианты promotion, `0-0`, `++`, attached move numbers и annotations; RAV в круглых скобках пока пропускаются, загружается главная линия.
+- Для сёги-подобных режимов PGN использует необязательный заголовок `SFEN` вместо невозможного `FEN`; импортировать такой файл нужно в соответствующем режиме.
+- editor импортирует FEN или SFEN; PGN — через game service, не через редактор позиции.
+- `LocalGameService` — journal-backed локальная партия с undo, навигацией по revision и загрузкой позиции из редактора. Для duck: `pending_move` после фигуры, затем `play_blocker`. Для crazyhouse: `select_hand_piece` / `play_selected_drop` (дропы через `generate_legal_drops`, не полный `generate_legal`). `play(move)` проверяет легальность только с клетки хода. `GameStatus.VARIANT_WIN` — сторона без ходов побеждает (duck fowl).
+- Application-тесты находятся в `tests/app/` (включая `test_training_memory.py` и `test_training_maze.py`); UI обучения: `tests/ui/test_training_widgets.py`. Варианты: `tests/core/test_chess960.py`, `test_crazyhouse.py`, `test_duck_chess.py`, `test_variant_modes.py`. Запуск: `.\.venv\Scripts\python.exe -m pytest tests/app/` из активированного окружения или `.\.venv\Scripts\python.exe -m pytest tests/core/test_variant_modes.py`.
 
 ## Текущие стабильные UI contracts
 
-- `ui.assets_loader.AssetsLoader` резолвит SVG из `assets/lichess/pieces/cburnett`, `assets/lichess/board` и `assets/lishogi/pieces/standard/shogi_bnw`.
+- `ui.assets_loader.AssetsLoader` резолвит SVG из `assets/lichess/pieces/cburnett`, `assets/lichess/board`, `assets/lishogi/pieces/standard/{kanji_brown|shogi_bnw}` и `assets/lishogi/pieces/dobutsu/dobutsu`. По умолчанию сёги — деревянный `kanji_brown`; стилизованный `shogi_bnw` включается комбо «Фигуры сёги» в ModePicker (`set_shogi_piece_set`). Ключи с суффиксом `@b`/`@w` указывают владельца для поворота, файл один (`0FU`).
+- `ui/piece_assets.py` — `piece_svg_key(mode, piece)`: шахматы `wK`/`bP`; сёги `0FU@b`/`0FU@w` (один `0*` файл выбранного набора, сторона через поворот 180°); dobutsu `dobutsu/0OU@b`. UI не хардкодит шахматные ключи для сёги-режимов.
 - `AssetsLoader.light_square_path` и `dark_square_path` возвращают SVG клеток доски Lichess.
-- `AssetsLoader.piece_path(piece_key)` ищет SVG сначала среди шахматных ключей Lichess (`wP`, `bK` и т.п.), затем среди ключей Lishogi shogi_bnw (`0FU`, `1OU` и т.п.).
+- `AssetsLoader.piece_path(piece_key)` снимает суффикс `@b`/`@w`, затем ищет SVG среди шахматных ключей Lichess (`wP`, `bK`), активного набора Lishogi (`kanji_brown` по умолчанию, иначе `shogi_bnw`), `lishogi/pieces/dobutsu/dobutsu` (`dobutsu/0OU`) и `assets/variants/{key}.svg` (утка: `duck`). `AssetsLoader.ui_icon_path(name)` читает `assets/ui/{name}.svg`. Сторона сёги не кодируется закрашенными `1*`-файлами.
 - `ui.widgets.BoardWidget` - PyQt6 `QWidget` только для отрисовки: правил игры, ходов и movegen внутри нет.
 - `BoardWidget.set_shape(files, ranks)` задаёт прямоугольную доску `m x n`; размеры должны быть положительными.
 - `BoardWidget.set_position(position: Mapping[int, str])` принимает row-major индексы клеток (`rank * files + file`) и SVG `piece_key`; пример: `{0: "wR", 4: "wK", 60: "bK"}`.
-- `BoardWidget.set_highlights(...)` задаёт только визуальные selected/legal/check-подсветки; правила и movegen остаются вне виджета.
-- `BoardWidget` поддерживает `BoardOrientation.WHITE/BLACK`, `set_orientation()`/`flip_orientation()` и единый immutable `BoardTransform` для взаимно обратных logical/display преобразований. В белой ориентации `a1 == index 0` слева снизу, в чёрной — `h8`; обе клетки тёмные. Позиции, selection/legal/check highlights, клики и координатные подписи хранятся в логических row-major индексах и проходят через этот transform; SVG фигур меняют экранную клетку, но остаются вертикальными.
+- `BoardWidget.set_highlights(...)` задаёт presentation-only подсветки: selected, legal dots/capture rings, check, last-move, hint-zone (KOTH), `lit_squares` (запоминание), `dot_squares` (лабиринт), `error_squares`/`mismatch_squares`/`missed_squares` (разбор позиции: лишняя / не та / пропущенная). Hover обрабатывается внутри виджета (`setMouseTracking`), без правил игры.
+- `ui/theme.py` — тёмная оболочка ChessBase-like, человекочитаемые `mode_display_name`, иконка окна из `cburnett/wN.svg`. Доска: last-move, hover, legal dots/rings, тонкая рамка; часы краснеют при <20с; eval bar — полоска как на chess.com (без лишнего поиска).
+- `BoardWidget` поддерживает `BoardOrientation.WHITE/BLACK`, `set_orientation()`/`flip_orientation()` и единый immutable `BoardTransform` для взаимно обратных logical/display преобразований. В белой ориентации `a1 == index 0` слева снизу, в чёрной — `h8`; обе клетки тёмные. Позиции, selection/legal/check highlights, клики и координатные подписи хранятся в логических row-major индексах и проходят через этот transform. Шахматные SVG остаются вертикальными; сёги/dobutsu с ключом `stem@b`/`stem@w` поворачиваются на 180°, если владелец не на нижней стороне текущей ориентации.
 - `BoardNotation.for_shape(files, ranks, file_labels=None, rank_labels=None)` задаёт универсальный блок координат. По умолчанию файлы идут `a..z, aa..`, ранги `1..n`; `BoardWidget.set_notation(...)` принимает кастомные подписи, а `set_coordinates_visible(bool)` включает/выключает их. Подписи рисуются вертикально без painter-transform в зарезервированных полях слева и снизу от доски, поэтому не перекрывают фигуры; при flip переупорядочиваются подписи логических клеток (`a..h`/`1..8` -> `h..a`/`8..1`), а не зеркалятся сами глифы.
 - SVG renderers кэшируются, а неизменившиеся position/highlight updates не вызывают лишнюю перерисовку.
 - Точка входа PyQt6 UI shell: `python -m chess_core.ui.app_entry`.
 - Корневой `play_classic.py` — отдельный launcher локальной классики на одном устройстве. Он сам добавляет `src` в import path и не зависит от текущей рабочей директории для поиска SVG.
 - `app_entry.main()` вызывает `register_builtin_modes()`, затем читает `default_registry.list_modes()` и передаёт mode id в `MainWindow`.
 - `UiSession` в `ui/mode_picker.py` хранит выбранный `mode_id`; `ModePicker` обновляет его при выборе режима.
-- `MainWindow` — локальная игра с sidebar (часы, eval bar, move list), рабочий `EditorWidget` с запуском партии из позиции; задачи/память — заглушки.
-- `LocalGameWidget` — splitter board + sidebar; `MoveListWidget` кликабелен для просмотра архивных позиций; `Ctrl+Z` undo; `F` flip; часы обновляются локальным `QTimer` без сетевых tick-запросов.
-- `ui/editor.py` — `EditorWidget` с палитрой, FEN import/export, валидацией и сигналом `play_requested(GameState)`.
+- `MainWindow` — локальная игра с sidebar (часы, eval bar, move list), рабочий `EditorWidget` с запуском партии из позиции; страница `Обучение` (`ui/training`) с запоминанием и лабиринтом; задачи ещё заглушка.
+- `MainWindow` содержит страницу `Эксперименты Elo`: интерактивные параметры K/D, пула, раундов, ничьих, преимущества белых и practical-certainty; математика остаётся в `app.rating`.
+- Страница `Просмотр PGN` (`ui/pgn_viewer.py`) принимает вставленный текст и загружает его в выбранном слева режиме. Запись сгруппирована по полным ходам (`1. e4 c5`), но `←`/`→` перемещают позицию по одному полуходу; мышь по строке открывает её последнюю позицию. Таймер в PGN viewer не создаётся и не рисуется. Из архивной позиции можно играть временную ветку; кнопка возврата восстанавливает исходную PGN-линию.
+- `LocalGameWidget` — splitter board + sidebar (sidebar ≥380px, stretch 3:2); часы `PlayerClockWidget` слева от доски, раздельно по игрокам (крупный моноширинный циферблат ≥32px). Цвета часов задаются stylesheet (у чёрных светлый текст на тёмном фоне; palette + border-stylesheet иначе прячет цифры). После мата/пата/`VARIANT_WIN` или перехода в архив `GameClockService.pause()` останавливает ход времени; в архиве часы скрыты, возврат в live-позицию возобновляет и показывает их. Crazyhouse: горизонтальный `PocketWidget` над/под доской, ширина = `hand_slot_types(mode)` × токен. Сёги: квадратный комодай (grid) справа от доски, фигуры в несколько рядов. `MoveListWidget` кликабелен, длинные ходы переносятся без горизонтального ползунка; `←`/`→` перемещают по полуходам, `Ctrl+Z` undo; `F` flip. Duck: после хода подсвечиваются клетки утки. В Kyoto карман/комодай показывает обе стороны фишки. Сёги-промоция: обычный клик без превращения, Shift+клик — с превращением. Сёги-режимы стартуют в `BoardOrientation.BLACK`; обе стороны рисуются `0*`-клиньями выбранного набора (`kanji_brown` по умолчанию), чужие повёрнуты на 180°. Нейтральный blocker рисуется ключом `duck` (`assets/variants/duck.svg`).
+- Кнопка `Сохранить PGN` открывает ChessBase metadata dialog и сохраняет партию/линию анализа в `output/*.pgn`; `Копировать PGN` остаётся быстрым экспортом без диалога. После мата, пата или variant-win UI один раз предлагает сохранить PGN (`Сохранить партию в PGN?`), затем тот же dialog.
+- `ui/widgets/pocket_widget.py` — presentation-only рука: strip (crazyhouse, ширина под каждый тип) или square grid/комодай (сёги); миниатюры, цифра количества если > 1.
+- `ui/piece_assets.hand_slot_types(mode)` — сколько токенов резервировать в кармане/комодае (Kyoto считает обе стороны фишки).
+- `app/sound.py` — `SoundEvent`; `ui/sound_player.py` играет `assets/sounds/{event}.wav` через `QSoundEffect`, пропуская отсутствующие файлы.
+- `AssetsLoader.piece_path` ищет SVG в cburnett, активном наборе сёги (`kanji_brown`/`shogi_bnw`), dobutsu, затем `assets/variants/{key}.svg`. `sounds_dir()` / `sound_path()`.
+- `ui/editor.py` — `EditorWidget` с SVG-палитрой (`EditorPaletteStrip`), инструментами Ставить / Переместить (`assets/ui/move.svg`) / Стереть (`assets/ui/eraser.svg`), ПКМ-стиранием, выбором стороны хода, FEN/SFEN и сигналом `play_requested(GameState)`. `require_one_king_per_side` / `enable_play` позволяют встраивать тот же редактор в запоминание позиции (`reset_empty`, `current_state`, `load_from_state`). При смене режима выбранная фигура сбрасывается на валидный тип режима (иначе dobutsu падал на отсутствующем `0PA.svg`). Отсутствующий SVG на доске рисуется как `?`, а не роняет `paintEvent`.
+- `ui/training/` — `TrainingHubWidget` (вкладки Запоминание / Лабиринт). Формат 3 запоминания показывает позицию, затем тот же `EditorWidget`. Лабиринт: клик по легальной клетке ходит белой фигурой; точки — препятствия.
 - `ui/widgets/move_list.py`, `game_clock.py`, `evaluation_bar.py` — presentation-only виджеты.
 - `ui/engine_bridge.py` — non-blocking engine analysis через `QThread`.
 
@@ -287,6 +340,12 @@ PyQt-слой. UI отображает состояние и отправляе�
 .\.venv\Scripts\python.exe play_classic.py
 ```
 
+Запустить отдельную лабораторию Elo:
+
+```powershell
+.\.venv\Scripts\python.exe experiments\run_elo_dashboard.py
+```
+
 Управление: щёлкнуть свою фигуру, затем подсвеченную клетку назначения; после хода управляется другая сторона. `F` переворачивает только отображение доски в любой момент, не меняя позицию или сторону хода. `R` начинает новую игру только после мата или пата; во время активной игры показывает краткое сообщение и не сбрасывает позицию. Кнопка `Новая игра / Сброс` по-прежнему сбрасывает сразу, `Выйти` закрывает окно. При превращении пешки автоматически выбирается ферзь.
 
 Запустить только классические шахматные регрессии:
@@ -321,6 +380,18 @@ $env:QT_QPA_PLATFORM="offscreen"; .\.venv\Scripts\python.exe -m pytest tests/tes
 
 Доступные режимы генерации: `flat_8x8`, `cylinder_8x8`, `all`. JSON пишется в `src/chess_core/data/masks/`.
 
+Объединить PGN-файлы в открываемую ChessBase базу (tool можно запустить прямо в директории с партиями):
+
+```powershell
+.\.venv\Scripts\python.exe -m chess_core.tools.pgn_database
+```
+
+Из корня проекта для `output/`:
+
+```powershell
+.\.venv\Scripts\python.exe -m chess_core.tools.pgn_database output -o output\database.pgn
+```
+
 Обновить зависимости после установки новых пакетов:
 
 ```powershell
@@ -329,9 +400,9 @@ $env:QT_QPA_PLATFORM="offscreen"; .\.venv\Scripts\python.exe -m pytest tests/tes
 
 ## Текущий следующий разумный шаг
 
-Общие системы партии v1 реализованы (record, undo, clocks, editor, engines infra, widgets). Следующие этапы: socket transport; полноценный engine UI wiring; movegen v2 (shogi drops, crazyhouse); PGN/SFEN export; сетевая игра с confirmable undo в UI.
+Ветка `engines`: внешний корневой каталог `engines/` подготовлен для общедоступных (`public/`) и собственных (`custom/`) движков, полностью исключён из Git и exe. Код протоколов и интеграций остаётся в `src/chess_core/infra/engines/`, а рукописная логика — в отслеживаемых пакетах проекта; в runtime-каталог кладутся только бинарники и тяжёлые данные. Следующие этапы: полноценный engine UI wiring и движок для two-move; параллельно по ядру — socket transport, giveaway/minichess и сетевая игра с confirmable undo в UI.
 
-Полная проверка: `.\.venv\Scripts\python.exe -m pytest -q` (80 tests), затем offscreen smoke с `QT_QPA_PLATFORM=offscreen`.
+Полная проверка: `.\.venv\Scripts\python.exe -m pytest -q`, затем offscreen smoke с `QT_QPA_PLATFORM=offscreen`.
 
 Git-репозиторий инициализирован; внешние engine binaries и runtime clock state не входят в exe bundle.
 

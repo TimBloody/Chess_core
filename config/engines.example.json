@@ -3,7 +3,7 @@
     {
       "id": "stockfish",
       "name": "Stockfish",
-      "path": "../engines/stockfish/stockfish.exe",
+      "path": "../engines/public/stockfish/stockfish.exe",
       "protocol": "uci",
       "variants": ["chess"]
     }

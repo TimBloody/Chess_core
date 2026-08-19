@@ -7,11 +7,13 @@ from dataclasses import dataclass
 from enum import Enum
 
 from PyQt6.QtCore import QPointF, QSize, QRectF, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QPainter
+from PyQt6.QtGui import QColor, QFont, QPainter, QPen
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QSizePolicy, QWidget
 
-from chess_core.ui.assets_loader import AssetsLoader
+from chess_core.core.piece import PieceSide
+from chess_core.ui.assets_loader import AssetsLoader, shogi_piece_set
+from chess_core.ui.piece_assets import parse_display_key
 
 
 class BoardOrientation(Enum):
@@ -124,6 +126,7 @@ class BoardWidget(QWidget):
     """Render a board grid and SVG pieces without embedding game rules."""
 
     square_clicked = pyqtSignal(int)
+    square_right_clicked = pyqtSignal(int)
 
     def __init__(self, parent: QWidget | None = None, assets_loader: AssetsLoader | None = None) -> None:
         super().__init__(parent)
@@ -133,15 +136,25 @@ class BoardWidget(QWidget):
         self._selected_square: int | None = None
         self._legal_destinations: set[int] = set()
         self._check_squares: set[int] = set()
+        self._last_move_squares: set[int] = set()
+        self._hint_squares: set[int] = set()
+        self._lit_squares: set[int] = set()
+        self._dot_squares: set[int] = set()
+        self._error_squares: set[int] = set()
+        self._mismatch_squares: set[int] = set()
+        self._missed_squares: set[int] = set()
+        self._hover_square: int | None = None
         self._orientation = BoardOrientation.WHITE
         self._transform = BoardTransform(self._files, self._ranks, self._orientation)
         self._coordinates_visible = True
         self._notation = BoardNotation.for_shape(self._files, self._ranks)
         self._assets_loader = assets_loader or AssetsLoader()
         self._renderers: dict[str, QSvgRenderer] = {}
+        self._facing_opponent = False
 
         self.setMinimumSize(QSize(160, 160))
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.setMouseTracking(True)
 
     def set_shape(self, files: int, ranks: int) -> None:
         """Set board dimensions in files x ranks."""
@@ -185,28 +198,74 @@ class BoardWidget(QWidget):
         selected: int | None = None,
         legal_destinations: Iterable[int] = (),
         check_squares: Iterable[int] = (),
+        last_move_squares: Iterable[int] = (),
+        hint_squares: Iterable[int] = (),
+        lit_squares: Iterable[int] = (),
+        dot_squares: Iterable[int] = (),
+        error_squares: Iterable[int] = (),
+        mismatch_squares: Iterable[int] = (),
+        missed_squares: Iterable[int] = (),
     ) -> None:
         """Set presentation-only square highlights."""
 
         squares = set(legal_destinations)
         checks = set(check_squares)
-        values = squares | checks | ({selected} if selected is not None else set())
+        last_moves = set(last_move_squares)
+        hints = set(hint_squares)
+        lit = set(lit_squares)
+        dots = set(dot_squares)
+        errors = set(error_squares)
+        mismatches = set(mismatch_squares)
+        missed = set(missed_squares)
+        values = (
+            squares
+            | checks
+            | last_moves
+            | hints
+            | lit
+            | dots
+            | errors
+            | mismatches
+            | missed
+            | ({selected} if selected is not None else set())
+        )
         if any(not 0 <= square < self._cell_count for square in values):
             raise ValueError("Highlight square index out of board bounds")
         if (
             selected != self._selected_square
             or squares != self._legal_destinations
             or checks != self._check_squares
+            or last_moves != self._last_move_squares
+            or hints != self._hint_squares
+            or lit != self._lit_squares
+            or dots != self._dot_squares
+            or errors != self._error_squares
+            or mismatches != self._mismatch_squares
+            or missed != self._missed_squares
         ):
             self._selected_square = selected
             self._legal_destinations = squares
             self._check_squares = checks
+            self._last_move_squares = last_moves
+            self._hint_squares = hints
+            self._lit_squares = lit
+            self._dot_squares = dots
+            self._error_squares = errors
+            self._mismatch_squares = mismatches
+            self._missed_squares = missed
             self.update()
 
     def clear_highlights(self) -> None:
         self._selected_square = None
         self._legal_destinations.clear()
         self._check_squares.clear()
+        self._last_move_squares.clear()
+        self._hint_squares.clear()
+        self._lit_squares.clear()
+        self._dot_squares.clear()
+        self._error_squares.clear()
+        self._mismatch_squares.clear()
+        self._missed_squares.clear()
         self.update()
 
     @property
@@ -245,6 +304,20 @@ class BoardWidget(QWidget):
             self._orientation = orientation
             self._transform = BoardTransform(self._files, self._ranks, orientation)
             self.update()
+
+    def set_facing_opponent(self, enabled: bool) -> None:
+        """Rotate opposing shogi wedges so they point toward the viewer’s opponent."""
+        if enabled != self._facing_opponent:
+            self._facing_opponent = enabled
+            self.update()
+
+    def invalidate_piece_renderers(self) -> None:
+        self._renderers = {
+            key: renderer
+            for key, renderer in self._renderers.items()
+            if not key.startswith("piece:")
+        }
+        self.update()
 
     def flip_orientation(self) -> None:
         """Rotate square positions 180 degrees while keeping piece art upright."""
@@ -313,15 +386,38 @@ class BoardWidget(QWidget):
 
         board_rect, cell_size = self._board_geometry()
         self._draw_squares(painter, board_rect, cell_size)
-        self._draw_highlights(painter, board_rect, cell_size)
+        self._draw_board_frame(painter, board_rect, cell_size)
+        self._draw_square_overlays(painter, board_rect, cell_size)
         self._draw_pieces(painter, board_rect, cell_size)
+        self._draw_move_markers(painter, board_rect, cell_size)
         self._draw_coordinates(painter, board_rect, cell_size)
 
     def mousePressEvent(self, event) -> None:  # noqa: ANN001 - Qt override signature
         square = self.square_at_position(event.position())
         if square is not None:
-            self.square_clicked.emit(square)
+            if event.button() == Qt.MouseButton.RightButton:
+                self.square_right_clicked.emit(square)
+            elif event.button() == Qt.MouseButton.LeftButton:
+                self.square_clicked.emit(square)
         super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:  # noqa: ANN001 - Qt override signature
+        square = self.square_at_position(event.position())
+        if square != self._hover_square:
+            self._hover_square = square
+            if square is not None and square in self._position:
+                self.setCursor(Qt.CursorShape.PointingHandCursor)
+            else:
+                self.unsetCursor()
+            self.update()
+        super().mouseMoveEvent(event)
+
+    def leaveEvent(self, event) -> None:  # noqa: ANN001 - Qt override signature
+        if self._hover_square is not None:
+            self._hover_square = None
+            self.unsetCursor()
+            self.update()
+        super().leaveEvent(event)
 
     def square_at_position(self, point: QPointF) -> int | None:
         """Map a widget point to a logical row-major square."""
@@ -383,36 +479,138 @@ class BoardWidget(QWidget):
                     painter, self._logical_square_rect(board_rect, cell_size, square)
                 )
 
+    def _draw_board_frame(
+        self, painter: QPainter, board_rect: QRectF, cell_size: float
+    ) -> None:
+        thickness = max(2.0, cell_size * 0.035)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(QColor(92, 74, 42), thickness))
+        painter.drawRect(board_rect.adjusted(-1, -1, 1, 1))
+        painter.setPen(QPen(QColor(201, 162, 39), 1.0))
+        painter.drawRect(board_rect)
+
     def _draw_pieces(self, painter: QPainter, board_rect: QRectF, cell_size: float) -> None:
         piece_margin = cell_size * 0.08
 
         for square, piece_key in self._position.items():
             square_rect = self._logical_square_rect(board_rect, cell_size, square)
             piece_rect = square_rect.adjusted(piece_margin, piece_margin, -piece_margin, -piece_margin)
-            renderer = self._renderer(f"piece:{piece_key}", str(self._assets_loader.piece_path(piece_key)))
-            renderer.render(painter, piece_rect)
+            try:
+                svg_path = str(self._assets_loader.piece_path(piece_key))
+            except FileNotFoundError:
+                painter.setPen(QColor(40, 40, 40))
+                painter.drawText(piece_rect, Qt.AlignmentFlag.AlignCenter, "?")
+                continue
+            renderer = self._renderer(
+                f"piece:{shogi_piece_set()}:{piece_key}",
+                svg_path,
+            )
+            if self._should_rotate_piece(piece_key):
+                painter.save()
+                painter.translate(piece_rect.center())
+                painter.rotate(180)
+                painter.translate(-piece_rect.center())
+                renderer.render(painter, piece_rect)
+                painter.restore()
+            else:
+                renderer.render(painter, piece_rect)
 
-    def _draw_highlights(self, painter: QPainter, board_rect: QRectF, cell_size: float) -> None:
+    def _should_rotate_piece(self, piece_key: str) -> bool:
+        if not self._facing_opponent:
+            return False
+        _stem, owner = parse_display_key(piece_key)
+        if owner is None:
+            return False
+        bottom = (
+            PieceSide.BLACK
+            if self._orientation is BoardOrientation.BLACK
+            else PieceSide.WHITE
+        )
+        return owner is not bottom
+
+    def _draw_square_overlays(
+        self, painter: QPainter, board_rect: QRectF, cell_size: float
+    ) -> None:
+        for square in self._missed_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(70, 170, 90, 155)
+            )
+        for square in self._hint_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(70, 140, 90, 70)
+            )
+        for square in self._lit_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(70, 150, 230, 170)
+            )
+        for square in self._last_move_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(205, 210, 106, 165)
+            )
+        for square in self._mismatch_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(232, 196, 48, 185)
+            )
+        if (
+            self._hover_square is not None
+            and self._hover_square != self._selected_square
+        ):
+            self._fill_square(
+                painter,
+                board_rect,
+                cell_size,
+                self._hover_square,
+                QColor(255, 255, 255, 50),
+            )
         if self._selected_square is not None:
             self._fill_square(
                 painter, board_rect, cell_size, self._selected_square, QColor(246, 246, 105, 170)
             )
-        for square in self._legal_destinations:
+        for square in self._check_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(220, 40, 40, 145)
+            )
+        for square in self._error_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(220, 40, 40, 165)
+            )
+
+    def _draw_move_markers(
+        self, painter: QPainter, board_rect: QRectF, cell_size: float
+    ) -> None:
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        for square in self._dot_squares:
             rect = self._logical_square_rect(board_rect, cell_size, square)
-            diameter = cell_size * (0.34 if square not in self._position else 0.82)
+            diameter = cell_size * 0.28
             marker = QRectF(
                 rect.center().x() - diameter / 2,
                 rect.center().y() - diameter / 2,
                 diameter,
                 diameter,
             )
-            painter.setBrush(QColor(40, 40, 40, 80))
-            painter.setPen(QColor(40, 40, 40, 100))
+            painter.setPen(QPen(QColor(210, 210, 210), max(1.0, cell_size * 0.03)))
+            painter.setBrush(QColor(248, 248, 248, 235))
             painter.drawEllipse(marker)
-        for square in self._check_squares:
-            self._fill_square(
-                painter, board_rect, cell_size, square, QColor(220, 40, 40, 145)
-            )
+        for square in self._legal_destinations:
+            rect = self._logical_square_rect(board_rect, cell_size, square)
+            occupied = square in self._position
+            if occupied:
+                inset = cell_size * 0.08
+                ring = rect.adjusted(inset, inset, -inset, -inset)
+                painter.setBrush(Qt.BrushStyle.NoBrush)
+                painter.setPen(QPen(QColor(20, 20, 20, 120), max(2.0, cell_size * 0.08)))
+                painter.drawEllipse(ring)
+            else:
+                diameter = cell_size * 0.32
+                marker = QRectF(
+                    rect.center().x() - diameter / 2,
+                    rect.center().y() - diameter / 2,
+                    diameter,
+                    diameter,
+                )
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.setBrush(QColor(20, 20, 20, 90))
+                painter.drawEllipse(marker)
 
     def _draw_coordinates(self, painter: QPainter, board_rect: QRectF, cell_size: float) -> None:
         if not self._coordinates_visible:
@@ -422,7 +620,7 @@ class BoardWidget(QWidget):
         font.setBold(True)
         font.setPixelSize(max(1, min(18, int(cell_size * 0.20))))
         painter.setFont(font)
-        painter.setPen(self.palette().color(self.foregroundRole()))
+        painter.setPen(QColor(207, 198, 184))
         left_units, bottom_units = self._notation_gutter_units()
         bottom_files, left_ranks = self.edge_labels()
 

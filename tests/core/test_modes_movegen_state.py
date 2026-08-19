@@ -15,7 +15,7 @@ from chess_core.core.piece import (
 from chess_core.core.state import HandsState
 from chess_core.core.topology import CylindricalFilesTopology
 from chess_core.modes.chess import classic_chess, cylindrical_chess, duck_chess
-from chess_core.modes.shogi import kyoto_shogi
+from chess_core.modes.shogi import dobutsu_shogi, kyoto_shogi, minishogi, shogi
 
 
 def _piece(name: str, side: PieceSide) -> Piece:
@@ -51,18 +51,33 @@ def test_required_mode_factories_are_fully_configured() -> None:
     cylinder = cylindrical_chess()
     duck = duck_chess()
     kyoto = kyoto_shogi()
+    mini = minishogi()
+    standard = shogi()
+    dobutsu = dobutsu_shogi()
 
     assert classic.board.shape.cell_count == 64
     assert len(classic.initial_state().board_state.cells) == 64
     assert sum(piece is not None for piece in classic.initial_state().board_state.cells.values()) == 32
     assert classic.ray_table is not None
+    assert classic.promotion_rule is not None
+    assert classic.protects_royal()
+    assert not classic.allows_royal_capture()
     assert isinstance(cylinder.topology, CylindricalFilesTopology)
     assert cylinder.ray_table is not None
     assert [step.label for step in duck.turn_scenario.steps] == ["move", "duck"]
+    assert duck.allows_royal_capture()
+    assert not duck.lose_on_no_legal_moves()
     assert kyoto.board.shape.cell_count == 25
     assert kyoto.drop_rule is not None
     assert kyoto.initial_state().hands is not None
     assert sum(piece is not None for piece in kyoto.initial_state().board_state.cells.values()) == 10
+    assert kyoto.starting_side is PieceSide.BLACK
+    assert mini.board.shape.cell_count == 25
+    assert mini.promotion_rule is not None
+    assert standard.board.shape.cell_count == 81
+    assert standard.drop_rule is not None
+    assert dobutsu.board.shape.cell_count == 12
+    assert dobutsu.initial_state().side_to_move is PieceSide.BLACK
 
 
 def test_classic_start_has_twenty_pseudo_and_legal_moves() -> None:

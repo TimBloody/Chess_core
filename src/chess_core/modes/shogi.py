@@ -1,26 +1,49 @@
-"""Shogi and shogi-variant mode factories (stubs)."""
+"""Shogi and shogi-variant mode factories."""
 
 from __future__ import annotations
 
 from chess_core.core.gamemode import GameMode, GameModeBuilder
-from chess_core.core.piece import Piece, PieceSide, PieceTransform, PieceTypeId
-from chess_core.core.rules import DropRule, VictoryCondition, VictoryKind
+from chess_core.core.rules import VictoryCondition, VictoryKind
 from chess_core.core.turn import StepKind, TurnScenario, TurnStep
 from chess_core.modes.catalog import (
     dobutsu_shogi_piece_catalog,
     kyoto_shogi_piece_catalog,
+    minishogi_piece_catalog,
     shogi_piece_catalog,
+)
+from chess_core.modes.shogi_rules import (
+    DOBUTSU_PROMOTIONS,
+    STANDARD_SHOGI_PROMOTIONS,
+    KyotoDropRule,
+    KyotoFlipTransform,
+    ShogiDropRule,
+    ShogiPromotionRule,
+    facing_start_cells,
 )
 
 
 def shogi() -> GameMode:
-    """9x9, drops, promotion zones, checkmate king."""
+    """9x9 standard shogi: drops, 3-rank promotion, checkmate."""
     return (
-        GameModeBuilder("shogi", "Shogi")
-        .with_shape(9, 9)
-        .with_pieces(shogi_piece_catalog())
-        .with_turn_scenario(_standard_single_move_scenario())
-        .with_victory(VictoryCondition(VictoryKind.CHECKMATE))
+        _shogi_builder("shogi", "Shogi", 9, 9, shogi_piece_catalog())
+        .with_drop_rule(ShogiDropRule())
+        .with_promotion_rule(
+            ShogiPromotionRule(zone_depth=3, mapping=STANDARD_SHOGI_PROMOTIONS)
+        )
+        .with_start_cells(_shogi_start_cells())
+        .build()
+    )
+
+
+def minishogi() -> GameMode:
+    """5x5 minishogi: one-rank promotion zone, otherwise standard drops."""
+    return (
+        _shogi_builder("minishogi", "Minishogi", 5, 5, minishogi_piece_catalog())
+        .with_drop_rule(ShogiDropRule())
+        .with_promotion_rule(
+            ShogiPromotionRule(zone_depth=1, mapping=STANDARD_SHOGI_PROMOTIONS)
+        )
+        .with_start_cells(_minishogi_start_cells())
         .build()
     )
 
@@ -34,81 +57,93 @@ def kyoto_shogi() -> GameMode:
     - Drops: captured piece may be placed with either face up (DropRule.allowed_faces).
     - Relaxed drop restrictions vs standard shogi (same file pawn, last rank, etc.).
     - Victory: checkmate (same goal as shogi).
-
-    Configure via PieceType.transforms_on_move (PieceTransform) and drop_rule,
-    not hardcoded movegen branches.
     """
     catalog = kyoto_shogi_piece_catalog()
     flip = KyotoFlipTransform()
     for piece_type in catalog.all_types():
-        if piece_type.id.name != "king":
+        if not piece_type.is_royal:
             piece_type.transforms_on_move = flip
 
-    # Kyoto flip-after-move is represented as a PieceTransform on each
-    # non-king piece type; movegen should consume that config, not branch by mode.
     return (
-        GameModeBuilder("kyoto_shogi", "Kyoto Shogi")
-        .with_shape(5, 5)
-        .with_pieces(catalog)
-        .with_turn_scenario(_standard_single_move_scenario())
-        .with_victory(VictoryCondition(VictoryKind.CHECKMATE))
+        _shogi_builder("kyoto_shogi", "Kyoto Shogi", 5, 5, catalog)
         .with_drop_rule(KyotoDropRule())
-        .with_start_cells(_kyoto_start_cells())
+        .with_start_cells(
+            facing_start_cells(5, 5, {0: ("tokin", "silver", "king", "gold", "pawn")})
+        )
         .build()
     )
 
 
 def dobutsu_shogi() -> GameMode:
-    """3x4 animal shogi for children; smaller catalog and board."""
+    """3x4 animal shogi: capture the lion or a safe try on the last rank."""
     return (
-        GameModeBuilder("dobutsu_shogi", "Dobutsu Shogi")
-        .with_shape(3, 4)
-        .with_pieces(dobutsu_shogi_piece_catalog())
-        .with_turn_scenario(_standard_single_move_scenario())
-        .with_victory(VictoryCondition(VictoryKind.KING_REACHES_ZONE))
+        _shogi_builder(
+            "dobutsu_shogi",
+            "Dobutsu Shogi",
+            3,
+            4,
+            dobutsu_shogi_piece_catalog(),
+        )
+        .with_drop_rule(
+            ShogiDropRule(nifu=False, dead_squares=False, forbid_pawn_drop_mate=False)
+        )
+        .with_promotion_rule(
+            ShogiPromotionRule(zone_depth=1, mapping=DOBUTSU_PROMOTIONS)
+        )
+        .with_victory(
+            (
+                VictoryCondition(VictoryKind.KING_CAPTURE),
+                VictoryCondition(VictoryKind.KING_REACHES_ZONE),
+            )
+        )
+        .with_start_cells(_dobutsu_start_cells())
+        .with_asset_family("dobutsu")
         .build()
     )
 
 
-class KyotoFlipTransform(PieceTransform):
-    """Stub: flip piece to alternate face in catalog after each move."""
-
-    _pairs = {
-        "tokin": "lance",
-        "lance": "tokin",
-        "silver": "bishop",
-        "bishop": "silver",
-        "gold": "knight",
-        "knight": "gold",
-        "pawn": "rook",
-        "rook": "pawn",
-    }
-
-    def apply(self, piece_type: PieceTypeId, context) -> PieceTypeId:
-        return PieceTypeId(self._pairs.get(piece_type.name, piece_type.name))
+def _shogi_builder(mode_id: str, name: str, files: int, ranks: int, catalog) -> GameModeBuilder:
+    builder = (
+        GameModeBuilder(mode_id, name)
+        .with_shape(files, ranks)
+        .with_pieces(catalog)
+        .with_turn_scenario(TurnScenario((TurnStep(StepKind.MOVE_OR_DROP),)))
+        .with_victory(VictoryCondition(VictoryKind.CHECKMATE))
+        .with_shogi_presentation()
+    )
+    return builder
 
 
-class KyotoDropRule(DropRule):
-    """Kyoto pieces may be dropped on any empty square with either face up."""
-
-    def can_drop(self, piece_type: PieceTypeId, square_index: int, state: object) -> bool:
-        return state.board_state.piece_at(square_index) is None
-
-    def allowed_faces(self, piece_type: PieceTypeId) -> tuple[str, ...] | None:
-        paired = KyotoFlipTransform._pairs.get(piece_type.name)
-        return None if paired is None else (piece_type.name, paired)
-
-
-def _kyoto_start_cells() -> dict[int, Piece]:
-    white = ("tokin", "silver", "king", "gold", "pawn")
-    black = tuple(reversed(white))
-    cells: dict[int, Piece] = {}
-    for file, name in enumerate(white):
-        cells[file] = Piece(PieceTypeId(name), PieceSide.WHITE)
-    for file, name in enumerate(black):
-        cells[20 + file] = Piece(PieceTypeId(name), PieceSide.BLACK)
-    return cells
+def _shogi_start_cells() -> dict:
+    empty = (None,)
+    return facing_start_cells(
+        9,
+        9,
+        {
+            0: ("lance", "knight", "silver", "gold", "king", "gold", "silver", "knight", "lance"),
+            1: empty + ("bishop",) + empty * 5 + ("rook",) + empty,
+            2: ("pawn",) * 9,
+        },
+    )
 
 
-def _standard_single_move_scenario() -> TurnScenario:
-    return TurnScenario((TurnStep(StepKind.MOVE_OR_DROP),))
+def _minishogi_start_cells() -> dict:
+    return facing_start_cells(
+        5,
+        5,
+        {
+            0: ("king", "gold", "silver", "bishop", "rook"),
+            1: ("pawn", None, None, None, None),
+        },
+    )
+
+
+def _dobutsu_start_cells() -> dict:
+    return facing_start_cells(
+        3,
+        4,
+        {
+            0: ("elephant", "lion", "giraffe"),
+            1: (None, "chick", None),
+        },
+    )

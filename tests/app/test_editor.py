@@ -11,6 +11,8 @@ from chess_core.core.rules import VictoryCondition, VictoryKind
 from chess_core.core.state import BoardState, GameState
 from chess_core.core.topology import FlatTopology
 from chess_core.core.turn import AlternatingSides, StepKind, TurnScenario, TurnStep
+from chess_core.modes.chess import classic_chess
+from chess_core.modes.shogi import dobutsu_shogi
 
 
 def _mode(files: int = 2, ranks: int = 2) -> GameMode:
@@ -72,7 +74,26 @@ def test_editor_validate_for_mode_uses_king_helper_and_callback() -> None:
 
     editor.remove_piece(7)
 
-    assert editor.validate_for_mode() == ["expected exactly one black king, found 0"]
+    assert editor.validate_for_mode() == ["expected exactly one black royal piece, found 0"]
+
+
+def test_editor_load_state_clones_position_for_the_current_mode() -> None:
+    mode = classic_chess()
+    source = BoardEditorService(mode)
+    source.new_empty_position()
+    source.set_piece(4, "king", "white")
+    editor = BoardEditorService(mode)
+    loaded = editor.load_state(source.state)
+    source.set_piece(4, None, None)
+    assert loaded.board_state.piece_at(4).piece_type.name == "king"
+
+
+def test_dobutsu_editor_exports_sfen_from_start() -> None:
+    editor = BoardEditorService(dobutsu_shogi())
+    editor.load_start_position()
+    text = editor.export_notation()
+    assert "k" in text.lower()
+    assert "/" in text
 
 
 def test_memory_training_grades_piece_type_and_side_by_index() -> None:

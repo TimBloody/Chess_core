@@ -76,6 +76,7 @@ class ClockSnapshot:
 
 Sync events: connect, start, turn, pause, resume, undo, end.
 Heartbeat: every 10–15 s. No per-tick server polling.
+The clock is idle (`running_side is None`) until the first committed turn; after that the opponent’s clock runs.
 
 ## Engine result
 
@@ -100,12 +101,14 @@ class BestMove:
 - `PIECE_SQUARE`: `e4`, `Nc6`
 - Composite actions within one turn joined by `·`
 - Drop: `N@e4`; duck placement: `@e4`
+- Duck Chess turn is always `MoveAction` then `PlaceBlockerAction`; undo reverts both together
+- Crazyhouse drop is a full `Turn` of one `DropAction` (`MOVE_OR_DROP`)
 
 ## Engine discovery
 
 Search order:
 1. `CHESS_CORE_ENGINES_DIR` env
 2. `config/engines.json` next to executable
-3. `../engines/` sibling directory
+3. root `engines/` directory (or `engines/` next to the packaged executable)
 
-Engine binaries never bundled in exe.
+Engine binaries and large model files are Git-ignored and never bundled in exe.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum, auto
+from collections.abc import Callable
 
 from chess_core.core.board import Square
 from chess_core.core.gamemode import GameMode
@@ -89,25 +90,105 @@ def _format_move(
     target = action.to_square
     piece = before.board_state.piece_at(source.index(files))
     captured = before.board_state.piece_at(target.index(files))
-    is_capture = captured is not None
+    castling = _castling_text(action, before)
+    is_capture = captured is not None or _is_en_passant(action, piece, before)
     if style is NotationStyle.FROM_TO:
         sep = "x" if is_capture else "-"
         text = f"{square_name(source)}{sep}{square_name(target)}"
+    elif castling is not None:
+        text = castling
     else:
         letter = ""
         if piece is not None:
             letter = _PIECE_LETTER.get(piece.piece_type.name, piece.piece_type.name[0].upper())
-        if is_capture and letter:
-            text = f"{letter}x{square_name(target)}"
-        elif letter:
-            text = f"{letter}{square_name(target)}"
+        if letter:
+            disambiguation = _disambiguation(action, piece, before)
+            capture_marker = "x" if is_capture else ""
+            text = f"{letter}{disambiguation}{capture_marker}{square_name(target)}"
+        elif is_capture:
+            text = f"{square_name(source)[0]}x{square_name(target)}"
         else:
             text = square_name(target)
     if action.promotion_choice is not None:
         promo = _PIECE_LETTER.get(action.promotion_choice.name, action.promotion_choice.name[0].upper())
         if promo:
             text += f"={promo}"
+    if style is NotationStyle.PIECE_SQUARE:
+        text += _check_suffix(before, after)
     return text
+
+
+def _castling_text(action: MoveAction, before: GameState) -> str | None:
+    mode = before.extras.get("mode")
+    rule = getattr(mode, "castling_rule", None)
+    if rule is None:
+        return None
+    path = rule.decode(action, before)
+    if path is None:
+        return None
+    return "O-O" if path.rook_from.file > path.king_from.file else "O-O-O"
+
+
+def _is_en_passant(
+    action: MoveAction,
+    piece: Piece | None,
+    before: GameState,
+) -> bool:
+    return (
+        piece is not None
+        and piece.piece_type.name == "pawn"
+        and action.from_square.file != action.to_square.file
+        and before.extras.get("en_passant") == action.to_square
+    )
+
+
+def _disambiguation(
+    action: MoveAction,
+    piece: Piece,
+    before: GameState,
+) -> str:
+    if piece.piece_type.name in {"pawn", "king"}:
+        return ""
+    mode = before.extras.get("mode")
+    if not isinstance(mode, GameMode):
+        return ""
+    from chess_core.core.movegen import MoveGenerator
+
+    files = before.board_state.board.shape.files
+    competing_sources = {
+        candidate.from_square
+        for candidate in MoveGenerator(mode).generate_legal(before)
+        if isinstance(candidate, MoveAction)
+        and candidate.to_square == action.to_square
+        and candidate.from_square != action.from_square
+        and (
+            (candidate_piece := before.board_state.piece_at(
+                candidate.from_square.index(files)
+            ))
+            is not None
+        )
+        and candidate_piece.side is piece.side
+        and candidate_piece.piece_type == piece.piece_type
+    }
+    if not competing_sources:
+        return ""
+    if all(other.file != action.from_square.file for other in competing_sources):
+        return square_name(action.from_square)[0]
+    if all(other.rank != action.from_square.rank for other in competing_sources):
+        return str(action.from_square.rank + 1)
+    return square_name(action.from_square)
+
+
+def _check_suffix(before: GameState, after: GameState) -> str:
+    mode = before.extras.get("mode")
+    if not isinstance(mode, GameMode) or not mode.protects_royal():
+        return ""
+    from chess_core.core.movegen import MoveGenerator
+
+    generator = MoveGenerator(mode)
+    if not generator.is_in_check(after):
+        return ""
+    return "#" if generator.is_checkmate(after) else "+"
 
 
 def parse_fen(fen: str, mode: GameMode) -> GameState:
@@ -157,7 +238,11 @@ def parse_fen(fen: str, mode: GameMode) -> GameState:
     return GameState(BoardState(mode.board, cells), side, extras=extras)
 
 
-def to_fen(state: GameState) -> str:
+def encode_board_placement(
+    state: GameState,
+    token_for_piece: Callable[[Piece], str | None],
+) -> str:
+    """Rank-major FEN/SFEN placement: last rank first, empty runs as digits."""
     shape = state.board_state.board.shape
     rows: list[str] = []
     for rank in reversed(range(shape.ranks)):
@@ -165,29 +250,58 @@ def to_fen(state: GameState) -> str:
         empty = 0
         for file in range(shape.files):
             piece = state.board_state.piece_at(rank * shape.files + file)
-            if piece is None:
+            token = None if piece is None else token_for_piece(piece)
+            if token is None:
                 empty += 1
                 continue
             if empty:
                 row += str(empty)
                 empty = 0
-            symbol = _TYPE_TO_SYMBOL.get(piece.piece_type.name)
-            if symbol is None:
-                raise ValueError(f"piece cannot be represented in FEN: {piece.piece_type.name}")
-            row += symbol.upper() if piece.side is PieceSide.WHITE else symbol
+            row += token
         if empty:
             row += str(empty)
         rows.append(row)
+    return "/".join(rows)
+
+
+def to_fen(state: GameState) -> str:
+    def token(piece: Piece) -> str:
+        symbol = _TYPE_TO_SYMBOL.get(piece.piece_type.name)
+        if symbol is None:
+            raise ValueError(
+                f"piece cannot be represented in FEN: {piece.piece_type.name}"
+            )
+        return symbol.upper() if piece.side is PieceSide.WHITE else symbol
+
+    placement = encode_board_placement(state, token)
     active = "w" if state.side_to_move is PieceSide.WHITE else "b"
-    rights = "".join(char for char in "KQkq" if char in state.extras.get("castling_rights", ())) or "-"
-    en_passant = square_name(state.extras.get("en_passant")) if state.extras.get("en_passant") else "-"
-    return f"{'/'.join(rows)} {active} {rights} {en_passant} {state.extras.get('halfmove_clock', 0)} {state.extras.get('fullmove_number', 1)}"
+    rights = "".join(
+        char for char in "KQkq" if char in state.extras.get("castling_rights", ())
+    ) or "-"
+    en_passant = (
+        square_name(state.extras.get("en_passant"))
+        if state.extras.get("en_passant")
+        else "-"
+    )
+    return (
+        f"{placement} {active} {rights} {en_passant} "
+        f"{state.extras.get('halfmove_clock', 0)} {state.extras.get('fullmove_number', 1)}"
+    )
 
 
 def parse_square(name: str, files: int, ranks: int) -> Square:
-    if len(name) != 2 or not name[0].isalpha() or not name[1].isdigit():
+    token = name.strip().lower()
+    letters = 0
+    while letters < len(token) and token[letters].isalpha():
+        letters += 1
+    if letters == 0 or letters == len(token) or not token[letters:].isdigit():
         raise ValueError("invalid FEN square")
-    square = Square(ord(name[0].lower()) - ord("a"), int(name[1]) - 1)
+    file_token = token[:letters]
+    file = 0
+    for char in file_token:
+        file = file * 26 + (ord(char) - ord("a") + 1)
+    file -= 1
+    square = Square(file, int(token[letters:]) - 1)
     Square.from_index(square.index(files), files, ranks)
     return square
 

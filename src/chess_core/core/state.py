@@ -17,6 +17,9 @@ from chess_core.core.move import (
     Turn,
 )
 from chess_core.core.piece import Piece, PieceSide, PieceTypeId
+from chess_core.core.rules import CastlingPath
+
+_ROOK_HOME_RIGHTS = {0: "Q", 7: "K", 56: "q", 63: "k"}
 
 
 @dataclass
@@ -28,6 +31,12 @@ class BoardState:
         if not 0 <= square_index < self.board.shape.cell_count:
             raise ValueError("square_index is outside board cells")
         return self.cells.get(square_index)
+
+    def iter_occupied(self):
+        """Yield ``(index, piece)`` for occupied cells only."""
+        for index, piece in self.cells.items():
+            if piece is not None:
+                yield index, piece
 
 
 @dataclass
@@ -45,6 +54,14 @@ class HandsState:
     def add(self, side: PieceSide, piece: Piece) -> None:
         captured = deepcopy(piece)
         captured.side = side
+        original = None
+        if captured.state:
+            original = captured.state.get("promoted_from")
+            if original is None and captured.state.get("promoted"):
+                original = "pawn"
+        if original:
+            captured.piece_type = PieceTypeId(str(original))
+            captured.state = None
         self.by_side.setdefault(side, []).append(captured)
 
 
@@ -102,17 +119,34 @@ class GameState:
             extras=extras,
         )
 
-    def apply_turn(self, turn: Turn, *, record_history: bool = True) -> GameState:
+    def apply_turn(
+        self,
+        turn: Turn,
+        *,
+        record_history: bool = True,
+        validate_scenario: bool = True,
+        switch_side: bool = True,
+    ) -> GameState:
         if turn.side is not self.side_to_move:
             raise ValueError("turn side does not match side_to_move")
         if not turn.actions:
             raise ValueError("turn must contain at least one action")
 
-        result = self.clone(include_history=record_history)
+        result = self.clone(include_history=True)
         mode = result.extras.get("mode")
         turn_actions: list[Action] = []
-        if mode is not None and not mode.turn_scenario.validate_turn(turn):
-            raise ValueError("turn does not match the game mode turn scenario")
+        policy = getattr(mode, "turn_policy", None) if mode is not None else None
+        if validate_scenario and mode is not None:
+            scenario = (
+                policy.scenario_for(self)
+                if policy is not None
+                else mode.turn_scenario
+            )
+            if policy is not None:
+                if not scenario.matches_prefix(turn):
+                    raise ValueError("turn does not match the game mode turn scenario")
+            elif not scenario.validate_turn(turn):
+                raise ValueError("turn does not match the game mode turn scenario")
         shape = result.board_state.board.shape
         for action in turn.actions:
             if isinstance(action, MoveAction):
@@ -123,64 +157,83 @@ class GameState:
                     raise ValueError("cannot move from an empty square")
                 if piece.side is not turn.side:
                     raise ValueError("cannot move another side's piece")
-                captured = result.board_state.piece_at(target)
-                if captured is not None and captured.side is turn.side:
-                    raise ValueError("cannot capture a friendly piece")
-                if captured is not None and captured.side is PieceSide.NEUTRAL:
-                    raise ValueError("cannot capture a neutral blocker")
-                if (
-                    piece.piece_type.name == "pawn"
-                    and captured is None
-                    and action.from_square.file != action.to_square.file
-                    and action.to_square == result.extras.get("en_passant")
-                ):
-                    captured_index = target - shape.files if turn.side is PieceSide.WHITE else target + shape.files
-                    captured = result.board_state.piece_at(captured_index)
+                castle = _decode_castling(action, result, mode)
+                captured = None
+                if castle is not None:
+                    _apply_castling(result, castle)
+                    target = castle.king_to.index(shape.files)
+                    piece = result.board_state.piece_at(target)
+                else:
+                    captured = result.board_state.piece_at(target)
+                    if captured is not None and captured.side is turn.side:
+                        raise ValueError("cannot capture a friendly piece")
+                    if captured is not None and captured.side is PieceSide.NEUTRAL:
+                        raise ValueError("cannot capture a neutral blocker")
                     if (
-                        captured is None
-                        or captured.piece_type.name != "pawn"
-                        or captured.side is turn.side
-                        or captured.side is PieceSide.NEUTRAL
+                        piece.piece_type.name == "pawn"
+                        and captured is None
+                        and action.from_square.file != action.to_square.file
+                        and action.to_square == result.extras.get("en_passant")
                     ):
-                        raise ValueError("invalid en passant capture")
-                    result.board_state.cells[captured_index] = None
-                if captured is not None and result.hands is not None:
-                    result.hands.add(turn.side, captured)
-                result.board_state.cells[source] = None
-                if action.promotion_choice is not None:
-                    piece = deepcopy(piece)
-                    piece.piece_type = action.promotion_choice
-                result.board_state.cells[target] = piece
-                if piece.piece_type.name == "king" and abs(action.to_square.file - action.from_square.file) == 2:
-                    rook_from_file = shape.files - 1 if action.to_square.file > action.from_square.file else 0
-                    rook_to_file = action.to_square.file - 1 if rook_from_file else action.to_square.file + 1
-                    rook_from = action.from_square.rank * shape.files + rook_from_file
-                    rook_to = action.from_square.rank * shape.files + rook_to_file
-                    rook = result.board_state.piece_at(rook_from)
-                    if rook is None or rook.piece_type.name != "rook" or rook.side is not turn.side:
-                        raise ValueError("invalid castling rook")
-                    result.board_state.cells[rook_from] = None
-                    result.board_state.cells[rook_to] = rook
+                        captured_index = target - shape.files * turn.side.forward_delta()
+                        captured = result.board_state.piece_at(captured_index)
+                        if (
+                            captured is None
+                            or captured.piece_type.name != "pawn"
+                            or captured.side is turn.side
+                            or captured.side is PieceSide.NEUTRAL
+                        ):
+                            raise ValueError("invalid en passant capture")
+                        result.board_state.cells[captured_index] = None
+                    if captured is not None and result.hands is not None:
+                        captured = _hand_piece(captured, mode)
+                        result.hands.add(turn.side, captured)
+                    result.board_state.cells[source] = None
+                    if action.promotion_choice is not None:
+                        original_name = piece.piece_type.name
+                        piece = deepcopy(piece)
+                        piece.piece_type = action.promotion_choice
+                        flags = dict(piece.state or {})
+                        flags["promoted_from"] = original_name
+                        piece.state = flags
+                    result.board_state.cells[target] = piece
                 rights = set(result.extras.get("castling_rights", ()))
-                if piece.piece_type.name == "king":
+                if piece is not None and piece.piece_type.name == "king":
                     rights -= {"K", "Q"} if turn.side is PieceSide.WHITE else {"k", "q"}
-                if piece.piece_type.name == "rook":
-                    rights.discard({0: "Q", 7: "K", 56: "q", 63: "k"}.get(source, ""))
+                if piece is not None and piece.piece_type.name == "rook":
+                    rights.discard(_ROOK_HOME_RIGHTS.get(source, ""))
+                if castle is not None:
+                    rights.discard(
+                        _ROOK_HOME_RIGHTS.get(castle.rook_from.index(shape.files), "")
+                    )
                 if captured is not None and captured.piece_type.name == "rook":
-                    rights.discard({0: "Q", 7: "K", 56: "q", 63: "k"}.get(target, ""))
+                    rights.discard(_ROOK_HOME_RIGHTS.get(target, ""))
                 result.extras["castling_rights"] = rights
                 result.extras["en_passant"] = (
-                    Square(action.from_square.file, (action.from_square.rank + action.to_square.rank) // 2)
-                    if piece.piece_type.name == "pawn"
-                    and abs(action.to_square.rank - action.from_square.rank) == 2
+                    Square(
+                        action.from_square.file,
+                        (action.from_square.rank + action.to_square.rank) // 2,
+                    )
+                    if (
+                        castle is None
+                        and piece is not None
+                        and piece.piece_type.name == "pawn"
+                        and abs(action.to_square.rank - action.from_square.rank) == 2
+                    )
                     else None
                 )
-                if mode is not None:
+                if mode is not None and castle is None and piece is not None:
                     definition = mode.pieces.get(piece.piece_type)
                     if definition.transforms_on_move is not None:
-                        context = _TransformContext(action.to_square, len(result.history.actions), len(result.history.actions))
+                        context = _TransformContext(
+                            action.to_square,
+                            len(result.history.actions),
+                            len(result.history.actions),
+                        )
                         transformed = deepcopy(result.board_state.cells[target])
-                        transformed.piece_type = definition.transforms_on_move.apply(piece.piece_type, context)
+                        transformed.piece_type = definition.transforms_on_move.apply(
+                            piece.piece_type, context
+                        )
                         result.board_state.cells[target] = transformed
             elif isinstance(action, DropAction):
                 target = action.to_square.index(shape.files)
@@ -237,16 +290,23 @@ class GameState:
                         raise TypeError("state transition must return GameState")
                     result = transitioned
 
+        if validate_scenario and policy is not None:
+            end = policy.should_end_turn(result, turn.actions)
+            required = policy.scenario_for(self).required_action_count()
+            if len(turn.actions) >= required:
+                end = True
+            if not end:
+                raise ValueError("turn does not match the game mode turn scenario")
         if record_history:
             result.history.actions.extend(turn_actions)
             result.history.metadata.append({"turn_side": turn.side.name})
-        result.side_to_move = (
-            mode.turn_order.next_side(result.side_to_move)
-            if mode is not None
-            else PieceSide.BLACK
-            if result.side_to_move is PieceSide.WHITE
-            else PieceSide.WHITE
-        )
+            result.extras["committed_turns"] = len(result.history.metadata)
+        if switch_side:
+            result.side_to_move = (
+                mode.turn_order.next_side(result.side_to_move)
+                if mode is not None
+                else result.side_to_move.opponent()
+            )
         return result
 
 
@@ -266,6 +326,49 @@ class _TransformContext:
         return self._ply
 
 
+def _decode_castling(action: MoveAction, state: GameState, mode: object) -> CastlingPath | None:
+    rule = getattr(mode, "castling_rule", None) if mode is not None else None
+    if rule is None:
+        return None
+    return rule.decode(action, state)
+
+
+def _apply_castling(state: GameState, path: CastlingPath) -> None:
+    files = state.board_state.board.shape.files
+    king_from = path.king_from.index(files)
+    rook_from = path.rook_from.index(files)
+    king_to = path.king_to.index(files)
+    rook_to = path.rook_to.index(files)
+    king = state.board_state.piece_at(king_from)
+    rook = state.board_state.piece_at(rook_from)
+    if king is None or king.piece_type.name != "king":
+        raise ValueError("invalid castling king")
+    if rook is None or rook.piece_type.name != "rook" or rook.side is not king.side:
+        raise ValueError("invalid castling rook")
+    state.board_state.cells[king_from] = None
+    state.board_state.cells[rook_from] = None
+    state.board_state.cells[king_to] = king
+    state.board_state.cells[rook_to] = rook
+
+
 def _clone_piece(piece: Piece) -> Piece:
     """Copy mutable per-piece state while sharing immutable identifiers."""
     return Piece(piece.piece_type, piece.side, deepcopy(piece.state))
+
+
+def _hand_piece(piece: Piece, mode: object) -> Piece:
+    captured = deepcopy(piece)
+    if captured.state and captured.state.get("promoted_from"):
+        return captured
+    catalog = getattr(mode, "pieces", None)
+    if catalog is None:
+        return captured
+    try:
+        demotes_to = catalog.get(captured.piece_type).demotes_to
+    except KeyError:
+        return captured
+    if demotes_to:
+        flags = dict(captured.state or {})
+        flags["promoted_from"] = demotes_to
+        captured.state = flags
+    return captured

@@ -8,8 +8,10 @@ from copy import deepcopy
 from chess_core.core.board import Square
 from chess_core.core.gamemode import GameMode
 from chess_core.core.notation import parse_fen, to_fen
+from chess_core.core.pgn import looks_like_pgn
+from chess_core.core.sfen import looks_like_sfen, parse_sfen, to_sfen
 from chess_core.core.piece import Piece, PieceSide, PieceTypeId
-from chess_core.core.state import BoardState, GameState
+from chess_core.core.state import BoardState, GameState, HandsState
 
 
 class BoardEditorService:
@@ -39,13 +41,22 @@ class BoardEditorService:
         cells = {index: None for index in range(self._mode.board.shape.cell_count)}
         self._state = GameState(
             board_state=BoardState(board=self._mode.board, cells=cells),
-            side_to_move=PieceSide.WHITE,
+            side_to_move=self._mode.starting_side,
+            hands=HandsState() if self._mode.drop_rule is not None else None,
             extras={"mode": self._mode},
         )
         return self._state
 
     def load_start_position(self) -> GameState:
         self._state = self._mode.initial_state()
+        return self._state
+
+    def load_state(self, state: GameState) -> GameState:
+        if state.board_state.board.shape != self._mode.board.shape:
+            raise ValueError("state board shape does not match editor mode")
+        loaded = state.clone()
+        loaded.extras["mode"] = self._mode
+        self._state = loaded
         return self._state
 
     def clear_board(self) -> None:
@@ -75,11 +86,32 @@ class BoardEditorService:
         state.board_state.cells[square_index] = None
 
     def export_notation(self) -> str:
-        return to_fen(self._require_state())
+        state = self._require_state()
+        if self._mode.drop_rule is not None:
+            try:
+                return to_sfen(state)
+            except ValueError:
+                pass
+        return to_fen(state)
 
     def import_notation(self, data: str) -> GameState:
-        self._state = parse_fen(data, self._mode)
-        return self._state
+        text = data.strip()
+        if looks_like_pgn(text) and text.startswith("["):
+            raise ValueError("PGN records a full game; import it from the game page")
+        errors: list[str] = []
+        parsers = []
+        if looks_like_sfen(text):
+            parsers.append(parse_sfen)
+        parsers.append(parse_fen)
+        if parse_sfen not in parsers:
+            parsers.append(parse_sfen)
+        for parser in parsers:
+            try:
+                self._state = parser(text, self._mode)
+                return self._state
+            except ValueError as exc:
+                errors.append(str(exc))
+        raise ValueError("; ".join(errors))
 
     def to_playable_state(self) -> GameState:
         state = deepcopy(self._require_state())
@@ -127,11 +159,15 @@ class BoardEditorService:
         for piece in state.board_state.cells.values():
             if piece is None:
                 continue
-            if piece.piece_type.name == "king" and piece.side in counts:
+            if piece is None:
+                continue
+            if piece.side in counts and self._mode.piece_is_royal(piece):
                 counts[piece.side] += 1
 
         errors: list[str] = []
         for side, count in counts.items():
             if count != 1:
-                errors.append(f"expected exactly one {side.name.lower()} king, found {count}")
+                errors.append(
+                    f"expected exactly one {side.name.lower()} royal piece, found {count}"
+                )
         return errors

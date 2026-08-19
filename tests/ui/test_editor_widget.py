@@ -26,3 +26,30 @@ def test_editor_widget_loads_start_position() -> None:
     assert len(widget.board.position) == 32
     widget._play()
     widget.close()
+
+
+def test_editor_dobutsu_uses_svg_palette_and_does_not_crash_on_click() -> None:
+    app = _app()
+    register_builtin_modes()
+    widget = EditorWidget(mode_id="chess")
+    widget.set_mode("dobutsu_shogi")
+    assert widget.board.files == 3
+    assert widget.board.ranks == 4
+    assert widget._selected_piece is not None
+    assert widget._selected_piece[0] in {"chick", "lion", "giraffe", "elephant", "hen"}
+    assert any(key.startswith("dobutsu/0OU") for key in widget.board.position.values())
+    assert widget.bottom_palette.tokens
+    assert all(
+        token.piece_key.startswith("dobutsu/")
+        for token in widget.bottom_palette.tokens
+    )
+    widget.resize(900, 640)
+    widget.show()
+    app.processEvents()
+    widget._on_square(0)
+    app.processEvents()
+    assert 0 in widget.board.position
+    widget._erase_square(0)
+    widget._export_fen()
+    assert widget.fen_field.text()
+    widget.close()

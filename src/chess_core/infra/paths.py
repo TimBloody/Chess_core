@@ -25,6 +25,10 @@ def assets_root() -> Path:
     return project_root() / "assets"
 
 
+def sounds_dir() -> Path:
+    return assets_root() / "sounds"
+
+
 def masks_dir() -> Path:
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
         return Path(sys._MEIPASS) / "chess_core" / "data" / "masks"
@@ -32,11 +36,20 @@ def masks_dir() -> Path:
 
 
 def engines_dir() -> Path:
+    """Return the external, never-bundled engine directory."""
     env = os.environ.get("CHESS_CORE_ENGINES_DIR")
     if env:
-        return Path(env)
-    return project_root().parent / "engines"
+        return Path(env).expanduser()
+    return project_root() / "engines"
 
 
 def config_dir() -> Path:
     return app_root() / "config"
+
+
+def output_dir() -> Path:
+    """Writable directory for exported games and PGN databases."""
+    env = os.environ.get("CHESS_CORE_OUTPUT_DIR")
+    if env:
+        return Path(env).expanduser()
+    return project_root() / "output"

@@ -15,6 +15,37 @@ class PieceSide(Enum):
     BLACK = auto()
     NEUTRAL = auto()
 
+    def opponent(self) -> PieceSide:
+        """Return the opposing player colour; neutral has no opponent."""
+        if self is PieceSide.WHITE:
+            return PieceSide.BLACK
+        if self is PieceSide.BLACK:
+            return PieceSide.WHITE
+        raise ValueError("neutral has no opponent")
+
+    def forward_delta(self) -> int:
+        """Rank step of this side's forward direction on a rectangular board."""
+        if self is PieceSide.WHITE:
+            return 1
+        if self is PieceSide.BLACK:
+            return -1
+        raise ValueError("neutral has no forward direction")
+
+    def last_rank(self, ranks: int) -> int:
+        """The furthest rank this side moves toward (promotion / try rank)."""
+        if ranks <= 0:
+            raise ValueError("ranks must be positive")
+        if self is PieceSide.WHITE:
+            return ranks - 1
+        if self is PieceSide.BLACK:
+            return 0
+        raise ValueError("neutral has no last rank")
+
+    def ranks_ahead(self, rank: int, ranks: int) -> int:
+        """How many ranks remain in this side's forward direction, including none."""
+        last = self.last_rank(ranks)
+        return abs(last - rank)
+
 
 @dataclass(frozen=True, slots=True)
 class PieceTypeId:
@@ -36,6 +67,15 @@ class MovePattern:
     kind: MovePatternKind
     directions: tuple[tuple[int, int], ...] = ()
     pattern_key: str | None = None
+
+
+class MovePatternResolver(Protocol):
+    """Resolve movement patterns from piece identity and current square."""
+
+    def patterns(
+        self, piece: Piece, square: Square, state: object
+    ) -> tuple[MovePattern, ...]:
+        pass
 
 
 class PieceTransformContext(Protocol):
@@ -63,6 +103,10 @@ class PieceType:
     patterns: tuple[MovePattern, ...]
     can_promote: bool = False
     transforms_on_move: PieceTransform | None = None
+    is_royal: bool = False
+    asset_key: str | None = None
+    demotes_to: str | None = None
+    sfen_symbol: str | None = None
 
 
 @dataclass

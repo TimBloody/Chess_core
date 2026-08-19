@@ -1,0 +1,3 @@
+*.pgn
+*.tmp
+!.gitignore

@@ -61,7 +61,9 @@ class EngineDiscovery:
         data = json.loads(config_file.read_text(encoding="utf-8"))
         descriptors: list[EngineDescriptor] = []
         for entry in data.get("engines", []):
-            path = Path(entry["path"])
+            path = Path(entry["path"]).expanduser()
+            if not path.is_absolute():
+                path = (config_file.parent / path).resolve()
             if path.is_file():
                 descriptors.append(
                     EngineDescriptor(

@@ -2,6 +2,7 @@ import pytest
 
 from chess_core.core.bitboard import BitMask, BitboardSet
 from chess_core.core.board import Board, BoardShape, Square
+from chess_core.core.piece import PieceSide
 
 
 @pytest.mark.parametrize("files,ranks", [(8, 8), (5, 5)])
@@ -69,3 +70,16 @@ def test_bitmask_operations_and_bitboard_set_contract() -> None:
     assert masks.mask_for_square(4) == 0b10000
     with pytest.raises(ValueError):
         masks.mask_for_square(-1)
+
+
+def test_piece_side_geometry() -> None:
+    assert PieceSide.WHITE.opponent() is PieceSide.BLACK
+    assert PieceSide.BLACK.opponent() is PieceSide.WHITE
+    assert PieceSide.WHITE.forward_delta() == 1
+    assert PieceSide.BLACK.forward_delta() == -1
+    assert PieceSide.WHITE.last_rank(8) == 7
+    assert PieceSide.BLACK.last_rank(8) == 0
+    assert PieceSide.WHITE.ranks_ahead(6, 8) == 1
+    assert PieceSide.BLACK.ranks_ahead(1, 8) == 1
+    with pytest.raises(ValueError):
+        PieceSide.NEUTRAL.opponent()

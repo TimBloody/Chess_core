@@ -9,6 +9,7 @@ description = "Configurable multi-variant chess and shogi core"
 requires-python = ">=3.11"
 dependencies = [
     "PyQt6>=6.11.0",
+    "pyqtgraph>=0.14.0",
 ]
 
 [project.scripts]

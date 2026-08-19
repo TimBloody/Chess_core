@@ -76,6 +76,14 @@ class GameRecord:
         self.view_revision = self.live_revision
         return self.live_state()
 
+    def branch_from_view(self) -> GameRecord:
+        """Copy the record and discard moves after the currently viewed position."""
+        branch = deepcopy(self)
+        branch.turns = branch.turns[: branch.view_revision]
+        branch._snapshots = branch._snapshots[: branch.view_revision + 1]
+        branch.live_revision = branch.view_revision
+        return branch
+
     def append_turn(
         self,
         turn: Turn,
@@ -124,12 +132,17 @@ class GameRecord:
     def move_log(self, *, paired: bool = True) -> list[str]:
         if not paired:
             return [entry.notation for entry in self.turns if entry.notation]
-        lines: list[str] = []
+        return [text for text, _start, _end in self.move_rows()]
+
+    def move_rows(self) -> list[tuple[str, int, int]]:
+        """Paired full-move rows with the revision range represented by each row."""
+        rows: list[tuple[str, int, int]] = []
         move_number = 1
         index = 0
         while index < len(self.turns):
             white_text = ""
             black_text = ""
+            start_revision = self.turns[index].revision
             if self.turns[index].turn.side.name == "WHITE":
                 white_text = self.turns[index].notation
                 index += 1
@@ -139,9 +152,25 @@ class GameRecord:
             else:
                 black_text = self.turns[index].notation
                 index += 1
-            if black_text:
-                lines.append(f"{move_number}. {white_text}  {black_text}".strip())
+            end_revision = self.turns[index - 1].revision
+            if white_text and black_text:
+                text = f"{move_number}. {white_text} {black_text}"
             elif white_text:
-                lines.append(f"{move_number}. {white_text}")
+                text = f"{move_number}. {white_text}"
+            else:
+                text = f"{move_number}... {black_text}"
+            rows.append((text, start_revision, end_revision))
             move_number += 1
+        return rows
+
+    def timeline_log(self) -> list[str]:
+        """One row per revision so a viewer can navigate every half-move."""
+        lines: list[str] = []
+        move_number = 1
+        for entry in self.turns:
+            if entry.turn.side.name == "WHITE":
+                lines.append(f"{move_number}. {entry.notation}")
+            else:
+                lines.append(f"{move_number}... {entry.notation}")
+                move_number += 1
         return lines
