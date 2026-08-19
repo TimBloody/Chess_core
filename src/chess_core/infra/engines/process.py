@@ -3,14 +3,30 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 import threading
 from dataclasses import dataclass, field
-from typing import TextIO
+from typing import Any, TextIO
+
+
+def hidden_popen_kwargs() -> dict[str, Any]:
+    """Keep engine binaries from flashing a console window on Windows."""
+
+    if sys.platform != "win32":
+        return {}
+    startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startupinfo.wShowWindow = subprocess.SW_HIDE
+    return {
+        "creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
+        "startupinfo": startupinfo,
+    }
 
 
 @dataclass
 class EngineProcess:
     command: list[str]
+    cwd: str | None = None
     _process: subprocess.Popen[str] | None = None
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
@@ -25,6 +41,8 @@ class EngineProcess:
                 stderr=subprocess.STDOUT,
                 text=True,
                 bufsize=1,
+                cwd=self.cwd,
+                **hidden_popen_kwargs(),
             )
 
     def stop(self) -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from chess_core.core.board import Board, BoardShape
 from chess_core.core.piece import MovePatternResolver, Piece, PieceCatalog, PieceSide
@@ -11,11 +12,19 @@ from chess_core.core.rules import (
     CastlingRule,
     DropRule,
     LegalityRule,
+    MoveProvider,
     PromotionRule,
     StateTransitionRule,
     VictoryCondition,
     VictoryKind,
 )
+
+if TYPE_CHECKING:
+    from chess_core.core.move import Turn
+    from chess_core.core.notation import NotationStyle
+    from chess_core.core.outcome import GameOutcome
+    from chess_core.core.rules_strategy import RulesStrategy
+    from chess_core.core.state import GameState
 from chess_core.core.topology import FlatTopology, Topology
 from chess_core.core.turn import AlternatingSides, StaticTurnPolicy, TurnOrder, TurnPolicy, TurnScenario
 
@@ -36,6 +45,7 @@ class GameMode:
     promotion_rule: PromotionRule | None = None
     castling_rule: CastlingRule | None = None
     legality: LegalityRule | None = None
+    move_provider: MoveProvider | None = None
     transitions: tuple[StateTransitionRule, ...] = field(default_factory=tuple)
     ray_table: RayTable | None = None
     mask_tables: dict[str, int] = field(default_factory=dict)
@@ -49,6 +59,42 @@ class GameMode:
     modifier_ids: tuple[str, ...] = field(default_factory=tuple)
     turn_policy: TurnPolicy | None = None
     move_resolver: MovePatternResolver | None = None
+    rules: RulesStrategy | None = None
+
+    def rules_engine(self) -> RulesStrategy:
+        if self.rules is not None:
+            return self.rules
+        from chess_core.core.rules_strategy import DefaultRulesStrategy
+
+        return DefaultRulesStrategy(self)
+
+    def legal_turns(self, state: GameState) -> list[Turn]:
+        return self.rules_engine().legal_turns(state)
+
+    def apply_turn(
+        self, state: GameState, turn: Turn, *, record_history: bool = True
+    ) -> GameState:
+        return self.rules_engine().apply_turn(
+            state, turn, record_history=record_history
+        )
+
+    def outcome(self, state: GameState) -> GameOutcome:
+        return self.rules_engine().outcome(state)
+
+    def format_turn(
+        self,
+        turn: Turn,
+        *,
+        before: GameState,
+        after: GameState,
+        style: NotationStyle | None = None,
+    ) -> str:
+        from chess_core.core.notation import NotationStyle as NS
+
+        resolved_style = style or NS.FROM_TO
+        return self.rules_engine().format_turn(
+            turn, before=before, after=after, style=resolved_style
+        )
 
     def piece_is_royal(self, piece: Piece) -> bool:
         try:
@@ -90,9 +136,12 @@ class GameMode:
         cells.update(self.start_cells)
         extras: dict[str, object] = dict(self.initial_extras)
         extras["mode"] = self
+        starting_side = extras.get("starting_side", self.starting_side)
+        if not isinstance(starting_side, PieceSide):
+            starting_side = self.starting_side
         return GameState(
             board_state=BoardState(self.board, cells),
-            side_to_move=self.starting_side,
+            side_to_move=starting_side,
             hands=HandsState() if self.drop_rule is not None else None,
             extras=extras,
         )
@@ -115,6 +164,7 @@ class GameModeBuilder:
         self._promotion_rule: PromotionRule | None = None
         self._castling_rule: CastlingRule | None = None
         self._legality: LegalityRule | None = None
+        self._move_provider: MoveProvider | None = None
         self._transitions: tuple[StateTransitionRule, ...] = ()
         self._ray_table: RayTable | None = None
         self._mask_tables: dict[str, int] = {}
@@ -127,6 +177,7 @@ class GameModeBuilder:
         self._modifier_ids: tuple[str, ...] = ()
         self._turn_policy: TurnPolicy | None = None
         self._move_resolver: MovePatternResolver | None = None
+        self._rules: RulesStrategy | None = None
 
     def with_shape(self, files: int, ranks: int) -> GameModeBuilder:
         self._shape = BoardShape(files=files, ranks=ranks)
@@ -172,6 +223,14 @@ class GameModeBuilder:
 
     def with_legality(self, rule: LegalityRule) -> GameModeBuilder:
         self._legality = rule
+        return self
+
+    def with_move_provider(self, provider: MoveProvider) -> GameModeBuilder:
+        self._move_provider = provider
+        return self
+
+    def with_rules(self, rules: RulesStrategy) -> GameModeBuilder:
+        self._rules = rules
         return self
 
     def with_transitions(
@@ -265,6 +324,7 @@ class GameModeBuilder:
             promotion_rule=self._promotion_rule,
             castling_rule=self._castling_rule,
             legality=self._legality,
+            move_provider=self._move_provider,
             transitions=self._transitions,
             ray_table=self._ray_table,
             mask_tables=dict(self._mask_tables),
@@ -278,4 +338,5 @@ class GameModeBuilder:
             modifier_ids=self._modifier_ids,
             turn_policy=turn_policy,
             move_resolver=self._move_resolver,
+            rules=self._rules,
         )

@@ -2,10 +2,24 @@
   "engines": [
     {
       "id": "stockfish",
-      "name": "Stockfish",
+      "name": "Stockfish 18",
       "path": "../engines/public/stockfish/stockfish.exe",
       "protocol": "uci",
       "variants": ["chess"]
+    },
+    {
+      "id": "yaneuraou",
+      "name": "YaneuraOu V9.00",
+      "path": "../engines/public/yaneuraou/yaneuraou.exe",
+      "protocol": "usi",
+      "variants": ["shogi"]
+    },
+    {
+      "id": "scan",
+      "name": "Scan 3.1",
+      "path": "../engines/public/scan/scan.exe",
+      "protocol": "hub",
+      "variants": ["draughts", "checkers"]
     }
   ]
 }

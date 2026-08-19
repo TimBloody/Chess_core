@@ -38,7 +38,7 @@ class EvaluationBarWidget(QWidget):
             return
         if evaluation is None:
             self._bar.setText("—")
-            self._detail.setText("Движок не подключён")
+            self._detail.setText("")
             self._set_share(0.5)
             return
         if evaluation.mate_in is not None:

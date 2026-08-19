@@ -12,6 +12,7 @@ from chess_core.core.piece import PieceSide, PieceTypeId
 class ActionKind(Enum):
     MOVE_PIECE = auto()
     DROP_PIECE = auto()
+    PLACE_PIECE = auto()
     TRANSFORM_PIECE = auto()
     PLACE_BLOCKER = auto()
     PASS = auto()
@@ -22,6 +23,8 @@ class MoveAction:
     from_square: Square
     to_square: Square
     promotion_choice: PieceTypeId | None = None
+    path: tuple[Square, ...] = ()
+    captured_squares: tuple[Square, ...] = ()
 
     @property
     def kind(self) -> ActionKind:
@@ -37,6 +40,19 @@ class DropAction:
     @property
     def kind(self) -> ActionKind:
         return ActionKind.DROP_PIECE
+
+
+@dataclass(frozen=True, slots=True)
+class PlaceAction:
+    """Place a piece type onto a square (gomoku, reversi, gobblet reserve)."""
+
+    piece_type: PieceTypeId
+    to_square: Square
+    face: str | None = None
+
+    @property
+    def kind(self) -> ActionKind:
+        return ActionKind.PLACE_PIECE
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,7 +83,14 @@ class PassAction:
         return ActionKind.PASS
 
 
-Action = MoveAction | DropAction | TransformAction | PlaceBlockerAction | PassAction
+Action = (
+    MoveAction
+    | DropAction
+    | PlaceAction
+    | TransformAction
+    | PlaceBlockerAction
+    | PassAction
+)
 
 
 @dataclass

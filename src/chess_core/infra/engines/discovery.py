@@ -16,7 +16,7 @@ class EngineDescriptor:
     id: str
     name: str
     path: Path
-    protocol: Literal["uci", "usi"]
+    protocol: Literal["uci", "usi", "hub"]
     variants: frozenset[str]
 
 
@@ -44,8 +44,15 @@ class EngineDiscovery:
 
     def _descriptor_for(self, path: Path) -> EngineDescriptor | None:
         name = path.stem.lower()
-        protocol: Literal["uci", "usi"] = "usi" if "yaneura" in name or "usi" in name else "uci"
-        variants = frozenset({"shogi"}) if protocol == "usi" else frozenset({"chess"})
+        if "yaneura" in name or "usi" in name or "fukaura" in name:
+            protocol: Literal["uci", "usi", "hub"] = "usi"
+            variants = frozenset({"shogi"})
+        elif "scan" in name or "hub" in name:
+            protocol = "hub"
+            variants = frozenset({"draughts", "checkers"})
+        else:
+            protocol = "uci"
+            variants = frozenset({"chess"})
         return EngineDescriptor(
             id=path.stem,
             name=path.stem,

@@ -12,6 +12,7 @@ from chess_core.core.move import (
     DropAction,
     MoveAction,
     PassAction,
+    PlaceAction,
     PlaceBlockerAction,
     TransformAction,
     Turn,
@@ -169,8 +170,28 @@ class GameState:
                         raise ValueError("cannot capture a friendly piece")
                     if captured is not None and captured.side is PieceSide.NEUTRAL:
                         raise ValueError("cannot capture a neutral blocker")
+                    if action.captured_squares:
+                        if captured is not None:
+                            raise ValueError("capture sequence must land on an empty square")
+                        captured_indices = [
+                            square.index(shape.files) for square in action.captured_squares
+                        ]
+                        if len(set(captured_indices)) != len(captured_indices):
+                            raise ValueError("capture sequence cannot capture a piece twice")
+                        for captured_index in captured_indices:
+                            victim = result.board_state.piece_at(captured_index)
+                            if (
+                                victim is None
+                                or victim.side is turn.side
+                                or victim.side is PieceSide.NEUTRAL
+                            ):
+                                raise ValueError("invalid capture sequence")
+                            if result.hands is not None:
+                                result.hands.add(turn.side, _hand_piece(victim, mode))
+                            result.board_state.cells[captured_index] = None
                     if (
-                        piece.piece_type.name == "pawn"
+                        not action.captured_squares
+                        and piece.piece_type.name == "pawn"
                         and captured is None
                         and action.from_square.file != action.to_square.file
                         and action.to_square == result.extras.get("en_passant")
@@ -262,6 +283,10 @@ class GameState:
                 if action.face is not None:
                     dropped.piece_type = PieceTypeId(action.face)
                 result.board_state.cells[target] = dropped
+            elif isinstance(action, PlaceAction):
+                from chess_core.core.rules_strategy import apply_place_action
+
+                apply_place_action(result, turn, action)
             elif isinstance(action, TransformAction):
                 target = action.square.index(shape.files)
                 piece = result.board_state.piece_at(target)

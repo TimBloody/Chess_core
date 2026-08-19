@@ -14,8 +14,18 @@ class StepKind(Enum):
     MOVE_OR_CAPTURE = auto()
     MOVE_OR_DROP = auto()
     DROP = auto()
+    PLACE = auto()
     PLACE_BLOCKER = auto()
     OPTIONAL_PASS = auto()
+
+
+_ACTION_TO_STEP = {
+    ActionKind.MOVE_PIECE: StepKind.MOVE_OR_CAPTURE,
+    ActionKind.DROP_PIECE: StepKind.DROP,
+    ActionKind.PLACE_PIECE: StepKind.PLACE,
+    ActionKind.PLACE_BLOCKER: StepKind.PLACE_BLOCKER,
+    ActionKind.PASS: StepKind.OPTIONAL_PASS,
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,12 +53,7 @@ class TurnScenario:
     def validate_turn(self, turn: Turn) -> bool:
         if not self.required_action_count() <= len(turn.actions) <= len(self._steps):
             return False
-        action_to_step = {
-            ActionKind.MOVE_PIECE: StepKind.MOVE_OR_CAPTURE,
-            ActionKind.DROP_PIECE: StepKind.DROP,
-            ActionKind.PLACE_BLOCKER: StepKind.PLACE_BLOCKER,
-            ActionKind.PASS: StepKind.OPTIONAL_PASS,
-        }
+        action_to_step = _ACTION_TO_STEP
         action_index = 0
         for step_index, step in enumerate(self._steps):
             if action_index >= len(turn.actions):
@@ -56,7 +61,7 @@ class TurnScenario:
             actual = action_to_step.get(turn.actions[action_index].kind)
             if actual == step.kind or (
                 step.kind is StepKind.MOVE_OR_DROP
-                and actual in {StepKind.MOVE_OR_CAPTURE, StepKind.DROP}
+                and actual in {StepKind.MOVE_OR_CAPTURE, StepKind.DROP, StepKind.PLACE}
             ):
                 action_index += 1
             elif not step.optional:
@@ -65,12 +70,7 @@ class TurnScenario:
 
     def matches_prefix(self, turn: Turn) -> bool:
         """True when ``turn.actions`` match a (possibly incomplete) prefix of steps."""
-        action_to_step = {
-            ActionKind.MOVE_PIECE: StepKind.MOVE_OR_CAPTURE,
-            ActionKind.DROP_PIECE: StepKind.DROP,
-            ActionKind.PLACE_BLOCKER: StepKind.PLACE_BLOCKER,
-            ActionKind.PASS: StepKind.OPTIONAL_PASS,
-        }
+        action_to_step = _ACTION_TO_STEP
         action_index = 0
         for step in self._steps:
             if action_index >= len(turn.actions):
@@ -78,7 +78,7 @@ class TurnScenario:
             actual = action_to_step.get(turn.actions[action_index].kind)
             if actual == step.kind or (
                 step.kind is StepKind.MOVE_OR_DROP
-                and actual in {StepKind.MOVE_OR_CAPTURE, StepKind.DROP}
+                and actual in {StepKind.MOVE_OR_CAPTURE, StepKind.DROP, StepKind.PLACE}
             ):
                 action_index += 1
             elif not step.optional:
@@ -87,12 +87,7 @@ class TurnScenario:
 
     def remaining_steps(self, actions: list[Action]) -> tuple[TurnStep, ...]:
         """Steps not yet consumed by ``actions``."""
-        action_to_step = {
-            ActionKind.MOVE_PIECE: StepKind.MOVE_OR_CAPTURE,
-            ActionKind.DROP_PIECE: StepKind.DROP,
-            ActionKind.PLACE_BLOCKER: StepKind.PLACE_BLOCKER,
-            ActionKind.PASS: StepKind.OPTIONAL_PASS,
-        }
+        action_to_step = _ACTION_TO_STEP
         action_index = 0
         start = 0
         for step_index, step in enumerate(self._steps):
@@ -101,7 +96,7 @@ class TurnScenario:
             actual = action_to_step.get(actions[action_index].kind)
             if actual == step.kind or (
                 step.kind is StepKind.MOVE_OR_DROP
-                and actual in {StepKind.MOVE_OR_CAPTURE, StepKind.DROP}
+                and actual in {StepKind.MOVE_OR_CAPTURE, StepKind.DROP, StepKind.PLACE}
             ):
                 action_index += 1
                 start = step_index + 1

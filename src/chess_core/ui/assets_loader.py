@@ -91,6 +91,14 @@ class AssetsLoader:
         if variant_path.is_file():
             return variant_path
 
+        checkers_path = self.assets_root / "checkers" / f"{stem}.svg"
+        if checkers_path.is_file():
+            return checkers_path
+
+        boardgames_path = self.assets_root / "boardgames" / f"{stem}.svg"
+        if boardgames_path.is_file():
+            return boardgames_path
+
         raise FileNotFoundError(f"No SVG asset found for piece key: {piece_key!r}")
 
     def ui_icon_path(self, name: str) -> Path:

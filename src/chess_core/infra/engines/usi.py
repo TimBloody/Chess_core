@@ -11,9 +11,9 @@ class UsiClient(UciClient):
         self._write("usi")
         self._wait_for("usiok", timeout=5.0)
         self._write("isready")
-        self._wait_for("readyok", timeout=5.0)
+        self._wait_for("readyok", timeout=30.0)
 
     def analyze_sfen(self, sfen: str) -> tuple[str | None, UciInfo | None]:
         self._write(f"position sfen {sfen}")
-        self._write(f"go btime {self._movetime_ms}")
-        return self.analyze_fen(sfen)
+        self._write(f"go byoyomi {self._movetime_ms}")
+        return self._collect_bestmove()

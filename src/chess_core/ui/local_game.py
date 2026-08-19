@@ -21,12 +21,14 @@ from PyQt6.QtWidgets import (
 )
 
 from chess_core.app.clock import GameClockService
+from chess_core.app.engine import BestMove, EngineHintService, suggested_squares_from_engine_move
 from chess_core.app.game import GameStatus, LocalGameService
+from chess_core.app.legal_turns import LegalTurnOption, LegalTurnOptions
 from chess_core.app.sound import SoundEvent
 from chess_core.core.board import Square
 from chess_core.core.gamemode import GameMode
-from chess_core.core.move import DropAction, MoveAction, PlaceBlockerAction
-from chess_core.core.piece import PieceSide
+from chess_core.core.move import DropAction, MoveAction, PassAction, PlaceAction, PlaceBlockerAction
+from chess_core.core.piece import PieceSide, PieceTypeId
 from chess_core.core.rules import VictoryKind
 from chess_core.core.state import GameState, HandsState
 from chess_core.core.time_control import TimeControlConfig, TimeControlKind
@@ -39,6 +41,7 @@ from chess_core.ui.piece_assets import (
     shogi_hand_order,
 )
 from chess_core.ui.pgn_save_dialog import PgnSaveDialog
+from chess_core.ui.engine_bridge import EngineBridge
 from chess_core.ui.theme import mode_display_name
 from chess_core.ui.sound_player import SoundPlayer
 from chess_core.ui.widgets.board_widget import BoardOrientation, BoardWidget
@@ -50,8 +53,19 @@ from chess_core.ui.widgets.pocket_widget import PocketStack, PocketWidget
 _POCKET_ORDER = ("pawn", "knight", "bishop", "rook", "queen", "king")
 
 _TERMINAL_STATUSES = frozenset(
-    (GameStatus.CHECKMATE, GameStatus.STALEMATE, GameStatus.VARIANT_WIN)
+    (
+        GameStatus.CHECKMATE,
+        GameStatus.STALEMATE,
+        GameStatus.VARIANT_WIN,
+        GameStatus.VARIANT_DRAW,
+    )
 )
+
+_RESERVE_LABELS = {
+    "gobblet_small": "Малая",
+    "gobblet_medium": "Средняя",
+    "gobblet_large": "Большая",
+}
 
 
 class _MonoClock:
@@ -70,6 +84,7 @@ class LocalGameWidget(QWidget):
         timeline_per_ply: bool = False,
         include_initial_position: bool = False,
         show_clock: bool = True,
+        hint_service: EngineHintService | None = None,
     ) -> None:
         super().__init__(parent)
         self._resolve = mode_resolver
@@ -77,9 +92,16 @@ class LocalGameWidget(QWidget):
         self._timeline_per_ply = timeline_per_ply
         self._include_initial_position = include_initial_position
         self._show_clock = show_clock
+        self._engine_hint_squares: set[int] = set()
+        self._hint_request_token: tuple[str, int] | None = None
+        self._hint_service = hint_service or EngineHintService()
+        self._engine_bridge = EngineBridge(self._hint_service, self)
+        self._engine_bridge.analysis_ready.connect(self._on_engine_hint)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self._service: LocalGameService | None = None
         self._selected: int | None = None
+        self._selected_reserve: PieceTypeId | None = None
+        self._auto_passing = False
         self._clock_service: GameClockService | None = None
         self._pgn_offered_revision: int | None = None
         self.board = BoardWidget()
@@ -104,16 +126,23 @@ class LocalGameWidget(QWidget):
         self.instructions = QLabel(
             "Ход: щёлкните фигуру и клетку. В crazyhouse фигура из кармана, "
             "затем пустая клетка. В duck chess после хода поставьте утку. "
+            "«Подсказка» спрашивает движок: ход фиолетовым, оценка на градуснике. "
             "F — перевернуть; Ctrl+Z — отмена; R — новая игра после окончания."
         )
         self.instructions.setObjectName("gameHint")
         self.instructions.setWordWrap(True)
+        self.reserve_panel = QWidget()
+        self._reserve_layout = QHBoxLayout(self.reserve_panel)
+        self._reserve_layout.setContentsMargins(0, 0, 0, 0)
+        self._reserve_buttons: dict[str, QPushButton] = {}
+        self.reserve_panel.hide()
         self.new_game_button = QPushButton("Новая игра / Сброс")
         self.live_button = QPushButton("К текущей позиции")
         self.mainline_button = QPushButton("Вернуться к основной линии")
         self.mainline_button.hide()
         self.pgn_button = QPushButton("Копировать PGN")
         self.save_pgn_button = QPushButton("Сохранить PGN")
+        self.hint_button = QPushButton("Подсказка")
         self.quit_button = QPushButton("Выйти")
 
         main_split = QSplitter()
@@ -151,12 +180,14 @@ class LocalGameWidget(QWidget):
         board_layout.addWidget(self._bottom_bar, 0, Qt.AlignmentFlag.AlignHCenter)
 
         board_layout.addWidget(self.instructions)
+        board_layout.addWidget(self.reserve_panel)
         controls = QHBoxLayout()
         controls.addWidget(self.new_game_button)
         controls.addWidget(self.live_button)
         controls.addWidget(self.mainline_button)
         controls.addWidget(self.pgn_button)
         controls.addWidget(self.save_pgn_button)
+        controls.addWidget(self.hint_button)
         controls.addStretch()
         controls.addWidget(self.quit_button)
         board_layout.addLayout(controls)
@@ -191,6 +222,7 @@ class LocalGameWidget(QWidget):
         self.mainline_button.clicked.connect(self._return_to_mainline)
         self.pgn_button.clicked.connect(self.copy_pgn)
         self.save_pgn_button.clicked.connect(self.save_pgn_dialog)
+        self.hint_button.clicked.connect(self.request_engine_hint)
         self.quit_button.clicked.connect(self._quit)
         self.move_list.revision_selected.connect(self._on_revision_selected)
         self._flip_shortcut = QShortcut(QKeySequence("F"), self)
@@ -240,6 +272,8 @@ class LocalGameWidget(QWidget):
         )
         self._pgn_offered_revision = None
         self._selected = None
+        self._selected_reserve = None
+        self._clear_engine_hint()
         self.board.set_shape(mode.board.shape.files, mode.board.shape.ranks)
         self.board.set_facing_opponent(mode.facing_opponent)
         self.board.set_orientation(
@@ -251,14 +285,41 @@ class LocalGameWidget(QWidget):
         self._sounds.play(SoundEvent.GAME_START)
         self._refresh()
 
+    def attach_service(
+        self,
+        service: LocalGameService,
+        *,
+        mode_id: str | None = None,
+        view_side: PieceSide | None = None,
+    ) -> None:
+        """Replace the local session with an already constructed service."""
+        self._service = service
+        self._mode_id = mode_id or service.mode.id
+        self._clock_service = None
+        self._pgn_offered_revision = None
+        self._selected = None
+        self._selected_reserve = None
+        self._clear_engine_hint()
+        mode = service.mode
+        self.board.set_shape(mode.board.shape.files, mode.board.shape.ranks)
+        self.board.set_facing_opponent(mode.facing_opponent)
+        side = view_side if view_side is not None else mode.default_view_side
+        self.board.set_orientation(
+            BoardOrientation.BLACK if side is PieceSide.BLACK else BoardOrientation.WHITE
+        )
+        self._sync_seat_layout()
+        self._refresh()
+
     def load_position(self, state: GameState) -> None:
         self.service.load_position(state)
         self._selected = None
+        self._clear_engine_hint()
         self._refresh()
 
     def load_pgn(self, text: str) -> None:
         self.service.import_pgn(text)
         self._selected = None
+        self._clear_engine_hint()
         self._refresh()
 
     @property
@@ -277,6 +338,7 @@ class LocalGameWidget(QWidget):
             )
         self._pgn_offered_revision = None
         self._selected = None
+        self._clear_engine_hint()
         self._sounds.play(SoundEvent.GAME_START)
         self._refresh()
 
@@ -285,6 +347,7 @@ class LocalGameWidget(QWidget):
             return
         self.service.undo()
         self._selected = None
+        self._clear_engine_hint()
         self._sounds.play(SoundEvent.UNDO)
         self._refresh()
 
@@ -344,11 +407,13 @@ class LocalGameWidget(QWidget):
 
     def _go_live(self) -> None:
         self.service.go_live()
+        self._clear_engine_hint()
         self._refresh()
 
     def _return_to_mainline(self) -> None:
         self.service.return_to_mainline()
         self._selected = None
+        self._clear_engine_hint()
         self._refresh()
 
     def copy_pgn(self) -> None:
@@ -407,6 +472,7 @@ class LocalGameWidget(QWidget):
     def _on_revision_selected(self, revision: int) -> None:
         self.service.go_to_revision(revision)
         self._selected = None
+        self._clear_engine_hint()
         self._refresh()
 
     def _navigate_revision(self, delta: int) -> None:
@@ -419,6 +485,7 @@ class LocalGameWidget(QWidget):
             return
         self.service.go_to_revision(target)
         self._selected = None
+        self._clear_engine_hint()
         self._refresh()
 
     def _quit(self) -> None:
@@ -430,11 +497,79 @@ class LocalGameWidget(QWidget):
         if app is not None:
             app.quit()
 
+    def _play_turn_option(self, option: LegalTurnOption) -> None:
+        try:
+            side = self.service.state.side_to_move
+            self.service.play_turn(option.turn)
+            self._on_clock_after_move(side)
+            self._sounds.play(SoundEvent.MOVE, accent=self._status_accent())
+        except ValueError:
+            self._sounds.play(SoundEvent.ILLEGAL)
+        self._selected = None
+        self._selected_reserve = None
+        self._clear_engine_hint()
+        self._refresh()
+        self._maybe_prompt_pgn_save()
+
     def _on_square(self, index: int) -> None:
         if self._service is None or not self.service.can_play:
             return
         if self._service.status() in _TERMINAL_STATUSES:
             return
+        if self.service.mode.rules is not None:
+            options = self.service.legal_turn_options()
+            occupant = self.service.state.board_state.piece_at(index)
+            movable = [
+                option
+                for option in options.options
+                if option.source_square == index
+            ]
+            if (
+                self._selected is None
+                and self._selected_reserve is None
+                and occupant is not None
+                and occupant.side is self.service.state.side_to_move
+                and movable
+            ):
+                self._selected = index
+                self._refresh()
+                return
+            if (
+                self._selected is not None
+                and occupant is not None
+                and occupant.side is self.service.state.side_to_move
+                and movable
+                and index != self._selected
+            ):
+                self._selected = index
+                self._refresh()
+                return
+            place_hits = [
+                option
+                for option in options.options
+                if option.source_square is None and option.target_square == index
+            ]
+            if self._selected_reserve is not None:
+                place_hits = [
+                    option
+                    for option in place_hits
+                    if option.reserve_piece == self._selected_reserve
+                ]
+            if place_hits and self._selected is None:
+                unique = {option.reserve_piece for option in place_hits}
+                if len(place_hits) == 1 or len(unique) == 1:
+                    self._play_turn_option(place_hits[0])
+                    return
+            if self._selected is not None:
+                matches = [
+                    option
+                    for option in options.options
+                    if option.source_square == self._selected
+                    and option.target_square == index
+                ]
+                if matches:
+                    self._play_turn_option(matches[0])
+                    return
         if self.service.waiting_for_blocker:
             shape = self._service.mode.board.shape
             target = Square.from_index(index, shape.files, shape.ranks)
@@ -446,6 +581,7 @@ class LocalGameWidget(QWidget):
             except ValueError:
                 self._sounds.play(SoundEvent.ILLEGAL)
             self._selected = None
+            self._clear_engine_hint()
             self._refresh()
             self._maybe_prompt_pgn_save()
             return
@@ -460,6 +596,7 @@ class LocalGameWidget(QWidget):
             except ValueError:
                 self._sounds.play(SoundEvent.ILLEGAL)
             self._selected = None
+            self._clear_engine_hint()
             self._refresh()
             self._maybe_prompt_pgn_save()
             return
@@ -498,6 +635,8 @@ class LocalGameWidget(QWidget):
             self._service.clear_selection()
             self._sounds.play(SoundEvent.ILLEGAL)
         self._selected = None
+        if move is not None:
+            self._clear_engine_hint()
         self._refresh()
         self._maybe_prompt_pgn_save()
 
@@ -507,12 +646,26 @@ class LocalGameWidget(QWidget):
         sender = self.sender()
         if not isinstance(sender, PocketWidget) or sender.side is not self.service.state.side_to_move:
             return
+        if self._reserve_map() is not None and self.service.state.hands is None:
+            self._on_reserve_clicked(PieceTypeId(piece_type))
+            return
         try:
             self.service.select_hand_piece(piece_type)
         except ValueError:
             self._sounds.play(SoundEvent.ILLEGAL)
             return
         self._selected = None
+        self._refresh()
+
+    def _on_reserve_clicked(self, piece_type: PieceTypeId) -> None:
+        if self.service.status() in _TERMINAL_STATUSES or not self.service.can_play:
+            return
+        if self._selected_reserve == piece_type:
+            self._selected_reserve = None
+        else:
+            self._selected_reserve = piece_type
+            self._selected = None
+            self.service.clear_selection()
         self._refresh()
 
     def _move_sound(self, before: GameState, move: MoveAction) -> SoundEvent:
@@ -609,6 +762,13 @@ class LocalGameWidget(QWidget):
 
     def _refresh(self) -> None:
         assert self._service is not None
+        options = (
+            self.service.legal_turn_options()
+            if self.service.can_play and self.service.mode.rules is not None
+            else LegalTurnOptions(())
+        )
+        if self._maybe_auto_pass(options):
+            return
         view = self._service.visible_state()
         position: dict[int, str] = {}
         for index, piece in view.board_state.cells.items():
@@ -650,12 +810,14 @@ class LocalGameWidget(QWidget):
                 ),
                 GameStatus.STALEMATE: ("Пат. Ничья.", "draw"),
                 GameStatus.VARIANT_WIN: (f"Победили {side}.", "win"),
+                GameStatus.VARIANT_DRAW: ("Ничья.", "draw"),
             }[game_status]
         self.status.setText(status_text)
         self.status.setProperty("state", status_state)
         self.status.style().unpolish(self.status)
         self.status.style().polish(self.status)
         self._refresh_pockets()
+        self._rebuild_reserve_buttons(options)
         if self._timeline_per_ply:
             move_texts = self.service.record.timeline_log()
             revision_ranges = [
@@ -694,6 +856,29 @@ class LocalGameWidget(QWidget):
                     move.to_square.index(shape.files)
                     for move in self._service.selected_moves
                 }
+                legal_destinations.update(
+                    option.target_square
+                    for option in options.options
+                    if option.source_square == self._selected
+                    and option.target_square is not None
+                )
+            elif self._selected_reserve is not None or any(
+                option.source_square is None and option.target_square is not None
+                for option in options.options
+            ):
+                targets = [
+                    option.target_square
+                    for option in options.options
+                    if option.source_square is None
+                    and option.target_square is not None
+                    and (
+                        self._selected_reserve is None
+                        or option.reserve_piece == self._selected_reserve
+                    )
+                ]
+                unique = {target for target in targets if target is not None}
+                if len(unique) <= 32:
+                    legal_destinations = unique
         check_squares: set[int] = set()
         if game_status in (GameStatus.CHECK, GameStatus.CHECKMATE):
             for index, piece in view.board_state.cells.items():
@@ -709,11 +894,56 @@ class LocalGameWidget(QWidget):
             check_squares=check_squares,
             last_move_squares=self._last_move_squares(),
             hint_squares=self._hint_squares(),
+            engine_squares=self._engine_hint_squares,
         )
+
+    def _rebuild_reserve_buttons(
+        self, options: LegalTurnOptions | None = None
+    ) -> None:
+        while self._reserve_layout.count():
+            item = self._reserve_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+        self._reserve_buttons = {}
+        if options is None:
+            options = (
+                self.service.legal_turn_options()
+                if self.service.can_play and self.service.mode.rules is not None
+                else LegalTurnOptions(())
+            )
+        if self._reserve_map() is not None:
+            self.reserve_panel.setVisible(False)
+            return
+        if not self.service.can_play or self.service.mode.rules is None:
+            self.reserve_panel.setVisible(False)
+            return
+        types: dict[str, PieceTypeId] = {}
+        for option in options.options:
+            if option.reserve_piece is not None:
+                types[option.reserve_piece.name] = option.reserve_piece
+        self.reserve_panel.setVisible(bool(types))
+        if not types:
+            return
+        for name, piece_type in types.items():
+            button = QPushButton(_RESERVE_LABELS.get(name, name))
+            button.setCheckable(True)
+            button.setChecked(self._selected_reserve == piece_type)
+            button.clicked.connect(
+                lambda _checked=False, chosen=piece_type: self._on_reserve_clicked(chosen)
+            )
+            self._reserve_layout.addWidget(button)
+            self._reserve_buttons[name] = button
+        self._reserve_layout.addStretch()
+
+    def _reserve_map(self) -> dict | None:
+        reserve = self.service.state.extras.get("reserve")
+        return reserve if isinstance(reserve, dict) else None
 
     def _refresh_pockets(self) -> None:
         hands = self.service.state.hands
-        show = hands is not None
+        reserve = self._reserve_map()
+        show = hands is not None or reserve is not None
         self.white_pocket.setVisible(show)
         self.black_pocket.setVisible(show)
         if not show:
@@ -721,10 +951,42 @@ class LocalGameWidget(QWidget):
         to_move = self.service.state.side_to_move
         live = self.service.can_play and not self.service.waiting_for_blocker
         selected = self.service.selected_hand_type
+        if selected is None and self._selected_reserve is not None:
+            selected = self._selected_reserve.name
         for widget in (self.white_pocket, self.black_pocket):
-            widget.set_stacks(self._pocket_stacks(hands, widget.side))
+            stacks = (
+                self._pocket_stacks(hands, widget.side)
+                if hands is not None
+                else self._reserve_stacks(reserve or {}, widget.side)
+            )
+            widget.set_stacks(stacks)
             widget.set_interactive(live and widget.side is to_move)
             widget.set_selected(selected if widget.side is to_move else None)
+
+    def _reserve_stacks(
+        self, reserve: dict, side: PieceSide
+    ) -> tuple[PocketStack, ...]:
+        mode = self.service.mode
+        raw = reserve.get(side, {})
+        if not isinstance(raw, dict):
+            return ()
+        counts: dict[str, int] = {}
+        for key, count in raw.items():
+            name = key.name if isinstance(key, PieceTypeId) else str(key)
+            counts[name] = int(count)
+        stacks: list[PocketStack] = []
+        for name in hand_slot_types(mode):
+            amount = counts.get(name, 0)
+            if amount <= 0:
+                continue
+            stacks.append(
+                PocketStack(
+                    piece_key=piece_svg_key_for(mode, name, side),
+                    piece_type=name,
+                    count=amount,
+                )
+            )
+        return tuple(stacks)
 
     def _pocket_stacks(self, hands: HandsState, side: PieceSide) -> tuple[PocketStack, ...]:
         mode = self.service.mode
@@ -772,6 +1034,31 @@ class LocalGameWidget(QWidget):
             )
         return tuple(stacks)
 
+    def _maybe_auto_pass(self, options: LegalTurnOptions) -> bool:
+        if self._auto_passing or not self.service.can_play:
+            return False
+        if self.service.status() in _TERMINAL_STATUSES:
+            return False
+        if len(options.options) != 1:
+            return False
+        option = options.options[0]
+        actions = option.turn.actions
+        if len(actions) != 1 or not isinstance(actions[0], PassAction):
+            return False
+        side = self.service.state.side_to_move
+        self._auto_passing = True
+        try:
+            self.service.play_turn(option.turn)
+            self._on_clock_after_move(side)
+        finally:
+            self._auto_passing = False
+        self._selected = None
+        self._selected_reserve = None
+        self._clear_engine_hint()
+        self._refresh()
+        self._maybe_prompt_pgn_save()
+        return True
+
     def _last_move_squares(self) -> set[int]:
         files = self.service.mode.board.shape.files
         squares: set[int] = set()
@@ -791,7 +1078,56 @@ class LocalGameWidget(QWidget):
                 squares.add(action.to_square.index(files))
             elif isinstance(action, PlaceBlockerAction):
                 squares.add(action.square.index(files))
+            elif isinstance(action, PlaceAction):
+                squares.add(action.to_square.index(files))
         return squares
+
+    def request_engine_hint(self) -> None:
+        if self._service is None:
+            return
+        self._hint_request_token = (
+            getattr(self, "_mode_id", self.service.mode.id),
+            self.service.record.view_revision,
+        )
+        self.hint_button.setEnabled(False)
+        self.evaluation_bar.set_evaluation(None, error="Думаю…")
+        self._engine_bridge.request_hint(
+            self.service.mode,
+            self.service.visible_state(),
+            registry_id=getattr(self, "_mode_id", self.service.mode.id),
+        )
+
+    def _on_engine_hint(self, result: BestMove) -> None:
+        self.hint_button.setEnabled(True)
+        token = (
+            getattr(self, "_mode_id", self.service.mode.id),
+            self.service.record.view_revision,
+        )
+        if self._hint_request_token is None or token != self._hint_request_token:
+            return
+        self._apply_engine_hint(result)
+
+    def _apply_engine_hint(self, result: BestMove) -> None:
+        if result.error:
+            self._engine_hint_squares = set()
+            self.evaluation_bar.set_evaluation(None, error=result.error)
+            self._refresh()
+            return
+        shape = self.service.mode.board.shape
+        self._engine_hint_squares = set(
+            suggested_squares_from_engine_move(
+                result.move_uci, files=shape.files, ranks=shape.ranks
+            )
+        )
+        self.evaluation_bar.set_evaluation(result.evaluation)
+        self._refresh()
+
+    def _clear_engine_hint(self) -> None:
+        self._engine_hint_squares = set()
+        self._hint_request_token = None
+        self.evaluation_bar.set_evaluation(None)
+        if hasattr(self, "hint_button"):
+            self.hint_button.setEnabled(True)
 
     def _hint_squares(self) -> set[int]:
         squares: set[int] = set()

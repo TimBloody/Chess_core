@@ -1,6 +1,7 @@
 """Tests for engine discovery and mock UCI engine."""
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -70,6 +71,28 @@ def test_default_engines_dir_is_inside_project_root(tmp_path: Path, monkeypatch)
     assert engines_dir() == tmp_path / "engines"
 
 
+def test_scan_exe_is_discovered_as_hub(tmp_path: Path, monkeypatch) -> None:
+    exe = tmp_path / "scan.exe"
+    exe.write_text("stub", encoding="utf-8")
+    monkeypatch.setattr("chess_core.infra.engines.discovery.engines_dir", lambda: tmp_path)
+
+    descriptors = EngineDiscovery().scan()
+
+    assert descriptors[0].protocol == "hub"
+    assert "draughts" in descriptors[0].variants
+
+
 def test_mock_uci_engine_script_exists() -> None:
     script = Path(__file__).resolve().parents[1] / "fixtures" / "mock_uci_engine.py"
     assert script.is_file()
+
+
+def test_hidden_popen_kwargs_hide_console_on_windows() -> None:
+    from chess_core.infra.engines.process import hidden_popen_kwargs
+
+    kwargs = hidden_popen_kwargs()
+    if sys.platform != "win32":
+        assert kwargs == {}
+        return
+    assert kwargs["creationflags"] == subprocess.CREATE_NO_WINDOW
+    assert kwargs["startupinfo"].wShowWindow == subprocess.SW_HIDE

@@ -11,7 +11,7 @@ from chess_core.core.move import Action, DropAction, MoveAction, PlaceBlockerAct
 from chess_core.core.movegen import MoveGenerator
 from chess_core.core.notation import NotationStyle, format_turn, parse_fen
 from chess_core.core.pgn import export_pgn, parse_pgn, resolve_turn
-from chess_core.core.piece import PieceSide
+from chess_core.core.outcome import OutcomeStatus
 from chess_core.core.rules import VictoryKind
 from chess_core.core.state import GameState
 from chess_core.core.turn import StepKind
@@ -23,6 +23,7 @@ class GameStatus(Enum):
     CHECKMATE = auto()
     STALEMATE = auto()
     VARIANT_WIN = auto()
+    VARIANT_DRAW = auto()
 
 
 class LocalGameService:
@@ -146,6 +147,23 @@ class LocalGameService:
         )
         return self._selected_moves
 
+    def legal_turns(self) -> list[Turn]:
+        if not self.can_play:
+            return []
+        return self.mode.legal_turns(self.state)
+
+    def legal_turn_options(self):
+        from chess_core.app.legal_turns import LegalTurnOptions, build_legal_turn_options
+
+        if not self.can_play:
+            return LegalTurnOptions(())
+        return build_legal_turn_options(
+            self.mode,
+            self.state,
+            self.legal_turns(),
+            notation_style=self._notation_style,
+        )
+
     def legal_drops_for_square(self, square_index: int) -> tuple[DropAction, ...]:
         self.legal_moves_for_square(square_index)
         return self._selected_drops
@@ -215,6 +233,13 @@ class LocalGameService:
     def play_turn(self, turn: Turn) -> GameState:
         if not self.can_play:
             raise RuntimeError("cannot play while viewing history")
+        signature = (turn.side, tuple(turn.actions))
+        legal = any(
+            (candidate.side, tuple(candidate.actions)) == signature
+            for candidate in self.mode.legal_turns(self.state)
+        )
+        if not legal:
+            raise ValueError("turn is not legal")
         self._pending_actions = []
         return self._apply_turn(turn)
 
@@ -233,8 +258,10 @@ class LocalGameService:
     def _apply_turn(self, turn: Turn) -> GameState:
         self._start_variation_if_needed()
         before = self.state
-        after = before.apply_turn(turn, record_history=False)
-        notation = format_turn(turn, before=before, after=after, style=self._notation_style)
+        after = self.mode.apply_turn(before, turn, record_history=False)
+        notation = self.mode.format_turn(
+            turn, before=before, after=after, style=self._notation_style
+        )
         next_state = self._record.append_turn(turn, notation=notation)
         self._revision += 1
         self._invalidate_caches()
@@ -311,8 +338,10 @@ class LocalGameService:
         state = self._record.live_state()
         for token in pgn.moves:
             turn = resolve_turn(state, token, self._generator)
-            after = state.apply_turn(turn, record_history=False)
-            notation = format_turn(turn, before=state, after=after, style=self._notation_style)
+            after = self.mode.apply_turn(state, turn, record_history=False)
+            notation = self.mode.format_turn(
+                turn, before=state, after=after, style=self._notation_style
+            )
             state = self._record.append_turn(turn, notation=notation)
         self._revision += 1
         self._pending_actions = []
@@ -348,7 +377,19 @@ class LocalGameService:
             return result
         in_check = self._generator.is_in_check(view) if uses_check else False
         has_legal = self._generator.has_any_legal(view) if self.can_play else True
-        if not has_legal and not self.mode.lose_on_no_legal_moves():
+        if VictoryKind.MATERIAL in kinds or VictoryKind.CUSTOM in kinds:
+            outcome = self.mode.outcome(view)
+            if outcome.status is OutcomeStatus.WIN:
+                result = GameStatus.VARIANT_WIN
+            elif outcome.status is OutcomeStatus.DRAW and outcome.reason == "stalemate":
+                result = GameStatus.STALEMATE
+            elif outcome.status is OutcomeStatus.DRAW:
+                result = GameStatus.VARIANT_DRAW
+            elif in_check:
+                result = GameStatus.CHECK
+            else:
+                result = GameStatus.ACTIVE
+        elif not has_legal and not self.mode.lose_on_no_legal_moves():
             result = GameStatus.VARIANT_WIN
         elif in_check and not has_legal:
             result = GameStatus.CHECKMATE

@@ -138,6 +138,7 @@ class BoardWidget(QWidget):
         self._check_squares: set[int] = set()
         self._last_move_squares: set[int] = set()
         self._hint_squares: set[int] = set()
+        self._engine_squares: set[int] = set()
         self._lit_squares: set[int] = set()
         self._dot_squares: set[int] = set()
         self._error_squares: set[int] = set()
@@ -200,6 +201,7 @@ class BoardWidget(QWidget):
         check_squares: Iterable[int] = (),
         last_move_squares: Iterable[int] = (),
         hint_squares: Iterable[int] = (),
+        engine_squares: Iterable[int] = (),
         lit_squares: Iterable[int] = (),
         dot_squares: Iterable[int] = (),
         error_squares: Iterable[int] = (),
@@ -212,6 +214,7 @@ class BoardWidget(QWidget):
         checks = set(check_squares)
         last_moves = set(last_move_squares)
         hints = set(hint_squares)
+        engine = set(engine_squares)
         lit = set(lit_squares)
         dots = set(dot_squares)
         errors = set(error_squares)
@@ -222,6 +225,7 @@ class BoardWidget(QWidget):
             | checks
             | last_moves
             | hints
+            | engine
             | lit
             | dots
             | errors
@@ -237,6 +241,7 @@ class BoardWidget(QWidget):
             or checks != self._check_squares
             or last_moves != self._last_move_squares
             or hints != self._hint_squares
+            or engine != self._engine_squares
             or lit != self._lit_squares
             or dots != self._dot_squares
             or errors != self._error_squares
@@ -248,6 +253,7 @@ class BoardWidget(QWidget):
             self._check_squares = checks
             self._last_move_squares = last_moves
             self._hint_squares = hints
+            self._engine_squares = engine
             self._lit_squares = lit
             self._dot_squares = dots
             self._error_squares = errors
@@ -261,6 +267,7 @@ class BoardWidget(QWidget):
         self._check_squares.clear()
         self._last_move_squares.clear()
         self._hint_squares.clear()
+        self._engine_squares.clear()
         self._lit_squares.clear()
         self._dot_squares.clear()
         self._error_squares.clear()
@@ -546,6 +553,10 @@ class BoardWidget(QWidget):
         for square in self._last_move_squares:
             self._fill_square(
                 painter, board_rect, cell_size, square, QColor(205, 210, 106, 165)
+            )
+        for square in self._engine_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(156, 80, 220, 180)
             )
         for square in self._mismatch_squares:
             self._fill_square(

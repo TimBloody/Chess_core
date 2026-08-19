@@ -58,8 +58,11 @@ place them in the `engines/` directory after installing the application.
 
 ## API
 
-- Application: `chess_core.app.engine.EngineAnalysisService`
+- Application: `chess_core.app.engine.EngineAnalysisService`, `EngineHintService`
+- Matching: exact `mode.id` / registry id in `EngineDescriptor.variants`, otherwise the nearest family (`chess` → Stockfish, `shogi` → YaneuraOu, `checkers` → Scan)
+- Local game: the **Подсказка** button sends FEN (or SFEN for USI), paints the suggested move in purple, and writes the score to the eval bar
 - Infrastructure: `chess_core.infra.engines.UciClient`
 - UI bridge: `chess_core.ui.engine_bridge.EngineBridge` (non-blocking via `QThread`)
 
 Tests use `tests/fixtures/mock_uci_engine.py` instead of a real binary.
+When a dedicated engine for a variant appears under `engines/custom/` (or in `config/engines.json` with that mode id in `variants`), hint routing will pick it over the family fallback.

@@ -11,8 +11,11 @@ build/
 dist/
 *.spec
 
-# Heavy third-party and custom engine binaries stay local and outside exe bundles.
-/engines/
+# Heavy engine binaries stay local and out of Git/exe bundles.
+# Markdown docs inside engines/ remain tracked.
+/engines/**
+!/engines/**/
+!/engines/**/*.md
 
 .env
 .env.*

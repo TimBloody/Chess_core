@@ -133,6 +133,12 @@ MODE_LABELS: dict[str, str] = {
     "minishogi": "Мини-сёги",
     "kyoto_shogi": "Киото-сёги",
     "dobutsu_shogi": "Добуцу-сёги",
+    "checkers": "Шашки",
+    "corners": "Уголки",
+    "gobblet": "Gobblet Gobblers",
+    "gobblet+relocate": "Gobblet Gobblers (с ходами)",
+    "gomoku": "Гомоку",
+    "reversi": "Реверси",
 }
 
 
@@ -143,6 +149,10 @@ def mode_display_name(mode_id: str) -> str:
     if mode_id.startswith("chess+"):
         parts = [MODE_LABELS.get(part, part) for part in mode_id.split("+")[1:]]
         return " + ".join(parts) if parts else MODE_LABELS["chess"]
+    if "+" in mode_id:
+        base, rest = mode_id.split("+", 1)
+        if base in MODE_LABELS:
+            return f"{MODE_LABELS[base]} ({rest})"
     return mode_id
 
 

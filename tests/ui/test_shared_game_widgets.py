@@ -52,6 +52,14 @@ def test_evaluation_bar_shows_cp() -> None:
     assert widget._white_share > 0.5
 
 
+def test_evaluation_bar_shows_error() -> None:
+    _app()
+    widget = EvaluationBarWidget()
+    widget.set_evaluation(None, error="Нет подходящего движка")
+    assert widget._bar.text() == "—"
+    assert "Нет подходящего" in widget._detail.text()
+
+
 def test_player_clock_warns_when_low_on_time() -> None:
     _app()
     widget = PlayerClockWidget(PieceSide.WHITE)

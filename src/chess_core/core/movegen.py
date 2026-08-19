@@ -28,6 +28,8 @@ class MoveGenerator:
 
     def generate_pseudo_legal(self, state: GameState) -> list[Action]:
         self._validate_state_shape(state)
+        if self._mode.move_provider is not None:
+            return list(self._mode.move_provider.pseudo_legal(state))
         moves: list[Action] = []
         shape = self._mode.board.shape
         for origin_index in range(shape.cell_count):
@@ -58,6 +60,15 @@ class MoveGenerator:
         """
         self._validate_state_shape(state)
         index = self._square_index(square)
+        if self._mode.move_provider is not None:
+            origin = Square.from_index(
+                index, self._mode.board.shape.files, self._mode.board.shape.ranks
+            )
+            return [
+                action
+                for action in self.generate_legal(state)
+                if isinstance(action, MoveAction) and action.from_square == origin
+            ]
         piece = state.board_state.piece_at(index)
         if piece is None:
             pseudo: list[Action] = list(self._drop_moves_to(state, index))
@@ -68,7 +79,7 @@ class MoveGenerator:
     def has_any_legal(self, state: GameState) -> bool:
         """Return early when the position has at least one legal action."""
         self._validate_state_shape(state)
-        if self._mode.legality is not None:
+        if self._mode.move_provider is not None or self._mode.legality is not None:
             return bool(self.generate_legal(state))
         shape = self._mode.board.shape
         for index in range(shape.cell_count):

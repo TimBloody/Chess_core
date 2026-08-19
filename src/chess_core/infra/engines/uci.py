@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import time
 from dataclasses import dataclass
+from pathlib import Path
 
 from chess_core.infra.engines.process import EngineProcess
 
@@ -19,7 +20,8 @@ class UciInfo:
 
 class UciClient:
     def __init__(self, executable: str, *, movetime_ms: int = 500) -> None:
-        self._process = EngineProcess([executable])
+        exe = Path(executable)
+        self._process = EngineProcess([str(exe)], cwd=str(exe.parent))
         self._movetime_ms = movetime_ms
 
     def handshake(self) -> None:
@@ -32,9 +34,15 @@ class UciClient:
     def analyze_fen(self, fen: str) -> tuple[str | None, UciInfo | None]:
         self._write(f"position fen {fen}")
         self._write(f"go movetime {self._movetime_ms}")
+        return self._collect_bestmove()
+
+    def shutdown(self) -> None:
+        self._process.stop()
+
+    def _collect_bestmove(self) -> tuple[str | None, UciInfo | None]:
         bestmove: str | None = None
         last_info: UciInfo | None = None
-        deadline = time.monotonic() + self._movetime_ms / 1000 + 2.0
+        deadline = time.monotonic() + self._movetime_ms / 1000 + 5.0
         stdout = self._process.stdout
         if stdout is None:
             return None, None
@@ -52,9 +60,6 @@ class UciClient:
             if info is not None:
                 last_info = info
         return bestmove, last_info
-
-    def shutdown(self) -> None:
-        self._process.stop()
 
     def _write(self, command: str) -> None:
         stdin = self._process.stdin

@@ -59,7 +59,9 @@ class GameRecord:
             return self._snapshots[revision].clone(include_history=False)
         state = self.initial.clone(include_history=False)
         for index in range(revision):
-            state = state.apply_turn(self.turns[index].turn, record_history=False)
+            state = self.mode.apply_turn(
+                state, self.turns[index].turn, record_history=False
+            )
         return state
 
     def current_view_state(self) -> GameState:
@@ -97,7 +99,7 @@ class GameRecord:
             self._snapshots = self._snapshots[: self.view_revision + 1]
 
         prev = self.live_state()
-        next_state = prev.apply_turn(turn, record_history=True)
+        next_state = self.mode.apply_turn(prev, turn, record_history=True)
         self.live_revision += 1
         self.view_revision = self.live_revision
         self.turns.append(

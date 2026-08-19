@@ -35,6 +35,13 @@ def masks_dir() -> Path:
     return Path(__file__).resolve().parents[1] / "data" / "masks"
 
 
+def puzzles_dir() -> Path:
+    """Bundled Lichess puzzle catalogs (CSV/JSON)."""
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / "chess_core" / "data" / "puzzles"
+    return Path(__file__).resolve().parents[1] / "data" / "puzzles"
+
+
 def engines_dir() -> Path:
     """Return the external, never-bundled engine directory."""
     env = os.environ.get("CHESS_CORE_ENGINES_DIR")

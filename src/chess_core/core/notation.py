@@ -11,6 +11,7 @@ from chess_core.core.move import (
     Action,
     DropAction,
     MoveAction,
+    PlaceAction,
     PlaceBlockerAction,
     Turn,
 )
@@ -26,6 +27,14 @@ _SYMBOL_TO_TYPE = {
     "p": "pawn",
 }
 _TYPE_TO_SYMBOL = {name: symbol for symbol, name in _SYMBOL_TO_TYPE.items()}
+_CHECKERS_SYMBOL_TO_TYPE = {
+    "m": "checker_man",
+    "k": "checker_king",
+}
+_CHECKERS_TYPE_TO_SYMBOL = {
+    "checker_man": "m",
+    "checker_king": "k",
+}
 
 _PIECE_LETTER = {
     "king": "K",
@@ -35,6 +44,13 @@ _PIECE_LETTER = {
     "knight": "N",
     "pawn": "",
 }
+_UCI_PROMOTIONS = {
+    "q": "queen",
+    "r": "rook",
+    "b": "bishop",
+    "n": "knight",
+}
+_TYPE_TO_UCI_PROMOTION = {name: letter for letter, name in _UCI_PROMOTIONS.items()}
 
 
 class NotationStyle(Enum):
@@ -60,6 +76,10 @@ def format_action(
         letter = _PIECE_LETTER.get(action.piece_type.name, action.piece_type.name[0].upper())
         target = square_name(action.to_square)
         return f"{letter}@{target}" if letter else f"@{target}"
+    if isinstance(action, PlaceAction):
+        letter = _PIECE_LETTER.get(action.piece_type.name, action.piece_type.name[0].upper())
+        target = square_name(action.to_square)
+        return f"{letter}+{target}" if letter else f"+{target}"
     if isinstance(action, PlaceBlockerAction):
         return f"@{square_name(action.square)}"
     return "?"
@@ -90,6 +110,9 @@ def _format_move(
     target = action.to_square
     piece = before.board_state.piece_at(source.index(files))
     captured = before.board_state.piece_at(target.index(files))
+    if action.captured_squares:
+        hops = action.path or (target,)
+        return ":".join(square_name(square) for square in (source, *hops))
     castling = _castling_text(action, before)
     is_capture = captured is not None or _is_en_passant(action, piece, before)
     if style is NotationStyle.FROM_TO:
@@ -213,7 +236,7 @@ def parse_fen(fen: str, mode: GameMode) -> GameState:
             if digits:
                 file += int(digits)
                 digits = ""
-            name = _SYMBOL_TO_TYPE.get(char.lower())
+            name = _fen_symbol_to_type(mode).get(char.lower())
             if name is None:
                 raise ValueError(f"unsupported FEN piece: {char!r}")
             if file >= shape.files:
@@ -264,9 +287,33 @@ def encode_board_placement(
     return "/".join(rows)
 
 
+def _uses_checkers_fen(mode: object) -> bool:
+    pieces = getattr(mode, "pieces", None)
+    if pieces is None:
+        return False
+    try:
+        return any(piece_type.id.name.startswith("checker") for piece_type in pieces.all_types())
+    except Exception:
+        return False
+
+
+def _fen_symbol_to_type(mode: object) -> dict[str, str]:
+    if _uses_checkers_fen(mode):
+        return _CHECKERS_SYMBOL_TO_TYPE
+    return _SYMBOL_TO_TYPE
+
+
+def _fen_type_to_symbol(mode: object) -> dict[str, str]:
+    if _uses_checkers_fen(mode):
+        return _CHECKERS_TYPE_TO_SYMBOL
+    return _TYPE_TO_SYMBOL
+
+
 def to_fen(state: GameState) -> str:
+    type_to_symbol = _fen_type_to_symbol(state.extras.get("mode"))
+
     def token(piece: Piece) -> str:
-        symbol = _TYPE_TO_SYMBOL.get(piece.piece_type.name)
+        symbol = type_to_symbol.get(piece.piece_type.name)
         if symbol is None:
             raise ValueError(
                 f"piece cannot be represented in FEN: {piece.piece_type.name}"
@@ -307,3 +354,27 @@ def parse_square(name: str, files: int, ranks: int) -> Square:
 
 def _square_name(square: Square) -> str:
     return square_name(square)
+
+
+def parse_uci(value: str, *, files: int = 8, ranks: int = 8) -> MoveAction:
+    """Parse a UCI coordinate move such as ``e2e4`` or ``a7a8q``."""
+    token = value.strip().lower()
+    if len(token) not in {4, 5}:
+        raise ValueError("UCI move must look like e2e4 or a7a8q")
+    origin = parse_square(token[:2], files, ranks)
+    target = parse_square(token[2:4], files, ranks)
+    promotion = None
+    if len(token) == 5:
+        name = _UCI_PROMOTIONS.get(token[4])
+        if name is None:
+            raise ValueError("UCI promotion must be q, r, b, or n")
+        promotion = PieceTypeId(name)
+    return MoveAction(origin, target, promotion)
+
+
+def format_uci(action: MoveAction) -> str:
+    text = f"{square_name(action.from_square)}{square_name(action.to_square)}"
+    if action.promotion_choice is None:
+        return text
+    letter = _TYPE_TO_UCI_PROMOTION.get(action.promotion_choice.name)
+    return f"{text}{letter}" if letter else text

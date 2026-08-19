@@ -1,10 +1,18 @@
 """Register built-in mode factories."""
 
 from chess_core.core.registry import default_registry
-from chess_core.modes import chess, shogi
+from chess_core.modes import checkers, chess, corners, gobblet, gomoku, reversi, shogi
 
 
 def register_builtin_modes() -> None:
+    default_registry.register("checkers", checkers.checkers)
+    default_registry.register_family("checkers", checkers.resolve_checkers_mode_id)
+    default_registry.register("corners", corners.corners)
+    default_registry.register_family("corners", corners.resolve_corners_mode_id)
+    default_registry.register("gobblet", gobblet.gobblet)
+    default_registry.register_family("gobblet", gobblet.resolve_gobblet_mode_id)
+    default_registry.register("gomoku", gomoku.gomoku)
+    default_registry.register("reversi", reversi.reversi)
     default_registry.register("chess", chess.classic_chess)
     default_registry.register("chess960", chess.chess960)
     default_registry.register("crazyhouse", chess.crazyhouse)

@@ -82,6 +82,13 @@ class LegalityRule(Protocol):
         pass
 
 
+class MoveProvider(Protocol):
+    """Generate mode-specific moves which do not fit leap/slide patterns."""
+
+    def pseudo_legal(self, state: object) -> list[Action]:
+        pass
+
+
 class StateTransitionRule(Protocol):
     def apply_after_action(self, action: Action, state: object) -> object:
         pass

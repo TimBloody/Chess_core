@@ -175,6 +175,14 @@ def test_main_window_contains_working_local_game_page() -> None:
     sidebar = window._local_game._main_split.widget(1)
     assert sidebar.minimumWidth() >= 380
     assert window._local_game.black_clock._time.font().pixelSize() >= 28
+    assert window.centralWidget().objectName() == "rootPane"
+    assert "Просмотр PGN" in window._nav_buttons
+    assert "Сеть" in window._nav_buttons
+    assert window._network_game is not None
+    window._local_game.set_mode("gomoku")
+    assert window._local_game.board.files == 15
+    window._local_game.set_mode("checkers")
+    assert window._local_game.board.position[0] == "wchecker_man"
     window.close()
 
 

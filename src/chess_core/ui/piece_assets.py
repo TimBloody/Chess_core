@@ -33,6 +33,8 @@ _SHOGI_HAND_ORDER = (
     "hen",
 )
 
+_GOBBLET_HAND_ORDER = ("gobblet_small", "gobblet_medium", "gobblet_large")
+
 FACING_ASSET_FAMILIES = frozenset({"shogi", "dobutsu"})
 
 
@@ -48,8 +50,16 @@ def parse_display_key(piece_key: str) -> tuple[str, PieceSide | None]:
     return piece_key, None
 
 
-def piece_svg_key(mode: GameMode, piece: Piece) -> str:
-    """Return the SVG stem used by AssetsLoader for this piece in ``mode``."""
+def piece_svg_key(mode: GameMode | Piece, piece: Piece | None = None) -> str:
+    """Return the SVG stem used by AssetsLoader for this piece."""
+    if piece is None:
+        if not isinstance(mode, Piece):
+            raise TypeError("piece_svg_key(piece) requires a Piece")
+        piece = mode
+        if piece.side is PieceSide.NEUTRAL:
+            return "duck"
+        prefix = "w" if piece.side is PieceSide.WHITE else "b"
+        return prefix + piece.piece_type.name
     if piece.side is PieceSide.NEUTRAL:
         return "duck"
     return piece_svg_key_for(mode, piece.piece_type.name, piece.side)
@@ -69,7 +79,7 @@ def piece_svg_key_for(mode: GameMode, type_name: str, side: PieceSide) -> str:
             stem = f"dobutsu/{stem}"
         owner = "b" if side is PieceSide.BLACK else "w"
         return f"{stem}@{owner}"
-    symbol = asset_key or _CHESS_FALLBACK.get(type_name, type_name[:1].upper())
+    symbol = asset_key or _CHESS_FALLBACK.get(type_name, type_name)
     return ("w" if side is PieceSide.WHITE else "b") + symbol
 
 
@@ -107,7 +117,10 @@ def hand_slot_types(mode: GameMode) -> tuple[str, ...]:
         else:
             add(base)
 
-    preferred = (
-        _SHOGI_HAND_ORDER if mode.asset_family in FACING_ASSET_FAMILIES else _CHESS_HAND_ORDER
-    )
+    if any(name in _GOBBLET_HAND_ORDER for name in seen):
+        preferred = _GOBBLET_HAND_ORDER
+    elif mode.asset_family in FACING_ASSET_FAMILIES:
+        preferred = _SHOGI_HAND_ORDER
+    else:
+        preferred = _CHESS_HAND_ORDER
     return tuple([name for name in preferred if name in seen] + [name for name in collected if name not in preferred])

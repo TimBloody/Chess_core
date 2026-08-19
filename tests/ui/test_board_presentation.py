@@ -5,6 +5,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PyQt6.QtCore import QEvent
 from PyQt6.QtWidgets import QApplication
 
+from chess_core.app.engine import BestMove, EngineEvaluation, EngineHintService
 from chess_core.core.piece import PieceSide
 from chess_core.core.registry import default_registry
 from chess_core.modes import register_builtin_modes
@@ -47,9 +48,11 @@ def test_board_last_move_and_capture_markers_are_presentation_only() -> None:
         legal_destinations=(20, 27),
         last_move_squares=(12, 28),
         hint_squares=(27, 28, 35, 36),
+        engine_squares=(12, 28),
     )
     assert board._last_move_squares == {12, 28}
     assert board._hint_squares == {27, 28, 35, 36}
+    assert board._engine_squares == {12, 28}
     assert 27 in board._legal_destinations
 
 
@@ -85,6 +88,39 @@ def test_koth_hints_mark_the_four_centre_squares() -> None:
     game = LocalGameWidget(lambda _mode_id: king_of_the_hill(), "king_of_the_hill")
     game._refresh()
     assert game.board._hint_squares == {27, 28, 35, 36}
+    game.close()
+
+
+def test_engine_hint_paints_purple_move_and_eval_bar() -> None:
+    _app()
+    game = LocalGameWidget(
+        lambda _mode_id: classic_chess(),
+        "chess",
+        hint_service=EngineHintService(engines=()),
+    )
+    game._apply_engine_hint(
+        BestMove(
+            "e2e4",
+            EngineEvaluation(score_cp=35, mate_in=None, pv=("e2e4",), depth=12),
+        )
+    )
+    assert game.board._engine_squares == {12, 28}
+    assert "+0.3" in game.evaluation_bar._bar.text()
+    game.service.play(parse_move("e2e4"))
+    game._clear_engine_hint()
+    game._refresh()
+    assert game.board._engine_squares == set()
+    game.close()
+
+
+def test_hint_button_exists_on_local_game() -> None:
+    _app()
+    game = LocalGameWidget(
+        lambda _mode_id: classic_chess(),
+        "chess",
+        hint_service=EngineHintService(engines=()),
+    )
+    assert game.hint_button.text() == "Подсказка"
     game.close()
 
 
