@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from chess_core.core.board import Square
 from chess_core.core.gamemode import GameMode
-from chess_core.core.move import Action, MoveAction, Turn
+from chess_core.core.move import Action, DropAction, MoveAction, Turn
 from chess_core.core.piece import MovePatternKind, Piece, PieceSide, PieceTypeId
 from chess_core.core.rules import VictoryCondition, VictoryKind
 from chess_core.core.state import GameState
@@ -20,7 +20,8 @@ class MoveGenerator:
         shape = self._mode.board.shape
         for origin_index in range(shape.cell_count):
             moves.extend(self._pseudo_for_index(state, origin_index))
-        return moves
+        moves.extend(self._drop_pseudo(state))
+        return list(dict.fromkeys(moves))
 
     def generate_legal(self, state: GameState) -> list[Action]:
         return self._filter_legal(state, self.generate_pseudo_legal(state))
@@ -43,22 +44,25 @@ class MoveGenerator:
         for index in range(self._mode.board.shape.cell_count):
             if self.generate_legal_for_square(state, index):
                 return True
-        return False
+        return bool(self._filter_legal(state, self._drop_pseudo(state)))
 
     def _filter_legal(
         self, state: GameState, pseudo: list[Action]
     ) -> list[Action]:
         legal: list[Action] = []
         for action in pseudo:
-            if not isinstance(action, MoveAction):
+            if not isinstance(action, (MoveAction, DropAction)):
                 legal.append(action)
                 continue
             try:
                 result = state.apply_turn(Turn(state.side_to_move, [action]), record_history=False)
             except ValueError:
                 continue
-            if not self._king_is_attacked(result, state.side_to_move):
-                legal.append(action)
+            if self._mode.checks_enabled and self._king_is_attacked(result, state.side_to_move):
+                continue
+            if self._is_forbidden_checkmate_drop(action, result):
+                continue
+            legal.append(action)
         if self._mode.legality is not None:
             return self._mode.legality.filter_legal(legal, state)
         return legal
@@ -131,7 +135,7 @@ class MoveGenerator:
                 offset = (offset[0], -offset[1])
             target = self._mode.topology.step(origin, offset)
             if target is not None and self._can_land(state, piece, target):
-                moves.append(MoveAction(origin, target))
+                moves.extend(self._with_configured_promotions(state, piece, origin, target))
         return moves
 
     def _slide_moves(
@@ -158,11 +162,11 @@ class MoveGenerator:
                 visited.add(target_index)
                 occupant = state.board_state.piece_at(target_index)
                 if occupant is None:
-                    moves.append(MoveAction(origin, target))
+                    moves.extend(self._with_configured_promotions(state, piece, origin, target))
                     current = target
                     continue
                 if self._can_capture(piece, occupant):
-                    moves.append(MoveAction(origin, target))
+                    moves.extend(self._with_configured_promotions(state, piece, origin, target))
                 break
         return moves
 
@@ -213,6 +217,8 @@ class MoveGenerator:
         if target.rank != last_rank:
             return [MoveAction(origin, target)]
         choices = ("queen", "rook", "bishop", "knight")
+        if self._mode.initial_extras.get("promote_includes_king"):
+            choices = (*choices, "king")
         available = {piece_type.id.name for piece_type in self._mode.pieces.all_types()}
         return [
             MoveAction(origin, target, PieceTypeId(choice))
@@ -220,21 +226,81 @@ class MoveGenerator:
             if choice in available
         ]
 
+    def _with_configured_promotions(
+        self,
+        state: GameState,
+        piece: Piece,
+        origin: Square,
+        target: Square,
+    ) -> list[MoveAction]:
+        rule = self._mode.promotion_rule
+        can_promote = getattr(rule, "can_promote", None)
+        must_promote = getattr(rule, "must_promote", None)
+        if rule is None or not callable(can_promote):
+            return [MoveAction(origin, target)]
+        if callable(must_promote) and must_promote(piece, origin, target, state):
+            choices = rule.choices(piece.piece_type)
+            return [MoveAction(origin, target, choice) for choice in choices] or [
+                MoveAction(origin, target)
+            ]
+        if can_promote(piece, origin, target, state):
+            promoted = [MoveAction(origin, target, choice) for choice in rule.choices(piece.piece_type)]
+            return [MoveAction(origin, target), *promoted]
+        return [MoveAction(origin, target)]
+
+    def _is_forbidden_checkmate_drop(self, action: Action, result: GameState) -> bool:
+        if not isinstance(action, DropAction) or self._mode.drop_rule is None:
+            return False
+        forbids = getattr(self._mode.drop_rule, "forbids_checkmate_drop", None)
+        if not callable(forbids) or not forbids(action.piece_type):
+            return False
+        if getattr(self, "_in_drop_mate_probe", False):
+            return False
+        self._in_drop_mate_probe = True
+        try:
+            return self.is_checkmate(result)
+        finally:
+            self._in_drop_mate_probe = False
+
     def _castling_moves(self, state: GameState) -> list[MoveAction]:
         if self._mode.board.shape.files != 8 or self._mode.board.shape.ranks != 8:
             return []
         side = state.side_to_move
         rank = 0 if side is PieceSide.WHITE else 7
-        origin = Square(4, rank)
-        king = state.board_state.piece_at(origin.index(8))
-        if king is None or king.piece_type.name != "king" or king.side is not side:
-            return []
         rights = set(state.extras.get("castling_rights", ()))
         if not rights:
             return []
+        king_index, king = next(
+            (
+                (index, piece)
+                for index, piece in state.board_state.cells.items()
+                if piece is not None
+                and piece.piece_type.name == "king"
+                and piece.side is side
+                and index // 8 == rank
+            ),
+            (None, None),
+        )
+        if king_index is None or king is None:
+            return []
+        origin = Square.from_index(king_index, 8, 8)
         enemy = PieceSide.BLACK if side is PieceSide.WHITE else PieceSide.WHITE
         if self._square_attacked(state, origin, enemy):
             return []
+        rook_files = state.extras.get("castling_rooks")
+        if isinstance(rook_files, dict):
+            return self._chess960_castling_moves(state, origin, side, rank, rights, rook_files, enemy)
+        return self._classic_castling_moves(state, origin, side, rank, rights, enemy)
+
+    def _classic_castling_moves(
+        self,
+        state: GameState,
+        origin: Square,
+        side: PieceSide,
+        rank: int,
+        rights: set[object],
+        enemy: PieceSide,
+    ) -> list[MoveAction]:
         candidates: list[MoveAction] = []
         right_prefix = "K" if side is PieceSide.WHITE else "k"
         for right, rook_file, path, transit, target_file in (
@@ -258,6 +324,39 @@ class MoveGenerator:
                 candidates.append(MoveAction(origin, Square(target_file, rank)))
         return candidates
 
+    def _chess960_castling_moves(
+        self,
+        state: GameState,
+        origin: Square,
+        side: PieceSide,
+        rank: int,
+        rights: set[object],
+        rook_files: dict[object, object],
+        enemy: PieceSide,
+    ) -> list[MoveAction]:
+        candidates: list[MoveAction] = []
+        for right, dest_file, rook_dest in (
+            ("K" if side is PieceSide.WHITE else "k", 6, 5),
+            ("Q" if side is PieceSide.WHITE else "q", 2, 3),
+        ):
+            if right not in rights:
+                continue
+            rook_file = rook_files.get(right)
+            if not isinstance(rook_file, int):
+                continue
+            rook = state.board_state.piece_at(rank * 8 + rook_file)
+            if rook is None or rook.piece_type.name != "rook" or rook.side is not side:
+                continue
+            king_path = _inclusive_files(origin.file, dest_file)
+            rook_path = _inclusive_files(rook_file, rook_dest)
+            blocked = (set(king_path) | set(rook_path)) - {origin.file, rook_file}
+            if any(state.board_state.piece_at(rank * 8 + file) is not None for file in blocked):
+                continue
+            if any(self._square_attacked(state, Square(file, rank), enemy) for file in king_path):
+                continue
+            candidates.append(MoveAction(origin, Square(rook_file, rank)))
+        return candidates
+
     def _king_is_attacked(self, state: GameState, side: PieceSide) -> bool:
         shape = self._mode.board.shape
         king_square = next(
@@ -266,7 +365,7 @@ class MoveGenerator:
                 for index, piece in state.board_state.cells.items()
                 if piece is not None
                 and piece.side is side
-                and piece.piece_type.name == "king"
+                and piece.piece_type.name == self._mode.royal_type
             ),
             None,
         )
@@ -349,7 +448,7 @@ class MoveGenerator:
     def _can_capture(self, piece: Piece, occupant: Piece) -> bool:
         if occupant.side is piece.side or occupant.side is PieceSide.NEUTRAL:
             return False
-        if occupant.piece_type.name == "king" and self._uses_checkmate_victory():
+        if occupant.piece_type.name == self._mode.royal_type and self._uses_checkmate_victory():
             return False
         return True
 
@@ -389,6 +488,33 @@ class MoveGenerator:
             is None
         )
 
+    def _drop_pseudo(self, state: GameState) -> list[Action]:
+        if self._mode.drop_rule is None or state.hands is None:
+            return []
+        hand = state.hands.by_side.get(state.side_to_move, ())
+        type_names = {piece.piece_type.name for piece in hand}
+        if not type_names:
+            return []
+        shape = self._mode.board.shape
+        drops: list[Action] = []
+        for name in type_names:
+            piece_type = PieceTypeId(name)
+            faces = self._mode.drop_rule.allowed_faces(piece_type)
+            for index in range(shape.cell_count):
+                if not self._mode.drop_rule.can_drop(piece_type, index, state):
+                    continue
+                square = Square.from_index(index, shape.files, shape.ranks)
+                if faces is None:
+                    drops.append(DropAction(piece_type, square))
+                else:
+                    drops.extend(DropAction(piece_type, square, face) for face in faces)
+        return drops
+
     def _validate_state_shape(self, state: GameState) -> None:
         if state.board_state.board.shape != self._mode.board.shape:
             raise ValueError("state board shape does not match game mode")
+
+
+def _inclusive_files(start: int, end: int) -> tuple[int, ...]:
+    step = 1 if end >= start else -1
+    return tuple(range(start, end + step, step))

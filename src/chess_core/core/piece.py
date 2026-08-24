@@ -15,6 +15,13 @@ class PieceSide(Enum):
     BLACK = auto()
     NEUTRAL = auto()
 
+    def opponent(self) -> "PieceSide":
+        if self is PieceSide.WHITE:
+            return PieceSide.BLACK
+        if self is PieceSide.BLACK:
+            return PieceSide.WHITE
+        raise ValueError("neutral has no opponent")
+
 
 @dataclass(frozen=True, slots=True)
 class PieceTypeId:

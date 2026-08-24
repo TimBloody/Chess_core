@@ -86,9 +86,9 @@ PyQt-слой. UI получает состояние и команды из app
 - contract-тесты для каждого ruleset;
 - интеграционные тесты application-сценариев без UI.
 
-## 7. Package Layout (scaffold)
+## 7. Package Layout
 
-Исходники лежат в `src/chess_core/`:
+Исходники лежат в `src/chess_core/`. `MoveGenerator` рабочий, не заглушка.
 
 | Путь | Назначение |
 |------|------------|
@@ -99,17 +99,31 @@ PyQt-слой. UI получает состояние и команды из app
 | `core/piece.py` | `Piece`, `PieceType`, `PieceCatalog`, `PieceTransform` |
 | `core/move.py` | `MoveAction`, `DropAction`, `Turn`, duck `PlaceBlockerAction` |
 | `core/turn.py` | `TurnScenario`, `TurnStep` — несколько действий в одном ходе |
-| `core/rules.py` | `VictoryCondition`, `DropRule`, `PromotionRule`, `LegalityRule` |
+| `core/rules.py` | `VictoryCondition`, `DropRule`, `PromotionRule`, `LegalityRule`, `CaptureSink` |
 | `core/gamemode.py` | `GameMode`, `GameModeBuilder` |
-| `core/state.py` | `GameState`, `HandsState` |
+| `core/state.py` | `GameState`, `HandsState`; ходы коммитятся через `GameState.apply_turn` |
+| `core/notation.py` | FEN, UCI (`parse_uci` / `format_uci`), текстовая нотация хода |
+| `core/chess960.py` | стартовые позиции 960 и рокировка «король на ладью» |
 | `core/registry.py` | `GameModeRegistry` |
-| `core/movegen.py` | `MoveGenerator` (заглушка) |
+| `core/movegen.py` | `MoveGenerator` |
 | `modes/chess.py` | classic, 960, crazyhouse, giveaway, minichess, cylindrical, duck |
-| `modes/shogi.py` | shogi, kyoto_shogi (flip-after-move), dobutsu_shogi |
-| `app/editor.py`, `puzzles.py`, `memory.py` | сценарии без UI |
-| `infra/network.py` | `GameServer` / `GameClient` протоколы |
+| `modes/shogi.py` | shogi, kyoto_shogi, dobutsu_shogi |
+| `modes/bughouse.py`, `hand_and_brain.py` | парные сетевые режимы |
+| `app/game.py` | `LocalGameService`, статусы партии |
+| `app/editor.py` | редактор позиции |
+| `app/puzzles.py` | Lichess FEN/UCI-каталог и `PuzzleSession` |
+| `app/training/memory.py` | запоминалки: клетки / последовательность / позиция |
+| `app/tournament/` | жеребьёвки |
+| `app/match.py`, `seats.py`, `network_game.py` | матч, лобби, сетевая партия |
+| `infra/network.py`, `tcp_*.py`, `lan.py` | LAN-сервер и клиент |
+| `infra/engines/` | UCI/USI discovery и процесс |
+| `infra/storage/lichess_puzzles.py` | загрузка CSV/JSON каталога задач |
+| `infra/paths.py` | assets / masks / puzzles / engines для dev и frozen exe |
+| `ui/app_entry.py`, `main_window.py` | оболочка: локальная игра, сеть, редактор, жеребьёвка, задачи, память |
+| `ui/widgets/` | доска, карман, часы, eval-bar, лобби, SVG-палитра редактора |
 | `tools/mask_builder.py` | сборщик масок и ray-таблиц |
-| `data/masks/` | сгенерированные таблицы (пока пусто) |
+| `data/masks/` | сгенерированные таблицы |
+| `data/puzzles/lichess_mini.csv` | офлайн-набор задач Lichess (CC0) |
 
 Расширение нового режима: собрать `GameMode` через `GameModeBuilder`, зарегистрировать в `registry`, не добавлять `if mode == ...` в `movegen`.
 
@@ -117,8 +131,10 @@ PyQt-слой. UI получает состояние и команды из app
 
 **PieceTransform** — смена эффективного типа/стороны фигуры после хода (киото-сёги: обязательный flip пары, кроме короля).
 
-**VictoryCondition** — мат, взятие короля, «царь горы» (зона), и т.д.
+**VictoryCondition** — мат, взятие короля, «царь горы» (зона), материал (giveaway).
 
 **Маски**: топология → `RayBuilder` → таблицы в `data/masks/` или `GameMode.mask_tables`.
 
-Установка пакета для разработки: `pip install -e .` из корня (`pyproject.toml`).
+Не реализовано и не трогать без запроса: Капабланка 10×8, портальная топология, лабиринты, распознавание бланков, AlphaZero.
+
+Установка пакета для разработки: `pip install -e .` из корня (`pyproject.toml`). Точка входа UI: `python -m chess_core.ui.app_entry`. Бинарники движков не входят в репозиторий и не пакуются в exe; см. `docs/ENGINES.md`.

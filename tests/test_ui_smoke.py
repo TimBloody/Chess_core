@@ -26,6 +26,17 @@ from chess_core.ui.widgets.board_widget import (
 
 _APP: QApplication | None = None
 
+
+def _square_center(board: BoardWidget, square: int) -> QPointF:
+    board_rect, cell_size = board._board_geometry()
+    display = board.logical_to_display_square(square)
+    file = display % board.files
+    rank = display // board.files
+    return QPointF(
+        board_rect.left() + (file + 0.5) * cell_size,
+        board_rect.top() + (board.ranks - rank - 0.5) * cell_size,
+    )
+
 def _app() -> QApplication:
     global _APP
     _APP = QApplication.instance() or QApplication([])
@@ -138,6 +149,12 @@ def test_main_window_contains_working_local_game_page() -> None:
     assert window._local_game.board.position[4] == "wK"
     window._local_game.set_mode("cylindrical")
     assert window._local_game.board.files == 8
+    from chess_core.ui.puzzles import PuzzleWidget
+    from chess_core.ui.training.memory_widget import MemoryTrainingWidget
+
+    assert isinstance(window._puzzles, PuzzleWidget)
+    assert isinstance(window._memory, MemoryTrainingWidget)
+    assert window._puzzles.board.files == 8
     window.close()
 
 
@@ -193,10 +210,12 @@ def test_flip_shortcut_preserves_state_cache_and_flipped_click_mapping() -> None
     QTest.keyClick(window, Qt.Key.Key_F)
     app.processEvents()
 
-    assert game.board.square_at_position(QPointF(280, 120)) == 12  # e2
-    assert game.board.square_at_position(QPointF(280, 280)) == 28  # e4
+    e2 = _square_center(game.board, 12)
+    e4 = _square_center(game.board, 28)
+    assert game.board.square_at_position(e2) == 12
+    assert game.board.square_at_position(e4) == 28
 
-    game.board.square_clicked.emit(game.board.square_at_position(QPointF(280, 280)))
+    game.board.square_clicked.emit(game.board.square_at_position(e4))
     assert game.board.position[28] == "wP"
     assert game.service.state.side_to_move is PieceSide.BLACK
     window.close()

@@ -11,7 +11,9 @@ from PyQt6.QtGui import QColor, QFont, QPainter
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QSizePolicy, QWidget
 
+from chess_core.core.piece import PieceSide
 from chess_core.ui.assets_loader import AssetsLoader
+from chess_core.ui.piece_keys import parse_display_key
 
 
 class BoardOrientation(Enum):
@@ -133,6 +135,14 @@ class BoardWidget(QWidget):
         self._selected_square: int | None = None
         self._legal_destinations: set[int] = set()
         self._check_squares: set[int] = set()
+        self._blocked_squares: set[int] = set()
+        self._type_highlights: set[int] = set()
+        self._last_move_squares: set[int] = set()
+        self._engine_squares: set[int] = set()
+        self._lit_squares: set[int] = set()
+        self._error_squares: set[int] = set()
+        self._mismatch_squares: set[int] = set()
+        self._missed_squares: set[int] = set()
         self._orientation = BoardOrientation.WHITE
         self._transform = BoardTransform(self._files, self._ranks, self._orientation)
         self._coordinates_visible = True
@@ -185,28 +195,80 @@ class BoardWidget(QWidget):
         selected: int | None = None,
         legal_destinations: Iterable[int] = (),
         check_squares: Iterable[int] = (),
+        blocked_squares: Iterable[int] = (),
+        type_highlights: Iterable[int] = (),
+        last_move_squares: Iterable[int] = (),
+        engine_squares: Iterable[int] = (),
+        lit_squares: Iterable[int] = (),
+        error_squares: Iterable[int] = (),
+        mismatch_squares: Iterable[int] = (),
+        missed_squares: Iterable[int] = (),
     ) -> None:
         """Set presentation-only square highlights."""
 
         squares = set(legal_destinations)
         checks = set(check_squares)
-        values = squares | checks | ({selected} if selected is not None else set())
+        blocked = set(blocked_squares)
+        typed = set(type_highlights)
+        last_moves = set(last_move_squares)
+        engine = set(engine_squares)
+        lit = set(lit_squares)
+        errors = set(error_squares)
+        mismatches = set(mismatch_squares)
+        missed = set(missed_squares)
+        values = (
+            squares
+            | checks
+            | blocked
+            | typed
+            | last_moves
+            | engine
+            | lit
+            | errors
+            | mismatches
+            | missed
+            | ({selected} if selected is not None else set())
+        )
         if any(not 0 <= square < self._cell_count for square in values):
             raise ValueError("Highlight square index out of board bounds")
         if (
             selected != self._selected_square
             or squares != self._legal_destinations
             or checks != self._check_squares
+            or blocked != self._blocked_squares
+            or typed != self._type_highlights
+            or last_moves != self._last_move_squares
+            or engine != self._engine_squares
+            or lit != self._lit_squares
+            or errors != self._error_squares
+            or mismatches != self._mismatch_squares
+            or missed != self._missed_squares
         ):
             self._selected_square = selected
             self._legal_destinations = squares
             self._check_squares = checks
+            self._blocked_squares = blocked
+            self._type_highlights = typed
+            self._last_move_squares = last_moves
+            self._engine_squares = engine
+            self._lit_squares = lit
+            self._error_squares = errors
+            self._mismatch_squares = mismatches
+            self._missed_squares = missed
             self.update()
 
     def clear_highlights(self) -> None:
         self._selected_square = None
         self._legal_destinations.clear()
         self._check_squares.clear()
+        self._blocked_squares.clear()
+        self._type_highlights.clear()
+        self._last_move_squares.clear()
+        self._engine_squares.clear()
+        self._lit_squares.clear()
+        self._error_squares.clear()
+        self._mismatch_squares.clear()
+        self._missed_squares.clear()
         self.update()
 
     @property
@@ -390,9 +452,54 @@ class BoardWidget(QWidget):
             square_rect = self._logical_square_rect(board_rect, cell_size, square)
             piece_rect = square_rect.adjusted(piece_margin, piece_margin, -piece_margin, -piece_margin)
             renderer = self._renderer(f"piece:{piece_key}", str(self._assets_loader.piece_path(piece_key)))
-            renderer.render(painter, piece_rect)
+            if self._should_rotate_piece(piece_key):
+                painter.save()
+                painter.translate(piece_rect.center())
+                painter.rotate(180)
+                painter.translate(-piece_rect.center())
+                renderer.render(painter, piece_rect)
+                painter.restore()
+            else:
+                renderer.render(painter, piece_rect)
+
+    def _should_rotate_piece(self, piece_key: str) -> bool:
+        _stem, owner = parse_display_key(piece_key)
+        if owner is None:
+            return False
+        facing_black = self._orientation is BoardOrientation.BLACK
+        if facing_black:
+            return owner is PieceSide.WHITE
+        return owner is PieceSide.BLACK
 
     def _draw_highlights(self, painter: QPainter, board_rect: QRectF, cell_size: float) -> None:
+        for square in self._blocked_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(40, 40, 40, 110)
+            )
+        for square in self._type_highlights:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(80, 170, 255, 120)
+            )
+        for square in self._missed_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(70, 170, 90, 155)
+            )
+        for square in self._lit_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(70, 150, 230, 170)
+            )
+        for square in self._last_move_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(205, 210, 106, 165)
+            )
+        for square in self._engine_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(156, 80, 220, 180)
+            )
+        for square in self._mismatch_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(232, 196, 48, 185)
+            )
         if self._selected_square is not None:
             self._fill_square(
                 painter, board_rect, cell_size, self._selected_square, QColor(246, 246, 105, 170)
@@ -412,6 +519,10 @@ class BoardWidget(QWidget):
         for square in self._check_squares:
             self._fill_square(
                 painter, board_rect, cell_size, square, QColor(220, 40, 40, 145)
+            )
+        for square in self._error_squares:
+            self._fill_square(
+                painter, board_rect, cell_size, square, QColor(220, 40, 40, 165)
             )
 
     def _draw_coordinates(self, painter: QPainter, board_rect: QRectF, cell_size: float) -> None:

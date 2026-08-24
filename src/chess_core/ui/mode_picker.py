@@ -8,6 +8,8 @@ from typing import Iterable
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QComboBox, QLabel, QVBoxLayout, QWidget
 
+from chess_core.ui.theme import mode_display_name
+
 
 @dataclass
 class UiSession:
@@ -42,7 +44,7 @@ class ModePicker(QWidget):
         self.setLayout(layout)
 
         for mode_id in self._mode_ids:
-            self._combo.addItem(mode_id, mode_id)
+            self._combo.addItem(mode_display_name(mode_id), mode_id)
 
         self._combo.currentIndexChanged.connect(self._on_mode_changed)
         self._select_initial_mode()
@@ -76,5 +78,5 @@ class ModePicker(QWidget):
             return None
 
         self._session.mode_id = str(mode_id)
-        self._status.setText(f"Выбран: {self._session.mode_id}")
+        self._status.setText(f"Выбран: {mode_display_name(self._session.mode_id)}")
         return self._session.mode_id

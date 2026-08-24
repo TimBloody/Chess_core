@@ -6,9 +6,11 @@ from enum import Enum, auto
 
 from chess_core.app.game_record import GameRecord
 from chess_core.core.gamemode import GameMode
-from chess_core.core.move import MoveAction, Turn
+from chess_core.core.move import Action, DropAction, MoveAction, Turn
 from chess_core.core.movegen import MoveGenerator
 from chess_core.core.notation import NotationStyle, format_turn
+from chess_core.core.piece import PieceSide
+from chess_core.core.rules import VictoryCondition, VictoryKind
 from chess_core.core.state import GameState
 
 
@@ -17,6 +19,9 @@ class GameStatus(Enum):
     CHECK = auto()
     CHECKMATE = auto()
     STALEMATE = auto()
+    MATERIAL_WIN = auto()
+    TRY_WIN = auto()
+    KING_CAPTURE_WIN = auto()
 
 
 class LocalGameService:
@@ -56,6 +61,22 @@ class LocalGameService:
             for action in self._generator.generate_legal(self.state)
             if isinstance(action, MoveAction)
         ]
+
+    def legal_drops(self) -> list[DropAction]:
+        if not self.is_live:
+            return []
+        return [
+            action
+            for action in self._generator.generate_legal(self.state)
+            if isinstance(action, DropAction)
+        ]
+
+    def play_action(self, action: Action) -> GameState:
+        if not self.is_live:
+            raise RuntimeError("cannot play while viewing history")
+        if action not in self._generator.generate_legal(self.state):
+            raise ValueError("action is not legal")
+        return self._apply_turn(Turn(self.state.side_to_move, [action]))
 
     def legal_moves_for_square(self, square_index: int) -> tuple[MoveAction, ...]:
         if not self.is_live:
@@ -137,18 +158,7 @@ class LocalGameService:
     def status(self) -> GameStatus:
         if self._status_cache is not None and self._status_cache[0] == self._revision:
             return self._status_cache[1]
-        view = self.state
-        in_check = self._generator.is_in_check(view)
-        has_legal = self._generator.has_any_legal(view) if self.is_live else True
-        result = (
-            GameStatus.CHECKMATE
-            if in_check and not has_legal
-            else GameStatus.STALEMATE
-            if not in_check and not has_legal
-            else GameStatus.CHECK
-            if in_check
-            else GameStatus.ACTIVE
-        )
+        result = evaluate_status(self.mode, self._generator, self.state, is_live=self.is_live)
         self._status_cache = (self._revision, result)
         return result
 
@@ -165,3 +175,96 @@ class LocalGameService:
     def _invalidate_caches(self) -> None:
         self.clear_selection()
         self._status_cache = None
+
+
+def evaluate_status(
+    mode: GameMode,
+    generator: MoveGenerator,
+    state: GameState,
+    *,
+    is_live: bool,
+) -> GameStatus:
+    conditions = (
+        mode.victory if isinstance(mode.victory, tuple) else (mode.victory,)
+    )
+    kinds = {condition.kind for condition in conditions if isinstance(condition, VictoryCondition)}
+    previous = (
+        PieceSide.BLACK if state.side_to_move is PieceSide.WHITE else PieceSide.WHITE
+    )
+
+    if VictoryKind.KING_CAPTURE in kinds and not _has_royal(mode, state, state.side_to_move):
+        return GameStatus.KING_CAPTURE_WIN
+    if VictoryKind.KING_REACHES_ZONE in kinds and _royal_reached_zone(
+        mode, generator, state, previous, conditions
+    ):
+        return GameStatus.TRY_WIN
+    if VictoryKind.MATERIAL in kinds:
+        white_count = _side_piece_count(state, PieceSide.WHITE)
+        black_count = _side_piece_count(state, PieceSide.BLACK)
+        if white_count == 0 or black_count == 0:
+            return GameStatus.MATERIAL_WIN
+
+    in_check = mode.checks_enabled and generator.is_in_check(state)
+    has_legal = generator.has_any_legal(state) if is_live else True
+    if has_legal:
+        return GameStatus.CHECK if in_check else GameStatus.ACTIVE
+    lose_on_no_moves = any(
+        isinstance(condition, VictoryCondition) and condition.lose_on_no_legal_moves
+        for condition in conditions
+    )
+    if in_check:
+        return GameStatus.CHECKMATE
+    if lose_on_no_moves:
+        return GameStatus.STALEMATE
+    return GameStatus.MATERIAL_WIN
+
+
+def _has_royal(mode: GameMode, state: GameState, side: PieceSide) -> bool:
+    return any(
+        piece is not None
+        and piece.side is side
+        and piece.piece_type.name == mode.royal_type
+        for piece in state.board_state.cells.values()
+    )
+
+
+def _side_piece_count(state: GameState, side: PieceSide) -> int:
+    return sum(
+        1
+        for piece in state.board_state.cells.values()
+        if piece is not None and piece.side is side
+    )
+
+
+def _royal_reached_zone(
+    mode: GameMode,
+    generator: MoveGenerator,
+    state: GameState,
+    side: PieceSide,
+    conditions: tuple[VictoryCondition, ...],
+) -> bool:
+    shape = mode.board.shape
+    zone = next(
+        (
+            condition.target_zone_mask
+            for condition in conditions
+            if condition.kind is VictoryKind.KING_REACHES_ZONE
+        ),
+        None,
+    )
+    last_rank = shape.ranks - 1 if side is PieceSide.WHITE else 0
+    for index, piece in state.board_state.cells.items():
+        if piece is None or piece.side is not side or piece.piece_type.name != mode.royal_type:
+            continue
+        if zone is not None:
+            if (zone >> index) & 1 == 0:
+                continue
+        elif index // shape.files != last_rank:
+            continue
+        from chess_core.core.board import Square
+
+        square = Square.from_index(index, shape.files, shape.ranks)
+        enemy = PieceSide.BLACK if side is PieceSide.WHITE else PieceSide.WHITE
+        if not generator.is_square_attacked(state, square, enemy):
+            return True
+    return False

@@ -16,7 +16,7 @@ chess-core = "chess_core.ui.app_entry:main"
 chess-classic = "play_classic:main"
 
 [tool.setuptools.package-data]
-"chess_core" = ["data/masks/*.json"]
+"chess_core" = ["data/masks/*.json", "data/puzzles/*"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

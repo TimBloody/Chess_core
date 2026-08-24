@@ -21,6 +21,19 @@ def test_from_to_notation_for_quiet_move() -> None:
     assert text == "e2-e4"
 
 
+def test_uci_round_trip() -> None:
+    from chess_core.core.notation import format_uci, parse_uci
+
+    move = parse_uci("e2e4")
+    assert (move.from_square.file, move.from_square.rank) == (4, 1)
+    assert (move.to_square.file, move.to_square.rank) == (4, 3)
+    assert format_uci(move) == "e2e4"
+    promo = parse_uci("e7e8q")
+    assert promo.promotion_choice is not None
+    assert promo.promotion_choice.name == "queen"
+    assert format_uci(promo) == "e7e8q"
+
+
 def test_piece_square_notation() -> None:
     mode = classic_chess()
     state = mode.initial_state()

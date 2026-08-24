@@ -1,12 +1,12 @@
 # External chess engines
 
-Engines are **not** bundled inside the application executable.
+Engines are **not** bundled inside the application executable and are **not** committed (`engines/public/` is gitignored). Fetch locally with `engines/_fetch_public.py` if needed.
 
 ## Discovery order
 
 1. `CHESS_CORE_ENGINES_DIR` environment variable
 2. `config/engines.json` next to the executable
-3. Sibling directory `../engines/` relative to the app root
+3. Sibling directory `../engines/` relative to the Chess_core project folder (`infra.paths.engines_dir`)
 
 ## Example layout
 

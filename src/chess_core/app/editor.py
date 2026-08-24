@@ -97,7 +97,7 @@ class BoardEditorService:
         if require_one_king_per_side is None:
             require_one_king_per_side = self._require_one_king_per_side
 
-        if require_one_king_per_side:
+        if require_one_king_per_side and self._mode.checks_enabled:
             errors.extend(self._validate_one_king_per_side(state))
 
         active_validator = validator or self._validator
@@ -127,11 +127,13 @@ class BoardEditorService:
         for piece in state.board_state.cells.values():
             if piece is None:
                 continue
-            if piece.piece_type.name == "king" and piece.side in counts:
+            if piece.piece_type.name == self._mode.royal_type and piece.side in counts:
                 counts[piece.side] += 1
 
         errors: list[str] = []
         for side, count in counts.items():
             if count != 1:
-                errors.append(f"expected exactly one {side.name.lower()} king, found {count}")
+                errors.append(
+                    f"expected exactly one {side.name.lower()} {self._mode.royal_type}, found {count}"
+                )
         return errors

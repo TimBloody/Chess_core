@@ -1,26 +1,37 @@
-"""Shogi and shogi-variant mode factories (stubs)."""
+"""Shogi and shogi-variant mode factories."""
 
 from __future__ import annotations
 
 from chess_core.core.gamemode import GameMode, GameModeBuilder
 from chess_core.core.piece import Piece, PieceSide, PieceTransform, PieceTypeId
-from chess_core.core.rules import DropRule, VictoryCondition, VictoryKind
+from chess_core.core.rules import CaptureSink, DropRule, VictoryCondition, VictoryKind
 from chess_core.core.turn import StepKind, TurnScenario, TurnStep
 from chess_core.modes.catalog import (
     dobutsu_shogi_piece_catalog,
     kyoto_shogi_piece_catalog,
     shogi_piece_catalog,
 )
+from chess_core.modes.shogi_rules import (
+    DobutsuDropRule,
+    DobutsuPromotionRule,
+    ShogiDropRule,
+    ShogiPromotionRule,
+)
 
 
 def shogi() -> GameMode:
-    """9x9, drops, promotion zones, checkmate king."""
+    """9x9 standard shogi: drops, promotion zone, checkmate the king."""
     return (
         GameModeBuilder("shogi", "Shogi")
         .with_shape(9, 9)
         .with_pieces(shogi_piece_catalog())
         .with_turn_scenario(_standard_single_move_scenario())
         .with_victory(VictoryCondition(VictoryKind.CHECKMATE))
+        .with_drop_rule(ShogiDropRule())
+        .with_capture_sink(CaptureSink.MOVER_HAND)
+        .with_promotion_rule(ShogiPromotionRule())
+        .with_start_cells(_shogi_start_cells())
+        .with_asset_family("shogi")
         .build()
     )
 
@@ -53,25 +64,38 @@ def kyoto_shogi() -> GameMode:
         .with_turn_scenario(_standard_single_move_scenario())
         .with_victory(VictoryCondition(VictoryKind.CHECKMATE))
         .with_drop_rule(KyotoDropRule())
+        .with_capture_sink(CaptureSink.MOVER_HAND)
         .with_start_cells(_kyoto_start_cells())
+        .with_asset_family("shogi")
         .build()
     )
 
 
 def dobutsu_shogi() -> GameMode:
-    """3x4 animal shogi for children; smaller catalog and board."""
+    """3x4 animal shogi: capture the lion or reach the opposite rank safely."""
     return (
         GameModeBuilder("dobutsu_shogi", "Dobutsu Shogi")
         .with_shape(3, 4)
         .with_pieces(dobutsu_shogi_piece_catalog())
         .with_turn_scenario(_standard_single_move_scenario())
-        .with_victory(VictoryCondition(VictoryKind.KING_REACHES_ZONE))
+        .with_victory(
+            (
+                VictoryCondition(VictoryKind.KING_CAPTURE),
+                VictoryCondition(VictoryKind.KING_REACHES_ZONE),
+            )
+        )
+        .with_drop_rule(DobutsuDropRule())
+        .with_capture_sink(CaptureSink.MOVER_HAND)
+        .with_promotion_rule(DobutsuPromotionRule())
+        .with_start_cells(_dobutsu_start_cells())
+        .with_royal_type("lion")
+        .with_asset_family("dobutsu")
         .build()
     )
 
 
 class KyotoFlipTransform(PieceTransform):
-    """Stub: flip piece to alternate face in catalog after each move."""
+    """Flip piece to alternate face in catalog after each move."""
 
     _pairs = {
         "tokin": "lance",
@@ -98,6 +122,9 @@ class KyotoDropRule(DropRule):
         paired = KyotoFlipTransform._pairs.get(piece_type.name)
         return None if paired is None else (piece_type.name, paired)
 
+    def captured_as(self, piece: Piece) -> Piece:
+        return piece
+
 
 def _kyoto_start_cells() -> dict[int, Piece]:
     white = ("tokin", "silver", "king", "gold", "pawn")
@@ -107,6 +134,36 @@ def _kyoto_start_cells() -> dict[int, Piece]:
         cells[file] = Piece(PieceTypeId(name), PieceSide.WHITE)
     for file, name in enumerate(black):
         cells[20 + file] = Piece(PieceTypeId(name), PieceSide.BLACK)
+    return cells
+
+
+def _shogi_start_cells() -> dict[int, Piece]:
+    back = ("lance", "knight", "silver", "gold", "king", "gold", "silver", "knight", "lance")
+    cells: dict[int, Piece] = {}
+    for file, name in enumerate(back):
+        cells[file] = Piece(PieceTypeId(name), PieceSide.WHITE)
+        cells[72 + file] = Piece(PieceTypeId(name), PieceSide.BLACK)
+        cells[18 + file] = Piece(PieceTypeId("pawn"), PieceSide.WHITE)
+        cells[54 + file] = Piece(PieceTypeId("pawn"), PieceSide.BLACK)
+    cells[10] = Piece(PieceTypeId("bishop"), PieceSide.WHITE)
+    cells[16] = Piece(PieceTypeId("rook"), PieceSide.WHITE)
+    cells[64] = Piece(PieceTypeId("rook"), PieceSide.BLACK)
+    cells[70] = Piece(PieceTypeId("bishop"), PieceSide.BLACK)
+    return cells
+
+
+def _dobutsu_start_cells() -> dict[int, Piece]:
+    """Sente (white) at the bottom: giraffe, lion, elephant; chick on b2."""
+    cells = {
+        0: Piece(PieceTypeId("giraffe"), PieceSide.WHITE),
+        1: Piece(PieceTypeId("lion"), PieceSide.WHITE),
+        2: Piece(PieceTypeId("elephant"), PieceSide.WHITE),
+        4: Piece(PieceTypeId("chick"), PieceSide.WHITE),
+        7: Piece(PieceTypeId("chick"), PieceSide.BLACK),
+        9: Piece(PieceTypeId("elephant"), PieceSide.BLACK),
+        10: Piece(PieceTypeId("lion"), PieceSide.BLACK),
+        11: Piece(PieceTypeId("giraffe"), PieceSide.BLACK),
+    }
     return cells
 
 

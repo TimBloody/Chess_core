@@ -13,6 +13,10 @@ from chess_core.core.piece import (
 ORTHOGONAL = ((1, 0), (-1, 0), (0, 1), (0, -1))
 DIAGONAL = ((1, 1), (1, -1), (-1, 1), (-1, -1))
 KING_STEPS = ORTHOGONAL + DIAGONAL
+GOLD_STEPS = ((0, 1), (1, 1), (-1, 1), (1, 0), (-1, 0), (0, -1))
+SILVER_STEPS = ((0, 1), (1, 1), (-1, 1), (1, -1), (-1, -1))
+SHOGI_KNIGHT = ((1, 2), (-1, 2))
+FORWARD = ((0, 1),)
 KNIGHT_LEAPS = (
     (1, 2), (2, 1), (2, -1), (1, -2),
     (-1, -2), (-2, -1), (-2, 1), (-1, 2),
@@ -60,28 +64,52 @@ def kyoto_shogi_piece_catalog() -> PieceCatalog:
 
 
 def shogi_piece_catalog() -> PieceCatalog:
-    """Standard shogi piece names without move generation patterns yet."""
-    return _catalog_with_names(
-        (
-            "king",
-            "rook",
-            "bishop",
-            "gold",
-            "silver",
-            "knight",
-            "lance",
-            "pawn",
-        )
+    """Standard 9x9 shogi types including promoted faces."""
+    gold = (MovePattern(MovePatternKind.LEAP, GOLD_STEPS),)
+    catalog = PieceCatalog()
+    definitions = (
+        PieceType(PieceTypeId("king"), (MovePattern(MovePatternKind.LEAP, KING_STEPS),)),
+        PieceType(PieceTypeId("gold"), gold),
+        PieceType(PieceTypeId("silver"), (MovePattern(MovePatternKind.LEAP, SILVER_STEPS),), can_promote=True),
+        PieceType(PieceTypeId("knight"), (MovePattern(MovePatternKind.LEAP, SHOGI_KNIGHT),), can_promote=True),
+        PieceType(PieceTypeId("lance"), (MovePattern(MovePatternKind.SLIDE, FORWARD),), can_promote=True),
+        PieceType(PieceTypeId("pawn"), (MovePattern(MovePatternKind.LEAP, FORWARD),), can_promote=True),
+        PieceType(PieceTypeId("bishop"), (MovePattern(MovePatternKind.SLIDE, DIAGONAL),), can_promote=True),
+        PieceType(PieceTypeId("rook"), (MovePattern(MovePatternKind.SLIDE, ORTHOGONAL),), can_promote=True),
+        PieceType(PieceTypeId("tokin"), gold),
+        PieceType(PieceTypeId("promoted_lance"), gold),
+        PieceType(PieceTypeId("promoted_knight"), gold),
+        PieceType(PieceTypeId("promoted_silver"), gold),
+        PieceType(
+            PieceTypeId("horse"),
+            (
+                MovePattern(MovePatternKind.SLIDE, DIAGONAL),
+                MovePattern(MovePatternKind.LEAP, KING_STEPS),
+            ),
+        ),
+        PieceType(
+            PieceTypeId("dragon"),
+            (
+                MovePattern(MovePatternKind.SLIDE, ORTHOGONAL),
+                MovePattern(MovePatternKind.LEAP, KING_STEPS),
+            ),
+        ),
     )
+    for definition in definitions:
+        catalog.register(definition)
+    return catalog
 
 
 def dobutsu_shogi_piece_catalog() -> PieceCatalog:
-    """Dobutsu shogi piece names without move generation patterns yet."""
-    return _catalog_with_names(("lion", "giraffe", "elephant", "chick", "hen"))
-
-
-def _catalog_with_names(names: tuple[str, ...]) -> PieceCatalog:
+    """Dobutsu shogi animals with leap patterns."""
     catalog = PieceCatalog()
-    for name in names:
-        catalog.register(PieceType(id=PieceTypeId(name), patterns=()))
+    definitions = (
+        PieceType(PieceTypeId("lion"), (MovePattern(MovePatternKind.LEAP, KING_STEPS),)),
+        PieceType(PieceTypeId("giraffe"), (MovePattern(MovePatternKind.LEAP, ORTHOGONAL),)),
+        PieceType(PieceTypeId("elephant"), (MovePattern(MovePatternKind.LEAP, DIAGONAL),)),
+        PieceType(PieceTypeId("chick"), (MovePattern(MovePatternKind.LEAP, FORWARD),), can_promote=True),
+        PieceType(PieceTypeId("hen"), (MovePattern(MovePatternKind.LEAP, GOLD_STEPS),)),
+    )
+    for definition in definitions:
+        catalog.register(definition)
     return catalog

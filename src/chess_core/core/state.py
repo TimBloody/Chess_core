@@ -17,6 +17,7 @@ from chess_core.core.move import (
     Turn,
 )
 from chess_core.core.piece import Piece, PieceSide, PieceTypeId
+from chess_core.core.rules import CaptureSink
 
 
 @dataclass
@@ -46,6 +47,20 @@ class HandsState:
         captured = deepcopy(piece)
         captured.side = side
         self.by_side.setdefault(side, []).append(captured)
+
+    def remove_type(self, side: PieceSide, piece_type_name: str) -> Piece | None:
+        hand = self.by_side.get(side, [])
+        for index, piece in enumerate(hand):
+            if piece.piece_type.name == piece_type_name:
+                return hand.pop(index)
+        return None
+
+    def remove_gift(self, side: PieceSide, gift_id: str) -> Piece | None:
+        hand = self.by_side.get(side, [])
+        for index, piece in enumerate(hand):
+            if piece.state and piece.state.get("gift_id") == gift_id:
+                return hand.pop(index)
+        return None
 
 
 @dataclass
@@ -110,6 +125,7 @@ class GameState:
 
         result = self.clone(include_history=record_history)
         mode = result.extras.get("mode")
+        result.extras["outbound_gifts"] = []
         turn_actions: list[Action] = []
         if mode is not None and not mode.turn_scenario.validate_turn(turn):
             raise ValueError("turn does not match the game mode turn scenario")
@@ -124,6 +140,16 @@ class GameState:
                 if piece.side is not turn.side:
                     raise ValueError("cannot move another side's piece")
                 captured = result.board_state.piece_at(target)
+                if _is_chess960_castle(piece, captured, result.extras):
+                    _apply_chess960_castle(result, action, piece, captured, shape)
+                    turn_actions.append(action)
+                    if mode is not None:
+                        for transition in mode.transitions:
+                            transitioned = transition.apply_after_action(action, result)
+                            if not isinstance(transitioned, GameState):
+                                raise TypeError("state transition must return GameState")
+                            result = transitioned
+                    continue
                 if captured is not None and captured.side is turn.side:
                     raise ValueError("cannot capture a friendly piece")
                 if captured is not None and captured.side is PieceSide.NEUTRAL:
@@ -144,12 +170,15 @@ class GameState:
                     ):
                         raise ValueError("invalid en passant capture")
                     result.board_state.cells[captured_index] = None
-                if captured is not None and result.hands is not None:
-                    result.hands.add(turn.side, captured)
+                if captured is not None:
+                    _deposit_capture(result, turn.side, captured, mode)
                 result.board_state.cells[source] = None
                 if action.promotion_choice is not None:
                     piece = deepcopy(piece)
+                    original_name = piece.piece_type.name
                     piece.piece_type = action.promotion_choice
+                    piece.state = dict(piece.state or {})
+                    piece.state["promoted_from"] = original_name
                 result.board_state.cells[target] = piece
                 if piece.piece_type.name == "king" and abs(action.to_square.file - action.from_square.file) == 2:
                     rook_from_file = shape.files - 1 if action.to_square.file > action.from_square.file else 0
@@ -162,12 +191,13 @@ class GameState:
                     result.board_state.cells[rook_from] = None
                     result.board_state.cells[rook_to] = rook
                 rights = set(result.extras.get("castling_rights", ()))
+                rook_files = result.extras.get("castling_rooks")
                 if piece.piece_type.name == "king":
                     rights -= {"K", "Q"} if turn.side is PieceSide.WHITE else {"k", "q"}
                 if piece.piece_type.name == "rook":
-                    rights.discard({0: "Q", 7: "K", 56: "q", 63: "k"}.get(source, ""))
+                    rights.discard(_rook_right_for_square(source, shape.files, rook_files))
                 if captured is not None and captured.piece_type.name == "rook":
-                    rights.discard({0: "Q", 7: "K", 56: "q", 63: "k"}.get(target, ""))
+                    rights.discard(_rook_right_for_square(target, shape.files, rook_files))
                 result.extras["castling_rights"] = rights
                 result.extras["en_passant"] = (
                     Square(action.from_square.file, (action.from_square.rank + action.to_square.rank) // 2)
@@ -269,3 +299,81 @@ class _TransformContext:
 def _clone_piece(piece: Piece) -> Piece:
     """Copy mutable per-piece state while sharing immutable identifiers."""
     return Piece(piece.piece_type, piece.side, deepcopy(piece.state))
+
+
+def _deposit_capture(state: GameState, mover: PieceSide, captured: Piece, mode: object) -> None:
+    piece = deepcopy(captured)
+    drop_rule = getattr(mode, "drop_rule", None) if mode is not None else None
+    captured_as = getattr(drop_rule, "captured_as", None)
+    if callable(captured_as):
+        piece = captured_as(piece)
+    sink = _capture_sink(mode, state)
+    if sink is CaptureSink.DESTROY:
+        return
+    if sink is CaptureSink.PARTNER_OUTBOUND:
+        gifts = list(state.extras.get("outbound_gifts") or [])
+        gifts.append(piece)
+        state.extras["outbound_gifts"] = gifts
+        return
+    if state.hands is None:
+        return
+    state.hands.add(mover, piece)
+
+
+def _capture_sink(mode: object, state: GameState) -> CaptureSink:
+    configured = getattr(mode, "capture_sink", None) if mode is not None else None
+    if configured is not None:
+        return configured
+    if state.hands is not None:
+        return CaptureSink.MOVER_HAND
+    return CaptureSink.DESTROY
+
+
+def _is_chess960_castle(piece: Piece, captured: Piece | None, extras: dict[str, Any]) -> bool:
+    return (
+        piece.piece_type.name == "king"
+        and captured is not None
+        and captured.piece_type.name == "rook"
+        and captured.side is piece.side
+        and isinstance(extras.get("castling_rooks"), dict)
+    )
+
+
+def _apply_chess960_castle(
+    state: GameState,
+    action: MoveAction,
+    king: Piece,
+    rook: Piece,
+    shape,
+) -> None:
+    kingside = action.to_square.file > action.from_square.file
+    king_file = 6 if kingside else 2
+    rook_file = 5 if kingside else 3
+    source = action.from_square.index(shape.files)
+    target = action.to_square.index(shape.files)
+    state.board_state.cells[source] = None
+    state.board_state.cells[target] = None
+    state.board_state.cells[action.from_square.rank * shape.files + king_file] = king
+    state.board_state.cells[action.from_square.rank * shape.files + rook_file] = rook
+    rights = set(state.extras.get("castling_rights", ()))
+    rights -= {"K", "Q"} if king.side is PieceSide.WHITE else {"k", "q"}
+    state.extras["castling_rights"] = rights
+    state.extras["en_passant"] = None
+
+
+def _rook_right_for_square(index: int, files: int, rook_files: object) -> str:
+    file = index % files
+    rank_start = index // files == 0
+    if isinstance(rook_files, dict):
+        if rank_start:
+            if file == rook_files.get("K"):
+                return "K"
+            if file == rook_files.get("Q"):
+                return "Q"
+        else:
+            if file == rook_files.get("k"):
+                return "k"
+            if file == rook_files.get("q"):
+                return "q"
+        return ""
+    return {0: "Q", 7: "K", 56: "q", 63: "k"}.get(index, "")

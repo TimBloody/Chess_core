@@ -34,6 +34,13 @@ _PIECE_LETTER = {
     "knight": "N",
     "pawn": "",
 }
+_UCI_PROMOTIONS = {
+    "q": "queen",
+    "r": "rook",
+    "b": "bishop",
+    "n": "knight",
+}
+_TYPE_TO_UCI_PROMOTION = {name: letter for letter, name in _UCI_PROMOTIONS.items()}
 
 
 class NotationStyle(Enum):
@@ -190,6 +197,30 @@ def parse_square(name: str, files: int, ranks: int) -> Square:
     square = Square(ord(name[0].lower()) - ord("a"), int(name[1]) - 1)
     Square.from_index(square.index(files), files, ranks)
     return square
+
+
+def parse_uci(value: str, *, files: int = 8, ranks: int = 8) -> MoveAction:
+    """Parse a UCI coordinate move such as ``e2e4`` or ``a7a8q``."""
+    token = value.strip().lower()
+    if len(token) not in {4, 5}:
+        raise ValueError("UCI move must look like e2e4 or a7a8q")
+    origin = parse_square(token[:2], files, ranks)
+    target = parse_square(token[2:4], files, ranks)
+    promotion = None
+    if len(token) == 5:
+        name = _UCI_PROMOTIONS.get(token[4])
+        if name is None:
+            raise ValueError("UCI promotion must be q, r, b, or n")
+        promotion = PieceTypeId(name)
+    return MoveAction(origin, target, promotion)
+
+
+def format_uci(action: MoveAction) -> str:
+    text = f"{square_name(action.from_square)}{square_name(action.to_square)}"
+    if action.promotion_choice is None:
+        return text
+    letter = _TYPE_TO_UCI_PROMOTION.get(action.promotion_choice.name)
+    return f"{text}{letter}" if letter else text
 
 def _square_name(square: Square) -> str:
     return square_name(square)

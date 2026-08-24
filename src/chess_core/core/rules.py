@@ -7,7 +7,7 @@ from enum import Enum, auto
 from typing import Protocol
 
 from chess_core.core.move import Action
-from chess_core.core.piece import PieceTypeId
+from chess_core.core.piece import Piece, PieceTypeId
 
 
 class VictoryKind(Enum):
@@ -27,6 +27,14 @@ class VictoryCondition:
     lose_on_no_legal_moves: bool = True
 
 
+class CaptureSink(Enum):
+    """Where a captured piece goes after a move (configured on GameMode)."""
+
+    DESTROY = auto()
+    MOVER_HAND = auto()
+    PARTNER_OUTBOUND = auto()
+
+
 class DropRule(Protocol):
     def can_drop(self, piece_type: PieceTypeId, square_index: int, state: object) -> bool:
         pass
@@ -34,6 +42,10 @@ class DropRule(Protocol):
     def allowed_faces(self, piece_type: PieceTypeId) -> tuple[str, ...] | None:
         """None = single face; tuple = Kyoto-style choose side up."""
         pass
+
+    def captured_as(self, piece: Piece) -> Piece:
+        """Optional demotion of a captured piece before it enters a hand."""
+        return piece
 
 
 class PromotionRule(Protocol):

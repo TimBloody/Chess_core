@@ -8,6 +8,7 @@ from chess_core.core.board import Board, BoardShape
 from chess_core.core.piece import Piece, PieceCatalog, PieceSide
 from chess_core.core.rays import RayTable
 from chess_core.core.rules import (
+    CaptureSink,
     DropRule,
     LegalityRule,
     PromotionRule,
@@ -31,6 +32,7 @@ class GameMode:
     turn_order: TurnOrder
     victory: VictoryCondition | tuple[VictoryCondition, ...]
     drop_rule: DropRule | None = None
+    capture_sink: CaptureSink | None = None
     promotion_rule: PromotionRule | None = None
     legality: LegalityRule | None = None
     transitions: tuple[StateTransitionRule, ...] = field(default_factory=tuple)
@@ -38,6 +40,9 @@ class GameMode:
     mask_tables: dict[str, int] = field(default_factory=dict)
     start_cells: dict[int, Piece] = field(default_factory=dict)
     initial_extras: dict[str, object] = field(default_factory=dict)
+    royal_type: str = "king"
+    checks_enabled: bool = True
+    asset_family: str = "chess"
 
     def initial_state(self) -> object:
         from chess_core.core.state import BoardState, GameState, HandsState
@@ -70,12 +75,16 @@ class GameModeBuilder:
         self._victory: VictoryCondition | tuple[VictoryCondition, ...] | None = None
         self._start_cells: dict[int, Piece] = {}
         self._drop_rule: DropRule | None = None
+        self._capture_sink: CaptureSink | None = None
         self._promotion_rule: PromotionRule | None = None
         self._legality: LegalityRule | None = None
         self._transitions: tuple[StateTransitionRule, ...] = ()
         self._ray_table: RayTable | None = None
         self._mask_tables: dict[str, int] = {}
         self._initial_extras: dict[str, object] = {}
+        self._royal_type = "king"
+        self._checks_enabled = True
+        self._asset_family = "chess"
 
     def with_shape(self, files: int, ranks: int) -> GameModeBuilder:
         self._shape = BoardShape(files=files, ranks=ranks)
@@ -97,8 +106,22 @@ class GameModeBuilder:
         self._turn_order = order
         return self
 
-    def with_victory(self, condition: VictoryCondition) -> GameModeBuilder:
+    def with_victory(
+        self, condition: VictoryCondition | tuple[VictoryCondition, ...]
+    ) -> GameModeBuilder:
         self._victory = condition
+        return self
+
+    def with_royal_type(self, royal_type: str) -> GameModeBuilder:
+        self._royal_type = royal_type
+        return self
+
+    def with_checks_enabled(self, enabled: bool) -> GameModeBuilder:
+        self._checks_enabled = enabled
+        return self
+
+    def with_asset_family(self, family: str) -> GameModeBuilder:
+        self._asset_family = family
         return self
 
     def with_start_cells(self, cells: dict[int, Piece]) -> GameModeBuilder:
@@ -107,6 +130,10 @@ class GameModeBuilder:
 
     def with_drop_rule(self, rule: DropRule) -> GameModeBuilder:
         self._drop_rule = rule
+        return self
+
+    def with_capture_sink(self, sink: CaptureSink) -> GameModeBuilder:
+        self._capture_sink = sink
         return self
 
     def with_promotion_rule(self, rule: PromotionRule) -> GameModeBuilder:
@@ -163,6 +190,7 @@ class GameModeBuilder:
             turn_order=turn_order,
             victory=self._victory,
             drop_rule=self._drop_rule,
+            capture_sink=self._capture_sink,
             promotion_rule=self._promotion_rule,
             legality=self._legality,
             transitions=self._transitions,
@@ -170,4 +198,7 @@ class GameModeBuilder:
             mask_tables=dict(self._mask_tables),
             start_cells=dict(self._start_cells),
             initial_extras=dict(self._initial_extras),
+            royal_type=self._royal_type,
+            checks_enabled=self._checks_enabled,
+            asset_family=self._asset_family,
         )

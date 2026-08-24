@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow
 
 from chess_core.modes.chess import classic_chess
 from chess_core.ui.local_game import LocalGameWidget
+from chess_core.ui.theme import SHELL_STYLESHEET, app_icon
 
 
 class ClassicGameWindow(QMainWindow):
@@ -23,7 +24,9 @@ class ClassicGameWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Chess Core — Классические шахматы")
-        self.resize(720, 780)
+        self.setWindowIcon(app_icon())
+        self.setStyleSheet(SHELL_STYLESHEET)
+        self.resize(1000, 780)
         self.game = LocalGameWidget(lambda _mode_id: classic_chess(), "chess")
         self.setCentralWidget(self.game)
 

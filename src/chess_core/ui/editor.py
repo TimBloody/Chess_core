@@ -9,7 +9,6 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QListWidget,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -17,18 +16,12 @@ from PyQt6.QtWidgets import (
 
 from chess_core.app.editor import BoardEditorService
 from chess_core.core.gamemode import GameMode
-from chess_core.core.piece import PieceSide
+from chess_core.core.piece import Piece, PieceSide, PieceTypeId
 from chess_core.core.registry import default_registry
+from chess_core.ui.assets_loader import AssetsLoader
+from chess_core.ui.piece_keys import FACING_ASSET_FAMILIES, piece_asset_key
 from chess_core.ui.widgets.board_widget import BoardWidget
-
-_ASSET_NAMES = {
-    "king": "K",
-    "queen": "Q",
-    "rook": "R",
-    "bishop": "B",
-    "knight": "N",
-    "pawn": "P",
-}
+from chess_core.ui.widgets.editor_palette import EditorPaletteStrip, PaletteToken
 
 
 class EditorWidget(QWidget):
@@ -39,29 +32,56 @@ class EditorWidget(QWidget):
         mode_resolver: Callable[[str], GameMode] = default_registry.get,
         mode_id: str = "chess",
         parent: QWidget | None = None,
+        *,
+        require_one_king_per_side: bool = True,
+        enable_play: bool = True,
     ) -> None:
         super().__init__(parent)
         self._resolve = mode_resolver
         self._mode_id = mode_id
-        self._service = BoardEditorService(self._resolve(mode_id), require_one_king_per_side=True)
+        self._require_one_king_per_side = require_one_king_per_side
+        self._enable_play = enable_play
+        self._assets = AssetsLoader()
+        self._service = BoardEditorService(
+            self._resolve(mode_id),
+            require_one_king_per_side=require_one_king_per_side,
+        )
         self._selected_piece: tuple[str, str] | None = ("pawn", "white")
         self._eraser = False
 
         self.board = BoardWidget()
         self.status = QLabel()
+        self.status.setObjectName("gameStatus")
         self.fen_field = QLineEdit()
-        self.palette = QListWidget()
+        self.white_label = QLabel("Белые")
+        self.white_label.setObjectName("panelTitle")
+        self.black_label = QLabel("Чёрные")
+        self.black_label.setObjectName("panelTitle")
+        self.white_palette = EditorPaletteStrip(assets_loader=self._assets)
+        self.black_palette = EditorPaletteStrip(assets_loader=self._assets)
+        self.erase_button = QPushButton("Стереть")
+        self.erase_button.setCheckable(True)
+        self.blocker_button = QPushButton("Блокер")
+        self.blocker_button.setCheckable(True)
         self.validation = QLabel()
+        self.validation.setWordWrap(True)
 
         layout = QHBoxLayout(self)
         board_col = QVBoxLayout()
         board_col.addWidget(self.status)
-        board_col.addWidget(self.board)
+        board_col.addWidget(self.board, 1)
         layout.addLayout(board_col, 3)
 
         side_col = QVBoxLayout()
         side_col.addWidget(QLabel("Палитра"))
-        side_col.addWidget(self.palette)
+        side_col.addWidget(self.white_label)
+        side_col.addWidget(self.white_palette)
+        side_col.addWidget(self.black_label)
+        side_col.addWidget(self.black_palette)
+        tools = QHBoxLayout()
+        tools.addWidget(self.erase_button)
+        tools.addWidget(self.blocker_button)
+        side_col.addLayout(tools)
         side_col.addWidget(QLabel("FEN"))
         side_col.addWidget(self.fen_field)
         for label, slot in (
@@ -70,16 +90,23 @@ class EditorWidget(QWidget):
             ("Импорт FEN", self._import_fen),
             ("Экспорт FEN", self._export_fen),
             ("Проверить", self._validate),
-            ("Играть с позиции", self._play),
         ):
             button = QPushButton(label)
             button.clicked.connect(slot)
             side_col.addWidget(button)
+        self.play_button = QPushButton("Играть с позиции")
+        self.play_button.clicked.connect(self._play)
+        self.play_button.setVisible(enable_play)
+        side_col.addWidget(self.play_button)
         side_col.addWidget(self.validation)
+        side_col.addStretch()
         layout.addLayout(side_col, 1)
 
         self.board.square_clicked.connect(self._on_square)
-        self.palette.currentTextChanged.connect(self._on_palette)
+        self.white_palette.token_clicked.connect(self._on_palette_piece)
+        self.black_palette.token_clicked.connect(self._on_palette_piece)
+        self.erase_button.clicked.connect(self._select_eraser)
+        self.blocker_button.clicked.connect(self._select_blocker)
         self._service.new_empty_position()
         self.board.set_shape(
             self._service.mode.board.shape.files,
@@ -90,7 +117,10 @@ class EditorWidget(QWidget):
 
     def set_mode(self, mode_id: str) -> None:
         self._mode_id = mode_id
-        self._service = BoardEditorService(self._resolve(mode_id), require_one_king_per_side=True)
+        self._service = BoardEditorService(
+            self._resolve(mode_id),
+            require_one_king_per_side=self._require_one_king_per_side,
+        )
         self._service.load_start_position()
         self.board.set_shape(
             self._service.mode.board.shape.files,
@@ -99,24 +129,75 @@ class EditorWidget(QWidget):
         self._refresh_palette()
         self._refresh_board()
 
-    def _refresh_palette(self) -> None:
-        self.palette.clear()
-        self.palette.addItem("(удалить)")
-        for piece_id in self._service.piece_types_for_palette():
-            for side in ("white", "black"):
-                self.palette.addItem(f"{piece_id}:{side}")
-        self.palette.addItem("blocker:neutral")
+    def current_state(self):
+        return self._service.to_playable_state()
 
-    def _on_palette(self, text: str) -> None:
-        if text == "(удалить)":
-            self._eraser = True
-            self._selected_piece = None
+    def reset_empty(self) -> None:
+        self._service.new_empty_position()
+        self._refresh_board()
+
+    def reload_piece_assets(self) -> None:
+        self.white_palette.invalidate_renderers()
+        self.black_palette.invalidate_renderers()
+        self.board.update()
+
+    def _refresh_palette(self) -> None:
+        family = self._service.mode.asset_family
+        facing = family in FACING_ASSET_FAMILIES
+        self.white_label.setText("Готе" if facing else "Белые")
+        self.black_label.setText("Сенте" if facing else "Чёрные")
+        self.white_palette.set_tokens(self._tokens_for(PieceSide.WHITE))
+        self.black_palette.set_tokens(self._tokens_for(PieceSide.BLACK))
+        self.white_palette.set_rotate_pieces(False)
+        self.black_palette.set_rotate_pieces(facing)
+        self._sync_palette_selection()
+
+    def _tokens_for(self, side: PieceSide) -> tuple[PaletteToken, ...]:
+        tokens: list[PaletteToken] = []
+        family = self._service.mode.asset_family
+        for piece_id in self._service.piece_types_for_palette():
+            key = piece_asset_key(Piece(PieceTypeId(piece_id), side), family)
+            if key is None:
+                continue
+            tokens.append(PaletteToken(piece_id, side, key))
+        return tuple(tokens)
+
+    def _on_palette_piece(self, piece_id: str, side: object) -> None:
+        if not isinstance(side, PieceSide):
             return
         self._eraser = False
-        if ":" not in text:
+        self._selected_piece = (piece_id, side.name.lower())
+        self.erase_button.setChecked(False)
+        self.blocker_button.setChecked(False)
+        self._sync_palette_selection()
+
+    def _select_eraser(self) -> None:
+        self._eraser = True
+        self._selected_piece = None
+        self.erase_button.setChecked(True)
+        self.blocker_button.setChecked(False)
+        self._sync_palette_selection()
+
+    def _select_blocker(self) -> None:
+        self._eraser = False
+        self._selected_piece = ("blocker", "neutral")
+        self.erase_button.setChecked(False)
+        self.blocker_button.setChecked(True)
+        self._sync_palette_selection()
+
+    def _sync_palette_selection(self) -> None:
+        if self._eraser or self._selected_piece is None:
+            self.white_palette.set_selected(None, None)
+            self.black_palette.set_selected(None, None)
             return
-        piece_id, side = text.split(":", 1)
-        self._selected_piece = (piece_id, side)
+        piece_id, side_name = self._selected_piece
+        if side_name == "neutral":
+            self.white_palette.set_selected(None, None)
+            self.black_palette.set_selected(None, None)
+            return
+        side = PieceSide.WHITE if side_name == "white" else PieceSide.BLACK
+        self.white_palette.set_selected(piece_id, side)
+        self.black_palette.set_selected(piece_id, side)
 
     def _on_square(self, index: int) -> None:
         if self._eraser or self._selected_piece is None:
@@ -168,8 +249,9 @@ class EditorWidget(QWidget):
             if piece.side is PieceSide.NEUTRAL:
                 position[index] = "wP"
                 continue
-            symbol = _ASSET_NAMES.get(piece.piece_type.name, piece.piece_type.name[0].upper())
-            position[index] = ("w" if piece.side is PieceSide.WHITE else "b") + symbol
+            key = piece_asset_key(piece, self._service.mode.asset_family)
+            if key is not None:
+                position[index] = key
         self.board.set_position(position)
         side = "белых" if state.side_to_move is PieceSide.WHITE else "чёрных"
         self.status.setText(f"Редактор — ход {side}")

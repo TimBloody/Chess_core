@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from chess_core.infra.paths import assets_root as resolve_assets_root
+from chess_core.ui.piece_keys import parse_display_key
 
 
 @dataclass(frozen=True)
@@ -31,6 +32,10 @@ class AssetsLoader:
         return self._required_dir("lishogi", "pieces", "standard", "shogi_bnw")
 
     @property
+    def dobutsu_pieces_dir(self) -> Path:
+        return self._required_dir("lishogi", "pieces", "dobutsu")
+
+    @property
     def light_square_path(self) -> Path:
         return self._required_file(self.lichess_board_dir / "light_square.svg")
 
@@ -44,14 +49,22 @@ class AssetsLoader:
     def shogi_piece_path(self, piece_key: str) -> Path:
         return self._required_file(self.shogi_pieces_dir / f"{piece_key}.svg")
 
-    def piece_path(self, piece_key: str) -> Path:
-        """Return a matching chess or shogi SVG path for a piece key."""
+    def dobutsu_piece_path(self, piece_key: str) -> Path:
+        return self._required_file(self.dobutsu_pieces_dir / f"{piece_key}.svg")
 
-        chess_path = self.lichess_pieces_dir / f"{piece_key}.svg"
+    def piece_path(self, piece_key: str) -> Path:
+        """Return a matching chess, shogi, or dobutsu SVG path for a piece key."""
+
+        stem, _owner = parse_display_key(piece_key)
+        if stem.startswith("dobutsu/"):
+            filename = stem.split("/", 1)[1]
+            return self.dobutsu_piece_path(filename)
+
+        chess_path = self.lichess_pieces_dir / f"{stem}.svg"
         if chess_path.is_file():
             return chess_path
 
-        shogi_path = self.shogi_pieces_dir / f"{piece_key}.svg"
+        shogi_path = self.shogi_pieces_dir / f"{stem}.svg"
         if shogi_path.is_file():
             return shogi_path
 

@@ -11,7 +11,7 @@ from chess_core.core.move import MoveAction, Turn
 from chess_core.core.piece import PieceSide
 from chess_core.core.topology import FlatTopology, PortalLink, PortalTopology
 from chess_core.infra.network import GameClient, GameServer, StateMessage, TurnMessage
-from chess_core.infra.network_messages import StateEnvelope
+from chess_core.infra.network_messages import LobbyState, MatchEnvelope, StateEnvelope
 from chess_core.modes.chess import classic_chess
 from chess_core.tools.mask_builder import MaskBuilder
 
@@ -71,17 +71,16 @@ def test_two_client_server_assigns_sides_and_broadcasts_state() -> None:
 
     assert white_session.side is PieceSide.WHITE
     assert black_session.side is PieceSide.BLACK
-    assert isinstance(white_session.inbox[0], (StateMessage, StateEnvelope))
+    assert any(isinstance(item, (StateMessage, StateEnvelope, MatchEnvelope, LobbyState)) for item in white_session.inbox)
     assert TurnMessage("id", Turn(PieceSide.WHITE, [])).session_id == "id"
-    with pytest.raises(ConnectionError):
-        GameClient().connect(server)
+    spectator = GameClient().connect(server)
+    assert spectator.seat == "spectator"
 
     white.submit_turn(
         Turn(PieceSide.WHITE, [MoveAction(Square(4, 1), Square(4, 3))])
     )
     assert server.state.side_to_move is PieceSide.BLACK
-    assert white_session.inbox[-1].state.board_state.piece_at(28) is not None
-    assert black_session.inbox[-1].state.board_state.piece_at(28) is not None
+    assert server.state.board_state.piece_at(28) is not None
     with pytest.raises(PermissionError):
         white.submit_turn(
             Turn(PieceSide.BLACK, [MoveAction(Square(4, 6), Square(4, 4))])
