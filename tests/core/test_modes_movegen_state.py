@@ -50,6 +50,7 @@ def test_required_mode_factories_are_fully_configured() -> None:
     classic = classic_chess()
     cylinder = cylindrical_chess()
     duck = duck_chess()
+    fairy_duck = duck_chess(fairy_rules=True)
     kyoto = kyoto_shogi()
 
     assert classic.board.shape.cell_count == 64
@@ -59,6 +60,9 @@ def test_required_mode_factories_are_fully_configured() -> None:
     assert isinstance(cylinder.topology, CylindricalFilesTopology)
     assert cylinder.ray_table is not None
     assert [step.label for step in duck.turn_scenario.steps] == ["move", "duck"]
+    assert duck.checks_enabled
+    assert not fairy_duck.checks_enabled
+    assert fairy_duck.initial_extras["fairy_duck_rules"] is True
     assert kyoto.board.shape.cell_count == 25
     assert kyoto.drop_rule is not None
     assert kyoto.initial_state().hands is not None
@@ -213,3 +217,20 @@ def test_kyoto_drop_validates_face_choice() -> None:
         Turn(PieceSide.WHITE, [DropAction(PieceTypeId("pawn"), Square(1, 1), "rook")])
     )
     assert result.board_state.piece_at(6).piece_type.name == "rook"
+
+
+def test_kyoto_movegen_offers_both_drop_faces() -> None:
+    mode = kyoto_shogi()
+    state = _position(
+        mode,
+        {2: _piece("king", PieceSide.WHITE), 22: _piece("king", PieceSide.BLACK)},
+    )
+    state.extras["mode"] = mode
+    state.hands = HandsState({PieceSide.WHITE: [_piece("pawn", PieceSide.WHITE)]})
+    drops = [
+        action
+        for action in MoveGenerator(mode).generate_legal(state)
+        if isinstance(action, DropAction) and action.to_square == Square(1, 1)
+    ]
+    faces = {action.face for action in drops}
+    assert faces == {"pawn", "rook"}

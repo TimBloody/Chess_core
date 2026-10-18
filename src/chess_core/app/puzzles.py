@@ -5,9 +5,10 @@ from __future__ import annotations
 import csv
 import io
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
+from random import Random
 
 from chess_core.app.game import GameStatus, LocalGameService, evaluate_status
 from chess_core.core.gamemode import GameMode
@@ -63,15 +64,18 @@ class LichessPuzzle:
     game_url: str = ""
     opening_tags: tuple[str, ...] = ()
     fen_is_before_last_move: bool = True
+    diagram: bool = False
 
     @property
     def last_move_uci(self) -> str:
-        if not self.moves_uci:
-            raise ValueError("puzzle has no moves")
+        if self.diagram or not self.moves_uci:
+            return ""
         return self.moves_uci[0]
 
     @property
     def solution_uci(self) -> tuple[str, ...]:
+        if self.diagram:
+            return self.moves_uci
         return self.moves_uci[1:]
 
 
@@ -116,11 +120,21 @@ class PuzzleService:
 class PuzzleSession:
     """Interactive Lichess-style solver: check the player move, reveal, next."""
 
-    def __init__(self, mode: GameMode, puzzles: Sequence[LichessPuzzle]) -> None:
+    def __init__(
+        self,
+        mode: GameMode,
+        puzzles: Sequence[LichessPuzzle],
+        *,
+        shuffle: bool = False,
+        rng: Random | None = None,
+    ) -> None:
         if not puzzles:
             raise ValueError("puzzles must not be empty")
+        ordered = list(puzzles)
+        if shuffle:
+            (rng or Random()).shuffle(ordered)
         self.mode = mode
-        self._puzzles = tuple(puzzles)
+        self._puzzles = tuple(ordered)
         self._game = LocalGameService(mode)
         self._index = 0
         self._ply = 0
@@ -154,6 +168,8 @@ class PuzzleSession:
     @property
     def last_move(self) -> MoveAction | None:
         uci = self.puzzle.last_move_uci
+        if not uci:
+            return None
         files = self.mode.board.shape.files
         ranks = self.mode.board.shape.ranks
         try:
@@ -322,32 +338,37 @@ def parse_lichess_csv(text: str) -> list[LichessPuzzle]:
     reader = csv.DictReader(io.StringIO(text))
     puzzles: list[LichessPuzzle] = []
     for row in reader:
-        puzzle_id = (row.get("PuzzleId") or "").strip()
-        fen = (row.get("FEN") or "").strip()
-        moves = tuple(
-            token.lower()
-            for token in (row.get("Moves") or "").split()
-            if token.strip()
-        )
-        if not puzzle_id or not fen or len(moves) < 2:
-            continue
-        themes = _split_tags(row.get("Themes"))
-        opening = _split_tags(row.get("OpeningTags"))
-        puzzles.append(
-            LichessPuzzle(
-                puzzle_id=puzzle_id,
-                fen=fen,
-                moves_uci=moves,
-                rating=_as_int(row.get("Rating")),
-                rating_deviation=_as_int(row.get("RatingDeviation")),
-                popularity=_as_int(row.get("Popularity")),
-                nb_plays=_as_int(row.get("NbPlays")),
-                themes=themes,
-                game_url=(row.get("GameUrl") or "").strip(),
-                opening_tags=opening,
-            )
-        )
+        parsed = lichess_puzzle_from_csv_row(row)
+        if parsed is not None:
+            puzzles.append(parsed)
     return puzzles
+
+
+def lichess_puzzle_from_csv_row(row: Mapping[str, str | None]) -> LichessPuzzle | None:
+    puzzle_id = (row.get("PuzzleId") or "").strip()
+    fen = (row.get("FEN") or "").strip()
+    moves = tuple(
+        token.lower()
+        for token in (row.get("Moves") or "").split()
+        if token.strip()
+    )
+    diagram = (row.get("Diagram") or "").strip().lower() in {"1", "yes", "diagram"}
+    if not puzzle_id or not fen or len(moves) < (1 if diagram else 2):
+        return None
+    return LichessPuzzle(
+        puzzle_id=puzzle_id,
+        fen=fen,
+        moves_uci=moves,
+        rating=_as_int(row.get("Rating")),
+        rating_deviation=_as_int(row.get("RatingDeviation")),
+        popularity=_as_int(row.get("Popularity")),
+        nb_plays=_as_int(row.get("NbPlays")),
+        themes=_split_tags(row.get("Themes")),
+        game_url=(row.get("GameUrl") or "").strip(),
+        opening_tags=_split_tags(row.get("OpeningTags")),
+        fen_is_before_last_move=not diagram,
+        diagram=diagram,
+    )
 
 
 def parse_lichess_json(text: str) -> list[LichessPuzzle]:

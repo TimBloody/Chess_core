@@ -45,6 +45,8 @@ def encode_state(state: GameState) -> dict[str, Any]:
         }
     else:
         payload["hands"] = None
+    if state.repetition_log:
+        payload["repetition_log"] = [_encode_key(key) for key in state.repetition_log]
     return payload
 
 
@@ -71,11 +73,14 @@ def decode_state(payload: dict[str, Any], mode: GameMode) -> GameState:
         )
     extras = _decode_extras(payload.get("extras") or {})
     extras["mode"] = mode
+    log = payload.get("repetition_log")
+    repetition_log = tuple(_decode_key(item) for item in log) if isinstance(log, list) else ()
     return GameState(
         board_state=BoardState(board, cells),
         side_to_move=PieceSide[str(payload["side_to_move"])],
         hands=hands,
         extras=extras,
+        repetition_log=repetition_log,
     )
 
 
@@ -120,6 +125,8 @@ def _encode_action(action: object) -> dict[str, Any]:
         }
         if action.promotion_choice is not None:
             payload["promotion"] = action.promotion_choice.name
+        if action.jumped:
+            payload["jumped"] = [_encode_square(square) for square in action.jumped]
         return payload
     if isinstance(action, DropAction):
         return {
@@ -147,10 +154,12 @@ def _decode_action(payload: object) -> object:
     kind = payload.get("kind")
     if kind == "move":
         promo = payload.get("promotion")
+        jumped = tuple(_decode_square(item) for item in payload.get("jumped") or ())
         return MoveAction(
             _decode_square(payload["from"]),
             _decode_square(payload["to"]),
             None if promo is None else PieceTypeId(str(promo)),
+            jumped,
         )
     if kind == "drop":
         return DropAction(
@@ -178,6 +187,18 @@ def _decode_square(payload: object) -> Square:
     if not isinstance(payload, dict):
         raise NetworkCodecError("square must be an object")
     return Square(int(payload["file"]), int(payload["rank"]))
+
+
+def _encode_key(value: object) -> object:
+    if isinstance(value, tuple):
+        return [_encode_key(item) for item in value]
+    return value
+
+
+def _decode_key(value: object) -> object:
+    if isinstance(value, list):
+        return tuple(_decode_key(item) for item in value)
+    return value
 
 
 def _encode_extra(value: object) -> object:

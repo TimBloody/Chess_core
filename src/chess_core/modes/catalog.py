@@ -113,3 +113,62 @@ def dobutsu_shogi_piece_catalog() -> PieceCatalog:
     for definition in definitions:
         catalog.register(definition)
     return catalog
+
+
+def reversi_piece_catalog() -> PieceCatalog:
+    catalog = PieceCatalog()
+    catalog.register(
+        PieceType(PieceTypeId("disc"), (MovePattern(MovePatternKind.LEAP, ()),), captures_on_landing=False)
+    )
+    return catalog
+
+
+def corners_piece_catalog() -> PieceCatalog:
+    catalog = PieceCatalog()
+    catalog.register(
+        PieceType(
+            PieceTypeId("man"),
+            (MovePattern(MovePatternKind.CUSTOM_MASK, pattern_key="corners_man"),),
+            captures_on_landing=False,
+        )
+    )
+    return catalog
+
+
+def draughts_piece_catalog() -> PieceCatalog:
+    catalog = PieceCatalog()
+    catalog.register(
+        PieceType(
+            PieceTypeId("man"),
+            (
+                MovePattern(MovePatternKind.LEAP, ((1, 1), (-1, 1))),
+                MovePattern(MovePatternKind.CUSTOM_MASK, pattern_key="draughts_man_jump"),
+            ),
+            can_promote=True,
+            captures_on_landing=False,
+        )
+    )
+    catalog.register(
+        PieceType(
+            PieceTypeId("kingman"),
+            (
+                MovePattern(MovePatternKind.SLIDE, DIAGONAL),
+                MovePattern(MovePatternKind.CUSTOM_MASK, pattern_key="draughts_king_jump"),
+            ),
+            captures_on_landing=False,
+        )
+    )
+    return catalog
+
+
+def gobblet_piece_catalog() -> PieceCatalog:
+    catalog = PieceCatalog()
+    for name in ("gobblet_small", "gobblet_medium", "gobblet_large"):
+        catalog.register(
+            PieceType(
+                PieceTypeId(name),
+                (MovePattern(MovePatternKind.CUSTOM_MASK, pattern_key="cover_any"),),
+                captures_on_landing=False,
+            )
+        )
+    return catalog

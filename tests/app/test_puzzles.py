@@ -1,5 +1,7 @@
 """Lichess puzzle parsing and interactive solving."""
 
+from random import Random
+
 from chess_core.app.puzzles import (
     PuzzleJudgement,
     PuzzleSession,
@@ -60,15 +62,81 @@ def test_lichess_sample_lines_are_legal_in_classic_engine() -> None:
         assert puzzle_line_is_legal(mode, puzzle)
 
 
-def test_bundled_mini_catalog_loads() -> None:
-    from chess_core.infra.storage.lichess_puzzles import load_lichess_puzzles
+def test_bundled_catalog_loads() -> None:
+    from chess_core.infra.storage.lichess_puzzles import (
+        bundled_lichess_catalog_path,
+        load_lichess_puzzles,
+    )
 
     puzzles = load_lichess_puzzles()
     assert len(puzzles) >= 20
+    themes = {theme for puzzle in puzzles for theme in puzzle.themes}
+    assert "mateIn1" in themes
+    assert themes - {"mate", "mateIn1", "oneMove", "short", "long"}
+    if bundled_lichess_catalog_path().name == "lichess_catalog.csv":
+        assert len(puzzles) >= 1000
+        assert {"mateIn1", "mateIn2", "fork", "pin"} <= themes
     mode = classic_chess()
     session = PuzzleSession(mode, puzzles[:3])
     assert session.solver_side in {PieceSide.WHITE, PieceSide.BLACK}
     assert session.expected_uci is not None
+
+
+def test_session_shuffle_is_seeded_and_optional() -> None:
+    puzzles = parse_lichess_csv(_CSV)
+    plain = PuzzleSession(classic_chess(), puzzles)
+    shuffled = PuzzleSession(classic_chess(), puzzles, shuffle=True, rng=Random(7))
+    again = PuzzleSession(classic_chess(), puzzles, shuffle=True, rng=Random(7))
+    assert [puzzle.puzzle_id for puzzle in plain.puzzles] == ["00008", "00sHx"]
+    assert [puzzle.puzzle_id for puzzle in shuffled.puzzles] == [
+        puzzle.puzzle_id for puzzle in again.puzzles
+    ]
+    assert shuffled.puzzle.puzzle_id == again.puzzle.puzzle_id
+
+
+def test_theme_sampler_fills_quotas_without_network() -> None:
+    from chess_core.tools.fetch_lichess_puzzles import sample_lichess_rows
+
+    rows = [
+        {
+            "PuzzleId": "m1",
+            "FEN": "8/8/8/8/8/8/8/8 w - - 0 1",
+            "Moves": "a2a3 a7a6",
+            "Rating": "800",
+            "RatingDeviation": "80",
+            "Popularity": "90",
+            "NbPlays": "100",
+            "Themes": "mate mateIn1 oneMove",
+            "GameUrl": "",
+            "OpeningTags": "",
+        },
+        {
+            "PuzzleId": "fk",
+            "FEN": "8/8/8/8/8/8/8/8 w - - 0 1",
+            "Moves": "a2a4 a7a5",
+            "Rating": "1200",
+            "RatingDeviation": "80",
+            "Popularity": "90",
+            "NbPlays": "100",
+            "Themes": "fork short",
+            "GameUrl": "",
+            "OpeningTags": "",
+        },
+        {
+            "PuzzleId": "m1b",
+            "FEN": "8/8/8/8/8/8/8/8 w - - 0 1",
+            "Moves": "b2b3 b7b6",
+            "Rating": "900",
+            "RatingDeviation": "80",
+            "Popularity": "90",
+            "NbPlays": "100",
+            "Themes": "mate mateIn1 oneMove",
+            "GameUrl": "",
+            "OpeningTags": "",
+        },
+    ]
+    sampled = sample_lichess_rows(rows, quotas={"mateIn1": 1, "fork": 1})
+    assert [puzzle.puzzle_id for puzzle in sampled] == ["m1", "fk"]
 
 
 def test_session_applies_setup_move_and_accepts_solution() -> None:

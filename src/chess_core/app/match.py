@@ -21,6 +21,7 @@ from chess_core.core.gamemode import GameMode
 from chess_core.core.move import DropAction, MoveAction, Turn
 from chess_core.core.movegen import MoveGenerator
 from chess_core.core.piece import Piece, PieceSide
+from chess_core.core.repetition import is_threefold
 from chess_core.core.state import GameState
 from chess_core.core.time_control import TimeControlConfig
 
@@ -313,6 +314,9 @@ class MatchController:
 
     def _check_end(self, board_id: str) -> None:
         board = self.board(board_id)
+        if is_threefold(board):
+            self._end_draw(board_id, "repetition")
+            return
         if self._generator.is_checkmate(board):
             loser = board.side_to_move
             self._end(board_id, loser, "checkmate")
@@ -321,7 +325,7 @@ class MatchController:
             self._end(board_id, board.side_to_move, "stalemate")
             return
         clock = self._clocks.get(board_id)
-        if clock is None:
+        if clock is None or not clock.config.is_timed:
             return
         snap = clock.snapshot()
         if snap.white_remaining_ms <= 0:
@@ -343,6 +347,10 @@ class MatchController:
         else:
             winner = "black" if loser is PieceSide.WHITE else "white"
         self.state.result = MatchResult(winner_team=winner, reason=reason, board_id=board_id)
+
+    def _end_draw(self, board_id: str, reason: str) -> None:
+        self.state.phase = MatchPhase.ENDED
+        self.state.result = MatchResult(winner_team=None, reason=reason, board_id=board_id)
 
     def _require_playing(self) -> None:
         if self.state.phase is MatchPhase.ENDED:

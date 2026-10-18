@@ -32,6 +32,10 @@ def test_uci_round_trip() -> None:
     assert promo.promotion_choice is not None
     assert promo.promotion_choice.name == "queen"
     assert format_uci(promo) == "e7e8q"
+    king = parse_uci("a7a8k")
+    assert king.promotion_choice is not None
+    assert king.promotion_choice.name == "king"
+    assert format_uci(king) == "a7a8k"
 
 
 def test_piece_square_notation() -> None:

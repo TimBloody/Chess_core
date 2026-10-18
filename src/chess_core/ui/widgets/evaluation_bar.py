@@ -18,44 +18,33 @@ class EvaluationBarWidget(QWidget):
         super().__init__(parent)
         self._white_share = 0.5
         self._bar = QLabel("0.0")
-        self._detail = QLabel("")
         self._bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._detail.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._bar.setObjectName("evalScore")
-        self._detail.setObjectName("evalDetail")
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 14, 0, 0)
         layout.setSpacing(2)
         layout.addWidget(self._bar)
-        layout.addWidget(self._detail)
-        self.setMinimumHeight(56)
+        self.setMinimumHeight(40)
 
     def set_evaluation(self, evaluation: EngineEvaluation | None, *, error: str | None = None) -> None:
         if error:
             self._bar.setText("—")
-            self._detail.setText(error)
             self._set_share(0.5)
             return
         if evaluation is None:
             self._bar.setText("—")
-            self._detail.setText("")
             self._set_share(0.5)
             return
         if evaluation.mate_in is not None:
-            sign = "+" if evaluation.mate_in > 0 else "-"
             self._bar.setText(f"M{abs(evaluation.mate_in)}")
-            self._detail.setText(f"Mate {sign}")
             self._set_share(1.0 if evaluation.mate_in > 0 else 0.0)
             return
         if evaluation.score_cp is not None:
             pawns = evaluation.score_cp / 100.0
             self._bar.setText(f"{pawns:+.1f}")
-            pv = " ".join(evaluation.pv[:3])
-            self._detail.setText(pv or f"depth {evaluation.depth or '?'}")
             self._set_share(max(0.04, min(0.96, 0.5 + evaluation.score_cp / 1600.0)))
             return
         self._bar.setText("—")
-        self._detail.setText("")
         self._set_share(0.5)
 
     def paintEvent(self, event) -> None:  # noqa: ANN001 - Qt override signature

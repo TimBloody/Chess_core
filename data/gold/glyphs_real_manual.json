@@ -1,0 +1,537 @@
+{
+  "method": "visual pass on upscaled raw crops, transferred role ignored",
+  "n": 59,
+  "glyphs": [
+    {
+      "path": "data/gold/glyphs_real/image_0006_0000_r01_c01_0.png",
+      "manual_role": "f_c",
+      "manual_ok": true,
+      "transferred_role": "f_c",
+      "notes": "c",
+      "sheet_id": "image_0006",
+      "cell": "0000_r01_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0000_r01_c01_1.png",
+      "manual_role": "r_4",
+      "manual_ok": true,
+      "transferred_role": "r_4",
+      "notes": "4",
+      "sheet_id": "image_0006",
+      "cell": "0000_r01_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0001_r01_c02_0.png",
+      "manual_role": "f_c",
+      "manual_ok": true,
+      "transferred_role": "f_c",
+      "notes": "c",
+      "sheet_id": "image_0006",
+      "cell": "0001_r01_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0001_r01_c02_1.png",
+      "manual_role": "r_5",
+      "manual_ok": true,
+      "transferred_role": "r_6",
+      "notes": "5, не 6",
+      "sheet_id": "image_0006",
+      "cell": "0001_r01_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0002_r02_c01_0.png",
+      "manual_role": "f_c",
+      "manual_ok": true,
+      "transferred_role": "KN",
+      "notes": "c со speck, не N",
+      "sheet_id": "image_0006",
+      "cell": "0002_r02_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0002_r02_c01_1.png",
+      "manual_role": "f_c",
+      "manual_ok": true,
+      "transferred_role": "f_c",
+      "notes": "C",
+      "sheet_id": "image_0006",
+      "cell": "0002_r02_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0002_r02_c01_2.png",
+      "manual_role": "r_4",
+      "manual_ok": true,
+      "transferred_role": "r_3",
+      "notes": "4, не 3",
+      "sheet_id": "image_0006",
+      "cell": "0002_r02_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0003_r02_c02_0.png",
+      "manual_role": "f_e",
+      "manual_ok": true,
+      "transferred_role": "f_g",
+      "notes": "e, не g",
+      "sheet_id": "image_0006",
+      "cell": "0003_r02_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0003_r02_c02_1.png",
+      "manual_role": "r_6",
+      "manual_ok": true,
+      "transferred_role": "r_5",
+      "notes": "6, не 5",
+      "sheet_id": "image_0006",
+      "cell": "0003_r02_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0005_r03_c02_0.png",
+      "manual_role": "KN",
+      "manual_ok": true,
+      "transferred_role": "KN",
+      "notes": "k",
+      "sheet_id": "image_0006",
+      "cell": "0005_r03_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0005_r03_c02_1.png",
+      "manual_role": null,
+      "manual_ok": false,
+      "transferred_role": "f_f",
+      "notes": "два знака в одном кропе",
+      "sheet_id": "image_0006",
+      "cell": "0005_r03_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0005_r03_c02_2.png",
+      "manual_role": "r_6",
+      "manual_ok": true,
+      "transferred_role": "r_6",
+      "notes": "6",
+      "sheet_id": "image_0006",
+      "cell": "0005_r03_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0006_r04_c01_0.png",
+      "manual_role": "KN",
+      "manual_ok": true,
+      "transferred_role": "f_b",
+      "notes": "k, не b",
+      "sheet_id": "image_0006",
+      "cell": "0006_r04_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0006_r04_c01_1.png",
+      "manual_role": null,
+      "manual_ok": false,
+      "transferred_role": "r_4",
+      "notes": "f и лишний штрих, не один знак",
+      "sheet_id": "image_0006",
+      "cell": "0006_r04_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0008_r05_c01_0.png",
+      "manual_role": null,
+      "manual_ok": false,
+      "transferred_role": "f_d",
+      "notes": "замкнутый овал без ножки, не целая d",
+      "sheet_id": "image_0006",
+      "cell": "0008_r05_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0008_r05_c01_1.png",
+      "manual_role": "r_4",
+      "manual_ok": true,
+      "transferred_role": "r_4",
+      "notes": "4",
+      "sheet_id": "image_0006",
+      "cell": "0008_r05_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0009_r05_c02_0.png",
+      "manual_role": "f_c",
+      "manual_ok": true,
+      "transferred_role": "f_h",
+      "notes": "c, не h",
+      "sheet_id": "image_0006",
+      "cell": "0009_r05_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0009_r05_c02_1.png",
+      "manual_role": "f_d",
+      "manual_ok": true,
+      "transferred_role": "r_6",
+      "notes": "d, не 6",
+      "sheet_id": "image_0006",
+      "cell": "0009_r05_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0010_r06_c01_0.png",
+      "manual_role": null,
+      "manual_ok": false,
+      "transferred_role": "f_b",
+      "notes": "два знака Kd",
+      "sheet_id": "image_0006",
+      "cell": "0010_r06_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0010_r06_c01_1.png",
+      "manual_role": "f_g",
+      "manual_ok": true,
+      "transferred_role": "r_5",
+      "notes": "g, не 5",
+      "sheet_id": "image_0006",
+      "cell": "0010_r06_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0012_r07_c01_0.png",
+      "manual_role": null,
+      "manual_ok": false,
+      "transferred_role": "BS",
+      "notes": "открытый штрих, не целый слон",
+      "sheet_id": "image_0006",
+      "cell": "0012_r07_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0012_r07_c01_1.png",
+      "manual_role": "f_b",
+      "manual_ok": true,
+      "transferred_role": "f_b",
+      "notes": "b",
+      "sheet_id": "image_0006",
+      "cell": "0012_r07_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0012_r07_c01_2.png",
+      "manual_role": "r_5",
+      "manual_ok": true,
+      "transferred_role": "r_2",
+      "notes": "5, не 2",
+      "sheet_id": "image_0006",
+      "cell": "0012_r07_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0013_r07_c02_0.png",
+      "manual_role": "QN",
+      "manual_ok": true,
+      "transferred_role": "QN",
+      "notes": "q",
+      "sheet_id": "image_0006",
+      "cell": "0013_r07_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0013_r07_c02_1.png",
+      "manual_role": "r_2",
+      "manual_ok": true,
+      "transferred_role": "f_c",
+      "notes": "2, не c",
+      "sheet_id": "image_0006",
+      "cell": "0013_r07_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0013_r07_c02_2.png",
+      "manual_role": "r_1",
+      "manual_ok": true,
+      "transferred_role": "r_1",
+      "notes": "1",
+      "sheet_id": "image_0006",
+      "cell": "0013_r07_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0014_r08_c01_0.png",
+      "manual_role": "O",
+      "manual_ok": true,
+      "transferred_role": "f_f",
+      "notes": "0, не f",
+      "sheet_id": "image_0006",
+      "cell": "0014_r08_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0014_r08_c01_1.png",
+      "manual_role": "O",
+      "manual_ok": true,
+      "transferred_role": "r_4",
+      "notes": "0, не 4",
+      "sheet_id": "image_0006",
+      "cell": "0014_r08_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0021_r11_c02_0.png",
+      "manual_role": "r_4",
+      "manual_ok": true,
+      "transferred_role": "BS",
+      "notes": "4, не слон",
+      "sheet_id": "image_0006",
+      "cell": "0021_r11_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0021_r11_c02_1.png",
+      "manual_role": "f_a",
+      "manual_ok": true,
+      "transferred_role": "f_b",
+      "notes": "a, не b",
+      "sheet_id": "image_0006",
+      "cell": "0021_r11_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0021_r11_c02_2.png",
+      "manual_role": null,
+      "manual_ok": false,
+      "transferred_role": "r_7",
+      "notes": "палочка, не целая 7",
+      "sheet_id": "image_0006",
+      "cell": "0021_r11_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0023_r12_c02_0.png",
+      "manual_role": "KN",
+      "manual_ok": true,
+      "transferred_role": "QN",
+      "notes": "k, не ферзь",
+      "sheet_id": "image_0006",
+      "cell": "0023_r12_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0023_r12_c02_1.png",
+      "manual_role": null,
+      "manual_ok": false,
+      "transferred_role": "f_d",
+      "notes": "палочка с точкой, не целая d",
+      "sheet_id": "image_0006",
+      "cell": "0023_r12_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0006_0023_r12_c02_2.png",
+      "manual_role": "f_c",
+      "manual_ok": true,
+      "transferred_role": "r_2",
+      "notes": "c, не 2",
+      "sheet_id": "image_0006",
+      "cell": "0023_r12_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0001_r01_c02_0.png",
+      "manual_role": "f_d",
+      "manual_ok": true,
+      "transferred_role": "f_d",
+      "notes": "d",
+      "sheet_id": "image_0552",
+      "cell": "0001_r01_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0001_r01_c02_1.png",
+      "manual_role": "r_5",
+      "manual_ok": true,
+      "transferred_role": "r_5",
+      "notes": "5",
+      "sheet_id": "image_0552",
+      "cell": "0001_r01_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0002_r02_c01_0.png",
+      "manual_role": "f_c",
+      "manual_ok": true,
+      "transferred_role": "f_c",
+      "notes": "C",
+      "sheet_id": "image_0552",
+      "cell": "0002_r02_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0002_r02_c01_1.png",
+      "manual_role": "r_4",
+      "manual_ok": true,
+      "transferred_role": "r_4",
+      "notes": "4",
+      "sheet_id": "image_0552",
+      "cell": "0002_r02_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0003_r02_c02_0.png",
+      "manual_role": "f_e",
+      "manual_ok": true,
+      "transferred_role": "f_e",
+      "notes": "e",
+      "sheet_id": "image_0552",
+      "cell": "0003_r02_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0003_r02_c02_1.png",
+      "manual_role": "r_6",
+      "manual_ok": true,
+      "transferred_role": "r_6",
+      "notes": "6",
+      "sheet_id": "image_0552",
+      "cell": "0003_r02_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0004_r03_c01_0.png",
+      "manual_role": "KN",
+      "manual_ok": true,
+      "transferred_role": "KN",
+      "notes": "k",
+      "sheet_id": "image_0552",
+      "cell": "0004_r03_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0004_r03_c01_1.png",
+      "manual_role": null,
+      "manual_ok": false,
+      "transferred_role": "f_c",
+      "notes": "не целая c",
+      "sheet_id": "image_0552",
+      "cell": "0004_r03_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0004_r03_c01_2.png",
+      "manual_role": "r_3",
+      "manual_ok": true,
+      "transferred_role": "r_3",
+      "notes": "3",
+      "sheet_id": "image_0552",
+      "cell": "0004_r03_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0006_r04_c01_0.png",
+      "manual_role": "f_a",
+      "manual_ok": true,
+      "transferred_role": "f_a",
+      "notes": "a",
+      "sheet_id": "image_0552",
+      "cell": "0006_r04_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0006_r04_c01_1.png",
+      "manual_role": "r_3",
+      "manual_ok": true,
+      "transferred_role": "r_3",
+      "notes": "3",
+      "sheet_id": "image_0552",
+      "cell": "0006_r04_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0007_r04_c02_0.png",
+      "manual_role": "f_c",
+      "manual_ok": true,
+      "transferred_role": "BS",
+      "notes": "c, не слон",
+      "sheet_id": "image_0552",
+      "cell": "0007_r04_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0007_r04_c02_1.png",
+      "manual_role": "f_b",
+      "manual_ok": true,
+      "transferred_role": "f_e",
+      "notes": "b, не e",
+      "sheet_id": "image_0552",
+      "cell": "0007_r04_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0007_r04_c02_2.png",
+      "manual_role": "r_4",
+      "manual_ok": true,
+      "transferred_role": "r_7",
+      "notes": "4, не 7",
+      "sheet_id": "image_0552",
+      "cell": "0007_r04_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0009_r05_c02_0.png",
+      "manual_role": null,
+      "manual_ok": false,
+      "transferred_role": "QN",
+      "notes": "два знака",
+      "sheet_id": "image_0552",
+      "cell": "0009_r05_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0009_r05_c02_1.png",
+      "manual_role": "f_c",
+      "manual_ok": true,
+      "transferred_role": "f_d",
+      "notes": "C, не d",
+      "sheet_id": "image_0552",
+      "cell": "0009_r05_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0009_r05_c02_2.png",
+      "manual_role": null,
+      "manual_ok": false,
+      "transferred_role": "r_6",
+      "notes": "двоеточие и d, не один ранг",
+      "sheet_id": "image_0552",
+      "cell": "0009_r05_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0012_r07_c01_0.png",
+      "manual_role": "f_c",
+      "manual_ok": true,
+      "transferred_role": "QN",
+      "notes": "c, не ферзь",
+      "sheet_id": "image_0552",
+      "cell": "0012_r07_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0012_r07_c01_1.png",
+      "manual_role": "QN",
+      "manual_ok": true,
+      "transferred_role": "f_c",
+      "notes": "q, не c",
+      "sheet_id": "image_0552",
+      "cell": "0012_r07_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0012_r07_c01_2.png",
+      "manual_role": "r_2",
+      "manual_ok": true,
+      "transferred_role": "r_2",
+      "notes": "2",
+      "sheet_id": "image_0552",
+      "cell": "0012_r07_c01.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0013_r07_c02_0.png",
+      "manual_role": "O",
+      "manual_ok": true,
+      "transferred_role": "O",
+      "notes": "0",
+      "sheet_id": "image_0552",
+      "cell": "0013_r07_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0013_r07_c02_1.png",
+      "manual_role": "O",
+      "manual_ok": true,
+      "transferred_role": "O",
+      "notes": "0",
+      "sheet_id": "image_0552",
+      "cell": "0013_r07_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0015_r08_c02_0.png",
+      "manual_role": "f_c",
+      "manual_ok": true,
+      "transferred_role": "BS",
+      "notes": "C без второй чаши, не слон",
+      "sheet_id": "image_0552",
+      "cell": "0015_r08_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0015_r08_c02_1.png",
+      "manual_role": "f_d",
+      "manual_ok": true,
+      "transferred_role": "f_d",
+      "notes": "d",
+      "sheet_id": "image_0552",
+      "cell": "0015_r08_c02.png"
+    },
+    {
+      "path": "data/gold/glyphs_real/image_0552_0015_r08_c02_2.png",
+      "manual_role": "r_7",
+      "manual_ok": true,
+      "transferred_role": "r_7",
+      "notes": "7",
+      "sheet_id": "image_0552",
+      "cell": "0015_r08_c02.png"
+    }
+  ]
+}

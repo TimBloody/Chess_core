@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QGridLayout, QLabel, QPushButton, QVBoxLayout, QWidg
 
 from chess_core.app.seats import SPECTATOR, seats_for_match_kind
 from chess_core.infra.network_messages import LobbyState
+from chess_core.ui.theme import tighten_wrapping_label
 
 
 class MatchLobbyWidget(QWidget):
@@ -18,8 +19,11 @@ class MatchLobbyWidget(QWidget):
         self._kind = "single"
         self._session_id = ""
         self._is_host = False
+        self._allow_incomplete_start = False
+        self._last_lobby: LobbyState | None = None
         self._buttons: dict[str, QPushButton] = {}
         self._status = QLabel("Подключение…")
+        tighten_wrapping_label(self._status)
         self._start = QPushButton("Начать партию")
         self._start.clicked.connect(self.start_requested.emit)
         self._spectator = QPushButton("Зритель")
@@ -38,6 +42,7 @@ class MatchLobbyWidget(QWidget):
         self._rebuild()
 
     def apply_lobby(self, lobby: LobbyState) -> None:
+        self._last_lobby = lobby
         occupied = {occupant.seat: occupant for occupant in lobby.occupants}
         for seat_id, button in self._buttons.items():
             occupant = occupied.get(seat_id)
@@ -47,18 +52,38 @@ class MatchLobbyWidget(QWidget):
             elif occupant.session_id == self._session_id:
                 button.setText(self._label(seat_id) + " — вы")
                 button.setEnabled(True)
+            elif occupant.is_bot:
+                button.setText(self._label(seat_id) + " — движок")
+                button.setEnabled(False)
             else:
                 button.setText(self._label(seat_id) + " — занято")
                 button.setEnabled(False)
         filled = all(seat in occupied for seat in lobby.required_seats)
         self._start.setVisible(self._is_host)
-        self._start.setEnabled(self._is_host and filled and lobby.phase.name == "LOBBY")
-        phase = {
-            "LOBBY": "Лобби: выберите место. Чтобы пересесть, сначала станьте зрителем.",
-            "PLAYING": "Партия идёт.",
-            "ENDED": "Партия окончена.",
-        }.get(lobby.phase.name, lobby.phase.name)
+        self._start.setEnabled(
+            self._is_host
+            and (filled or self._allow_incomplete_start)
+            and lobby.phase.name == "LOBBY"
+        )
+        if self._kind == "bughouse" and lobby.phase.name == "LOBBY":
+            phase = (
+                "Лобби Bughouse: можно сесть за две доски сразу "
+                "(например A·белые и B·чёрные — одна команда). "
+                "Повторный клик по своему месту снимает его. "
+                "Свободные места хост может отдать движку."
+            )
+        else:
+            phase = {
+                "LOBBY": "Лобби: выберите место. Чтобы пересесть, сначала станьте зрителем.",
+                "PLAYING": "Партия идёт.",
+                "ENDED": "Партия окончена.",
+            }.get(lobby.phase.name, lobby.phase.name)
         self._status.setText(phase)
+
+    def set_allow_incomplete_start(self, allowed: bool) -> None:
+        self._allow_incomplete_start = allowed
+        if self._last_lobby is not None:
+            self.apply_lobby(self._last_lobby)
 
     def _rebuild(self) -> None:
         while self._grid.count():

@@ -16,3 +16,7 @@ dist/
 
 output/
 engines/public/
+data/gobblet/*.ggt
+data/gobblet/*.ggb
+data/experiments/ocr/emnist/
+data/experiments/ocr/cyrillic/

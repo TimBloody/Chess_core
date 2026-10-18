@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "chess-core": {
+      "type": "stdio",
+      "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "args": ["-m", "chess_core.tools.mcp_server"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src",
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONUTF8": "1"
+      }
+    }
+  }
+}

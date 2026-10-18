@@ -45,6 +45,15 @@ class MovePattern:
     pattern_key: str | None = None
 
 
+class MovePatternResolver(Protocol):
+    """Resolve movement patterns from piece identity and current square."""
+
+    def patterns(
+        self, piece: Piece, square: Square, state: object
+    ) -> tuple[MovePattern, ...]:
+        pass
+
+
 class PieceTransformContext(Protocol):
     def square(self) -> Square:
         pass
@@ -70,6 +79,7 @@ class PieceType:
     patterns: tuple[MovePattern, ...]
     can_promote: bool = False
     transforms_on_move: PieceTransform | None = None
+    captures_on_landing: bool = True
 
 
 @dataclass

@@ -23,6 +23,10 @@ def test_giveaway_must_capture_when_a_capture_exists() -> None:
     legal = generator.generate_legal(state)
     assert MoveAction(Square(4, 1), Square(4, 2)) in legal
     assert all(action.to_square == Square(4, 2) for action in legal)
+    king_moves = generator.generate_legal_for_square(state, Square(4, 0))
+    assert king_moves == []
+    rook_moves = generator.generate_legal_for_square(state, Square(4, 1))
+    assert rook_moves == [MoveAction(Square(4, 1), Square(4, 2))]
 
 
 def test_giveaway_losing_the_last_piece_wins() -> None:
@@ -50,3 +54,18 @@ def test_giveaway_stalemate_is_a_win_for_the_side_to_move() -> None:
     game = LocalGameService(mode, state)
     assert not MoveGenerator(mode).has_any_legal(state)
     assert game.status() is GameStatus.MATERIAL_WIN
+
+
+def test_giveaway_pawn_may_promote_to_king() -> None:
+    from chess_core.core.notation import parse_fen
+
+    mode = giveaway()
+    state = parse_fen("4k3/P7/8/8/8/8/8/4K3 w - - 0 1", mode)
+    legal = MoveGenerator(mode).generate_legal_for_square(state, Square(0, 6))
+    assert {action.promotion_choice.name for action in legal} == {
+        "queen",
+        "rook",
+        "bishop",
+        "knight",
+        "king",
+    }

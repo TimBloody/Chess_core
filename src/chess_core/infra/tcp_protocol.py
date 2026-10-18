@@ -347,6 +347,7 @@ def _encode_lobby(lobby: LobbyState) -> dict[str, Any]:
                 "session_id": occupant.session_id,
                 "seat": occupant.seat,
                 "is_host": occupant.is_host,
+                "is_bot": occupant.is_bot,
             }
             for occupant in lobby.occupants
         ],
@@ -359,6 +360,7 @@ def _decode_lobby(payload: dict[str, Any]) -> LobbyState:
             session_id=str(item["session_id"]),
             seat=str(item["seat"]),
             is_host=bool(item.get("is_host", False)),
+            is_bot=bool(item.get("is_bot", False)),
         )
         for item in payload.get("occupants") or ()
     )

@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
+    QButtonGroup,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -17,9 +18,10 @@ from PyQt6.QtWidgets import (
 from chess_core.app.editor import BoardEditorService
 from chess_core.core.gamemode import GameMode
 from chess_core.core.piece import Piece, PieceSide, PieceTypeId
-from chess_core.core.registry import default_registry
+from chess_core.modes import resolve_mode
 from chess_core.ui.assets_loader import AssetsLoader
 from chess_core.ui.piece_keys import FACING_ASSET_FAMILIES, piece_asset_key
+from chess_core.ui.theme import tighten_wrapping_label
 from chess_core.ui.widgets.board_widget import BoardWidget
 from chess_core.ui.widgets.editor_palette import EditorPaletteStrip, PaletteToken
 
@@ -29,12 +31,13 @@ class EditorWidget(QWidget):
 
     def __init__(
         self,
-        mode_resolver: Callable[[str], GameMode] = default_registry.get,
+        mode_resolver: Callable[[str], GameMode] = resolve_mode,
         mode_id: str = "chess",
         parent: QWidget | None = None,
         *,
         require_one_king_per_side: bool = True,
         enable_play: bool = True,
+        play_button_text: str = "Играть с позиции",
     ) -> None:
         super().__init__(parent)
         self._resolve = mode_resolver
@@ -52,6 +55,7 @@ class EditorWidget(QWidget):
         self.board = BoardWidget()
         self.status = QLabel()
         self.status.setObjectName("gameStatus")
+        tighten_wrapping_label(self.status)
         self.fen_field = QLineEdit()
         self.white_label = QLabel("Белые")
         self.white_label.setObjectName("panelTitle")
@@ -63,8 +67,16 @@ class EditorWidget(QWidget):
         self.erase_button.setCheckable(True)
         self.blocker_button = QPushButton("Блокер")
         self.blocker_button.setCheckable(True)
+        self.white_to_move_button = QPushButton("Ход белых")
+        self.white_to_move_button.setCheckable(True)
+        self.black_to_move_button = QPushButton("Ход чёрных")
+        self.black_to_move_button.setCheckable(True)
+        self._side_group = QButtonGroup(self)
+        self._side_group.setExclusive(True)
+        self._side_group.addButton(self.white_to_move_button)
+        self._side_group.addButton(self.black_to_move_button)
         self.validation = QLabel()
-        self.validation.setWordWrap(True)
+        tighten_wrapping_label(self.validation)
 
         layout = QHBoxLayout(self)
         board_col = QVBoxLayout()
@@ -82,6 +94,10 @@ class EditorWidget(QWidget):
         tools.addWidget(self.erase_button)
         tools.addWidget(self.blocker_button)
         side_col.addLayout(tools)
+        side_row = QHBoxLayout()
+        side_row.addWidget(self.white_to_move_button)
+        side_row.addWidget(self.black_to_move_button)
+        side_col.addLayout(side_row)
         side_col.addWidget(QLabel("FEN"))
         side_col.addWidget(self.fen_field)
         for label, slot in (
@@ -94,7 +110,7 @@ class EditorWidget(QWidget):
             button = QPushButton(label)
             button.clicked.connect(slot)
             side_col.addWidget(button)
-        self.play_button = QPushButton("Играть с позиции")
+        self.play_button = QPushButton(play_button_text)
         self.play_button.clicked.connect(self._play)
         self.play_button.setVisible(enable_play)
         side_col.addWidget(self.play_button)
@@ -107,6 +123,8 @@ class EditorWidget(QWidget):
         self.black_palette.token_clicked.connect(self._on_palette_piece)
         self.erase_button.clicked.connect(self._select_eraser)
         self.blocker_button.clicked.connect(self._select_blocker)
+        self.white_to_move_button.clicked.connect(self._set_white_to_move)
+        self.black_to_move_button.clicked.connect(self._set_black_to_move)
         self._service.new_empty_position()
         self.board.set_shape(
             self._service.mode.board.shape.files,
@@ -146,6 +164,8 @@ class EditorWidget(QWidget):
         facing = family in FACING_ASSET_FAMILIES
         self.white_label.setText("Готе" if facing else "Белые")
         self.black_label.setText("Сенте" if facing else "Чёрные")
+        self.white_to_move_button.setText("Ход готе" if facing else "Ход белых")
+        self.black_to_move_button.setText("Ход сенте" if facing else "Ход чёрных")
         self.white_palette.set_tokens(self._tokens_for(PieceSide.WHITE))
         self.black_palette.set_tokens(self._tokens_for(PieceSide.BLACK))
         self.white_palette.set_rotate_pieces(False)
@@ -184,6 +204,14 @@ class EditorWidget(QWidget):
         self.erase_button.setChecked(False)
         self.blocker_button.setChecked(True)
         self._sync_palette_selection()
+
+    def _set_white_to_move(self) -> None:
+        self._service.set_side_to_move(PieceSide.WHITE)
+        self._refresh_board()
+
+    def _set_black_to_move(self) -> None:
+        self._service.set_side_to_move(PieceSide.BLACK)
+        self._refresh_board()
 
     def _sync_palette_selection(self) -> None:
         if self._eraser or self._selected_piece is None:
@@ -246,12 +274,18 @@ class EditorWidget(QWidget):
         for index, piece in state.board_state.cells.items():
             if piece is None:
                 continue
-            if piece.side is PieceSide.NEUTRAL:
-                position[index] = "wP"
-                continue
             key = piece_asset_key(piece, self._service.mode.asset_family)
             if key is not None:
                 position[index] = key
         self.board.set_position(position)
-        side = "белых" if state.side_to_move is PieceSide.WHITE else "чёрных"
+        white = state.side_to_move is PieceSide.WHITE
+        self.white_to_move_button.blockSignals(True)
+        self.black_to_move_button.blockSignals(True)
+        self.white_to_move_button.setChecked(white)
+        self.black_to_move_button.setChecked(not white)
+        self.white_to_move_button.blockSignals(False)
+        self.black_to_move_button.blockSignals(False)
+        side = "белых" if white else "чёрных"
+        if self._service.mode.asset_family in FACING_ASSET_FAMILIES:
+            side = "готе" if white else "сенте"
         self.status.setText(f"Редактор — ход {side}")

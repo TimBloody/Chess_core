@@ -49,6 +49,53 @@ def test_start_requires_four_players() -> None:
     assert server.match.state.phase.name == "PLAYING"
 
 
+def test_bughouse_session_can_control_partner_seats_on_both_boards() -> None:
+    mode = bughouse()
+    server = GameServer(mode.initial_state(), mode=mode)
+    host = GameClient().connect(server)
+    opponent = GameClient().connect(server)
+    host.claim_seat("a_white")
+    host.claim_seat("b_black")
+    opponent.claim_seat("a_black")
+    opponent.claim_seat("b_white")
+    assert host.seats == {"a_white", "b_black"}
+    server.start_match(host.session_id)
+    server.apply_remote_turn(
+        host.session_id,
+        Turn(PieceSide.WHITE, [MoveAction(Square(4, 1), Square(4, 3))]),
+        board_id="A",
+    )
+    server.apply_remote_turn(
+        opponent.session_id,
+        Turn(PieceSide.WHITE, [MoveAction(Square(4, 1), Square(4, 3))]),
+        board_id="B",
+    )
+    server.apply_remote_turn(
+        host.session_id,
+        Turn(PieceSide.BLACK, [MoveAction(Square(4, 6), Square(4, 4))]),
+        board_id="B",
+    )
+    assert server.match.board("A").side_to_move is PieceSide.BLACK
+    assert server.match.board("B").side_to_move is PieceSide.WHITE
+
+
+def test_host_can_fill_missing_bughouse_seats_with_bots() -> None:
+    mode = bughouse()
+    server = GameServer(mode.initial_state(), mode=mode)
+    host = GameClient().connect(server)
+    host.claim_seat("a_white")
+    host.claim_seat("b_black")
+    bots = server.fill_empty_seats_with_bots()
+    assert set(bots) == {"a_black", "b_white"}
+    assert all(
+        occupant.is_bot
+        for occupant in server.lobby_state().occupants
+        if occupant.seat in bots
+    )
+    server.start_match(host.session_id)
+    assert server.match.state.phase.name == "PLAYING"
+
+
 def test_wrong_board_or_brain_cannot_move() -> None:
     mode = bughouse()
     server = GameServer(mode.initial_state(), mode=mode)

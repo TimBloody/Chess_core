@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from chess_core.core.board import Board, BoardShape
-from chess_core.core.piece import Piece, PieceCatalog, PieceSide
+from chess_core.core.piece import MovePatternResolver, Piece, PieceCatalog, PieceSide
 from chess_core.core.rays import RayTable
 from chess_core.core.rules import (
     CaptureSink,
@@ -43,21 +43,51 @@ class GameMode:
     royal_type: str = "king"
     checks_enabled: bool = True
     asset_family: str = "chess"
+    move_resolver: MovePatternResolver | None = None
 
     def initial_state(self) -> object:
+        from copy import deepcopy
+
         from chess_core.core.state import BoardState, GameState, HandsState
 
         cells: dict[int, Piece | None] = {
             index: None for index in range(self.board.shape.cell_count)
         }
         cells.update(self.start_cells)
-        extras: dict[str, object] = dict(self.initial_extras)
+        extras: dict[str, object] = deepcopy(self.initial_extras)
         extras["mode"] = self
-        return GameState(
-            board_state=BoardState(self.board, cells),
-            side_to_move=PieceSide.WHITE,
-            hands=HandsState() if self.drop_rule is not None else None,
-            extras=extras,
+        hands = None
+        if self.drop_rule is not None:
+            from chess_core.core.piece import PieceTypeId
+
+            hands = HandsState()
+            stock = extras.get("hand_stock")
+            if isinstance(stock, int) and stock > 0:
+                names = [piece_type.id.name for piece_type in self.pieces.all_types()]
+                fill = names[0] if names else "disc"
+                for side in (PieceSide.WHITE, PieceSide.BLACK):
+                    for _ in range(stock):
+                        hands.add(side, Piece(PieceTypeId(fill), side))
+            elif isinstance(stock, dict):
+                for side in (PieceSide.WHITE, PieceSide.BLACK):
+                    for name, count in stock.items():
+                        for _ in range(int(count)):
+                            hands.add(side, Piece(PieceTypeId(str(name)), side))
+        from chess_core.core.repetition import seed_repetition_log
+
+        starting = extras.get("starting_side", PieceSide.WHITE)
+        if isinstance(starting, str):
+            starting = PieceSide[starting.upper()]
+        if not isinstance(starting, PieceSide):
+            starting = PieceSide.WHITE
+
+        return seed_repetition_log(
+            GameState(
+                board_state=BoardState(self.board, cells),
+                side_to_move=starting,
+                hands=hands,
+                extras=extras,
+            )
         )
 
 
@@ -85,6 +115,7 @@ class GameModeBuilder:
         self._royal_type = "king"
         self._checks_enabled = True
         self._asset_family = "chess"
+        self._move_resolver: MovePatternResolver | None = None
 
     def with_shape(self, files: int, ranks: int) -> GameModeBuilder:
         self._shape = BoardShape(files=files, ranks=ranks)
@@ -122,6 +153,10 @@ class GameModeBuilder:
 
     def with_asset_family(self, family: str) -> GameModeBuilder:
         self._asset_family = family
+        return self
+
+    def with_move_resolver(self, resolver: MovePatternResolver) -> GameModeBuilder:
+        self._move_resolver = resolver
         return self
 
     def with_start_cells(self, cells: dict[int, Piece]) -> GameModeBuilder:
@@ -201,4 +236,5 @@ class GameModeBuilder:
             royal_type=self._royal_type,
             checks_enabled=self._checks_enabled,
             asset_family=self._asset_family,
+            move_resolver=self._move_resolver,
         )

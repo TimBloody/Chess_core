@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "settings": {
+    "name": "Демо: 12 игроков",
+    "system": "swiss",
+    "declared_rounds": 5,
+    "rr_cycles": 1,
+    "initial_color": "white",
+    "pairing_engine": "native_dutch_2026",
+    "seed": 1,
+    "list_closed": false,
+    "site": "Тестовый зал",
+    "arbiter": "Главный судья",
+    "time_control": "90+30"
+  },
+  "current_round": 0,
+  "players": [
+    {
+      "player_id": "demo-1",
+      "name": "Иванов Иван",
+      "rating": 2412,
+      "team": "Спартак",
+      "title": "GM",
+      "federation": "RUS",
+      "status": "active",
+      "start_number": 1
+    },
+    {
+      "player_id": "demo-2",
+      "name": "Петрова Анна",
+      "rating": 2288,
+      "team": "Динамо",
+      "title": "WIM",
+      "federation": "RUS",
+      "status": "active",
+      "start_number": 2
+    },
+    {
+      "player_id": "demo-3",
+      "name": "Сидоров Павел",
+      "rating": 2210,
+      "team": "Локомотив",
+      "title": "FM",
+      "federation": "RUS",
+      "status": "active",
+      "start_number": 3
+    },
+    {
+      "player_id": "demo-4",
+      "name": "Козлова Мария",
+      "rating": 2145,
+      "team": "Шахматная школа",
+      "title": "WFM",
+      "federation": "BLR",
+      "status": "active",
+      "start_number": 4
+    },
+    {
+      "player_id": "demo-5",
+      "name": "Орлов Дмитрий",
+      "rating": 2078,
+      "team": "Спартак",
+      "title": "",
+      "federation": "RUS",
+      "status": "active",
+      "start_number": 5
+    },
+    {
+      "player_id": "demo-6",
+      "name": "Новикова Елена",
+      "rating": 2014,
+      "team": "Динамо",
+      "title": "WCM",
+      "federation": "UKR",
+      "status": "active",
+      "start_number": 6
+    },
+    {
+      "player_id": "demo-7",
+      "name": "Смирнов Алексей",
+      "rating": 1960,
+      "team": "Юность",
+      "title": "",
+      "federation": "RUS",
+      "status": "active",
+      "start_number": 7
+    },
+    {
+      "player_id": "demo-8",
+      "name": "Волкова Ирина",
+      "rating": 1895,
+      "team": "Астана",
+      "title": "",
+      "federation": "KAZ",
+      "status": "active",
+      "start_number": 8
+    },
+    {
+      "player_id": "demo-9",
+      "name": "Морозов Никита",
+      "rating": 1822,
+      "team": "Юность",
+      "title": "",
+      "federation": "RUS",
+      "status": "active",
+      "start_number": 9
+    },
+    {
+      "player_id": "demo-10",
+      "name": "Лебедева Ольга",
+      "rating": 1750,
+      "team": "Шахматная школа",
+      "title": "",
+      "federation": "RUS",
+      "status": "active",
+      "start_number": 10
+    },
+    {
+      "player_id": "demo-11",
+      "name": "Кузнецов Артём",
+      "rating": 1688,
+      "team": "Локомотив",
+      "title": "",
+      "federation": "RUS",
+      "status": "active",
+      "start_number": 11
+    },
+    {
+      "player_id": "demo-12",
+      "name": "Соколова Дарья",
+      "rating": 1540,
+      "team": "Динамо",
+      "title": "",
+      "federation": "RUS",
+      "status": "active",
+      "start_number": 12
+    }
+  ],
+  "pairings": [],
+  "audit": [],
+  "scheduled_byes": []
+}

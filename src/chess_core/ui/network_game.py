@@ -6,8 +6,9 @@ import asyncio
 import time
 from collections.abc import Callable
 
-from PyQt6.QtCore import QObject, QThread, pyqtSignal
+from PyQt6.QtCore import QObject, QThread, QTimer, pyqtSignal
 from PyQt6.QtWidgets import (
+    QCheckBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -19,17 +20,28 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from chess_core.app.engine import BestMove, EngineAnalysisService, EngineRequest, SearchLimit
 from chess_core.app.match import match_kind_from_mode, match_kind_key
 from chess_core.app.network_game import (
     GuestTurnTransport,
     HostTurnTransport,
     NetworkedLocalGameService,
 )
-from chess_core.app.seats import BOARD_A, BOARD_B, BOARD_MAIN, SPECTATOR, SeatDuty, spec_by_id
+from chess_core.app.seats import (
+    BOARD_A,
+    BOARD_B,
+    BOARD_MAIN,
+    SPECTATOR,
+    SeatDuty,
+    partner_board,
+    spec_by_id,
+)
+from chess_core.core.notation import with_partner_engine_fen
 from chess_core.core.board import Square
 from chess_core.core.gamemode import GameMode
-from chess_core.core.move import DropAction, Turn
+from chess_core.core.move import DropAction, MoveAction, Turn
 from chess_core.core.piece import PieceSide, PieceTypeId
+from chess_core.core.state import GameState
 from chess_core.core.time_control import TimeControlConfig
 from chess_core.infra.lan import lan_ipv4_addresses
 from chess_core.infra.network import GameServer
@@ -43,12 +55,15 @@ from chess_core.infra.network_messages import (
 )
 from chess_core.infra.tcp_client import HelloRejectedError, TcpGameClient
 from chess_core.infra.tcp_server import TcpGameServer
-from chess_core.ui.piece_keys import droppable_type_names, piece_asset_key
-from chess_core.ui.theme import mode_display_name
+from chess_core.ui.piece_keys import drop_flip_map, droppable_type_names, piece_asset_key
+from chess_core.ui.engine_bridge import EngineBridge
+from chess_core.ui.theme import mode_display_name, tighten_wrapping_label
 from chess_core.ui.widgets.board_widget import BoardOrientation, BoardWidget
 from chess_core.ui.widgets.game_clock import GameClockWidget
 from chess_core.ui.widgets.match_lobby import MatchLobbyWidget
+from chess_core.ui.widgets.move_list import MoveListWidget
 from chess_core.ui.widgets.pocket_widget import PocketWidget
+from chess_core.ui.widgets.promotion_menu import choose_promotion_move
 
 
 class _AsyncLoopThread(QThread):
@@ -94,9 +109,11 @@ class NetworkGameWidget(QWidget):
         mode_resolver: Callable[[str], GameMode],
         mode_id: str,
         parent: QWidget | None = None,
+        discovered: list | None = None,
     ) -> None:
         super().__init__(parent)
         self._resolve = mode_resolver
+        self._discovered = discovered
         self._mode_id = mode_id
         self._loop_thread: _AsyncLoopThread | None = None
         self._tcp_server: TcpGameServer | None = None
@@ -110,8 +127,14 @@ class NetworkGameWidget(QWidget):
         self._services: dict[str, NetworkedLocalGameService] = {}
         self._selected: dict[str, int | None] = {}
         self._drop_type: str | None = None
+        self._drop_face: str | None = None
         self._seat = SPECTATOR
+        self._seats: set[str] = set()
+        self._bot_sessions: dict[str, str] = {}
+        self._bot_bridges: dict[str, EngineBridge] = {}
+        self._bot_busy: set[str] = set()
         self._clocks: dict = {}
+        self._analysis_board = BOARD_MAIN
         self._signals = NetworkSignals(self)
         self._signals.message.connect(self._on_network_message)
         self._signals.error.connect(self._on_network_error)
@@ -124,18 +147,34 @@ class NetworkGameWidget(QWidget):
         self.port_input.setRange(1, 65535)
         self.port_input.setValue(DEFAULT_GAME_PORT)
         self.status = QLabel(_lan_text())
+        tighten_wrapping_label(self.status)
         self.lobby = MatchLobbyWidget()
         self.lobby.seat_chosen.connect(self._on_seat_chosen)
         self.lobby.start_requested.connect(self._on_start_match)
+        self.fill_bots = QCheckBox("Заполнить свободные места движком")
+        self.fill_bots.setToolTip(
+            "При старте свободные места займёт Fairy-Stockfish (или встроенный "
+            "движок, если Fairy не найден). Каждый ход движок видит свою доску, "
+            "карман с подарками партнёра и FEN второй доски."
+        )
+        self.two_engine_processes = QCheckBox("Два процесса движка")
+        self.two_engine_processes.setChecked(True)
+        self.two_engine_processes.setToolTip(
+            "Включено: отдельный процесс на каждую доску. "
+            "Выключено: один процесс последовательно играет на обеих досках."
+        )
 
         self.board_a = BoardWidget()
         self.board_b = BoardWidget()
+        self.board_a.set_piece_drag_enabled(True)
+        self.board_b.set_piece_drag_enabled(True)
         self.pocket_a = PocketWidget()
         self.pocket_b = PocketWidget()
         self.clock_a = GameClockWidget()
         self.clock_b = GameClockWidget()
         self.board_b_panel = QWidget()
         self._hnb_hint = QLabel("")
+        tighten_wrapping_label(self._hnb_hint)
 
         connect_row = QHBoxLayout()
         connect_row.addWidget(self.host_button)
@@ -159,19 +198,42 @@ class NetworkGameWidget(QWidget):
         boards.addWidget(left)
         boards.addWidget(self.board_b_panel)
 
+        self.move_list = MoveListWidget()
+        self.live_button = QPushButton("К партии")
+        self.live_button.setEnabled(False)
+        analysis = QWidget()
+        analysis_layout = QVBoxLayout(analysis)
+        analysis_layout.setContentsMargins(0, 0, 0, 0)
+        analysis_title = QLabel("Ходы")
+        analysis_title.setObjectName("panelTitle")
+        analysis_layout.addWidget(analysis_title)
+        analysis_layout.addWidget(self.move_list, 1)
+        analysis_layout.addWidget(self.live_button)
+
+        play_row = QSplitter()
+        play_row.addWidget(boards)
+        play_row.addWidget(analysis)
+        play_row.setStretchFactor(0, 4)
+        play_row.setStretchFactor(1, 1)
+
         layout = QVBoxLayout(self)
         layout.addLayout(connect_row)
         layout.addWidget(self.status)
         layout.addWidget(self.lobby)
+        layout.addWidget(self.fill_bots)
+        layout.addWidget(self.two_engine_processes)
         layout.addWidget(self._hnb_hint)
-        layout.addWidget(boards, 1)
+        layout.addWidget(play_row, 1)
 
         self.host_button.clicked.connect(self._host_game)
         self.join_button.clicked.connect(self._join_game)
+        self.live_button.clicked.connect(self._go_live)
+        self.move_list.revision_selected.connect(self._on_revision_selected)
         self.board_a.square_clicked.connect(lambda index: self._on_square(BOARD_A if self._match_kind == "bughouse" else BOARD_MAIN, index))
         self.board_b.square_clicked.connect(lambda index: self._on_square(BOARD_B, index))
         self.pocket_a.piece_chosen.connect(lambda name: self._on_drop_type(name))
         self.pocket_b.piece_chosen.connect(lambda name: self._on_drop_type(name))
+        self.fill_bots.toggled.connect(self.lobby.set_allow_incomplete_start)
         self.set_mode(mode_id)
 
     def set_mode(self, mode_id: str) -> None:
@@ -179,6 +241,8 @@ class NetworkGameWidget(QWidget):
         mode = self._resolve(mode_id)
         self._match_kind = match_kind_key(match_kind_from_mode(mode))
         self.board_b_panel.setVisible(self._match_kind == "bughouse")
+        self.fill_bots.setVisible(self._match_kind == "bughouse")
+        self.two_engine_processes.setVisible(self._match_kind == "bughouse")
         self.pocket_a.setVisible(self._match_kind in {"bughouse", "single"} and mode.drop_rule is not None)
         self.pocket_b.setVisible(self._match_kind == "bughouse")
 
@@ -198,16 +262,27 @@ class NetworkGameWidget(QWidget):
         self._loop_thread = None
         self._transport = None
         self._services.clear()
+        self._shutdown_bot_engines()
+        self._bot_sessions.clear()
+        self._seats.clear()
 
     def closeEvent(self, event) -> None:  # noqa: ANN001
         self.disconnect()
         super().closeEvent(event)
 
-    def _host_game(self) -> None:
+    def host_from_position(self, state: GameState) -> None:
+        """Host a new table from an editor position. Replaces an existing table."""
+
+        self._host_game(initial_state=state)
+        self.status.setText(
+            f"{self.status.text()} Стартовая позиция из редактора."
+        )
+
+    def _host_game(self, initial_state: GameState | None = None) -> None:
         self.disconnect()
         mode = self._resolve(self._mode_id)
         server = GameServer(
-            mode.initial_state(),
+            initial_state if initial_state is not None else mode.initial_state(),
             mode=mode,
             time_control=TimeControlConfig.blitz(),
         )
@@ -239,7 +314,8 @@ class NetworkGameWidget(QWidget):
         self._own_session_id = host_session.session_id
         self._is_host = True
         self._transport = HostTurnTransport(server, host_session.session_id, on_flush=_flush)
-        self._attach_services(mode, match_ready=self._match_kind == "single")
+        start = initial_state if initial_state is not None else mode.initial_state()
+        self._attach_services(mode, match_ready=self._match_kind == "single", initial_state=start)
         self.lobby.set_context(
             match_kind=self._match_kind,
             session_id=host_session.session_id,
@@ -303,28 +379,40 @@ class NetworkGameWidget(QWidget):
         self.status.setText(f"Подключено к {mode_display_name(hello.mode_id)}.")
         self.set_mode(hello.mode_id)
 
-    def _attach_services(self, mode: GameMode, *, match_ready: bool) -> None:
+    def _attach_services(
+        self,
+        mode: GameMode,
+        *,
+        match_ready: bool,
+        initial_state: GameState | None = None,
+    ) -> None:
         assert self._transport is not None
         boards = (BOARD_A, BOARD_B) if self._match_kind == "bughouse" else (BOARD_MAIN,)
         self._services = {
             board_id: NetworkedLocalGameService(
                 mode,
                 self._transport,
+                initial_state,
                 match_ready=match_ready,
                 board_id=board_id,
             )
             for board_id in boards
         }
         self._selected = {board_id: None for board_id in boards}
+        self._analysis_board = boards[0]
 
     def _on_network_message(self, message: object) -> None:
         if isinstance(message, HelloOkPayload) and not self._is_host:
             self._attach_guest(message)
         if isinstance(message, LobbyState):
             self.lobby.apply_lobby(message)
-            for occupant in message.occupants:
-                if occupant.session_id == self._own_session_id:
-                    self._seat = occupant.seat
+            self._seats = {
+                occupant.seat
+                for occupant in message.occupants
+                if occupant.session_id == self._own_session_id
+                and occupant.seat != SPECTATOR
+            }
+            self._seat = next(iter(self._seats), SPECTATOR)
         for service in self._services.values():
             service.apply_server_message(message)
         if isinstance(message, MatchEnvelope):
@@ -333,6 +421,8 @@ class NetworkGameWidget(QWidget):
             self._clocks["main"] = message.clock
         if isinstance(message, (MatchEnvelope, StateEnvelope, LobbyState, UndoPending, HelloOkPayload)):
             self._refresh()
+        if isinstance(message, MatchEnvelope):
+            QTimer.singleShot(0, self._schedule_bughouse_bots)
         if self._game_server is not None:
             self.lobby.apply_lobby(self._game_server.lobby_state())
             self._refresh()
@@ -346,19 +436,39 @@ class NetworkGameWidget(QWidget):
         if self._transport is None:
             return
         try:
+            if (
+                self._match_kind == "bughouse"
+                and self.fill_bots.isChecked()
+                and self._game_server is not None
+            ):
+                self._bot_sessions.update(
+                    self._game_server.fill_empty_seats_with_bots()
+                )
+                self._ensure_bughouse_engines()
             self._transport.start_match()
+            self.fill_bots.setEnabled(False)
+            self.two_engine_processes.setEnabled(False)
         except PermissionError as exc:
             self.status.setText(str(exc))
+            return
+        QTimer.singleShot(0, self._schedule_bughouse_bots)
 
     def _on_drop_type(self, name: str) -> None:
         self._drop_type = name
+        sender = self.sender()
+        self._drop_face = sender.selected_face() if isinstance(sender, PocketWidget) else name
 
     def _on_square(self, board_id: str, index: int) -> None:
-        spec = spec_by_id(self._match_kind, self._seat)
-        if spec is None or spec.board_id != board_id:
-            return
+        self._analysis_board = board_id
         service = self._services.get(board_id)
         if service is None or not service.match_ready:
+            return
+        if not service.is_live:
+            self.status.setText("Просмотр партии. «К партии» — вернуться к текущей позиции.")
+            self._refresh()
+            return
+        spec = self._own_spec_for_board(board_id, service.state.side_to_move)
+        if spec is None:
             return
         if spec.duty is SeatDuty.BRAIN:
             piece = service.state.board_state.piece_at(index)
@@ -378,12 +488,13 @@ class NetworkGameWidget(QWidget):
         if self._drop_type is not None:
             shape = service.mode.board.shape
             target = Square.from_index(index, shape.files, shape.ranks)
-            drop = DropAction(PieceTypeId(self._drop_type), target)
+            drop = DropAction(PieceTypeId(self._drop_type), target, self._drop_face)
             try:
                 service.play_turn(Turn(spec.side, [drop]))
             except (PermissionError, ValueError):
                 pass
             self._drop_type = None
+            self._drop_face = None
             self.pocket_a.clear_selection()
             self.pocket_b.clear_selection()
             self._refresh()
@@ -411,24 +522,56 @@ class NetworkGameWidget(QWidget):
             for move in service.selected_moves
             if move.from_square == source and move.to_square == target
         ]
-        move = next(
-            (
-                candidate
-                for candidate in candidates
-                if candidate.promotion_choice is not None and candidate.promotion_choice.name == "queen"
-            ),
-            candidates[0] if candidates else None,
+        if not candidates:
+            self._selected[board_id] = None
+            self._refresh()
+            return
+        source_piece = service.state.board_state.piece_at(selected)
+        move = self._choose_promotion(
+            candidates,
+            side=spec.side,
+            asset_family=service.mode.asset_family,
+            unpromoted_type=None if source_piece is None else source_piece.piece_type.name,
         )
-        if move is not None:
-            try:
-                service.play_turn(Turn(spec.side, [move]))
-            except (PermissionError, ValueError) as exc:
-                self.status.setText(str(exc))
+        if move is None:
+            return
+        try:
+            service.play_turn(Turn(spec.side, [move]))
+        except (PermissionError, ValueError) as exc:
+            self.status.setText(str(exc))
         self._selected[board_id] = None
         self._refresh()
 
+    def _choose_promotion(
+        self,
+        candidates: list[MoveAction],
+        *,
+        side: PieceSide,
+        asset_family: str,
+        unpromoted_type: str | None,
+    ) -> MoveAction | None:
+        return choose_promotion_move(
+            candidates,
+            parent=self,
+            side=side,
+            asset_family=asset_family,
+            unpromoted_type=unpromoted_type,
+        )
+
+    def _own_spec_for_board(
+        self, board_id: str, side: PieceSide | None = None
+    ):
+        seats = self._seats or ({self._seat} if self._seat != SPECTATOR else set())
+        for seat in seats:
+            spec = spec_by_id(self._match_kind, seat)
+            if spec is None or spec.board_id != board_id:
+                continue
+            if side is None or spec.side is side:
+                return spec
+        return None
+
     def _refresh(self) -> None:
-        spec = spec_by_id(self._match_kind, self._seat)
+        primary_spec = spec_by_id(self._match_kind, self._seat)
         mapping = {
             BOARD_MAIN: (self.board_a, self.pocket_a, self.clock_a),
             BOARD_A: (self.board_a, self.pocket_a, self.clock_a),
@@ -437,6 +580,11 @@ class NetworkGameWidget(QWidget):
         for board_id, service in self._services.items():
             board, pocket, clock = mapping[board_id]
             _paint_board(board, service)
+            spec = (
+                self._own_spec_for_board(board_id)
+                if self._match_kind == "bughouse"
+                else primary_spec
+            )
             own_board = spec is not None and spec.board_id == board_id
             orientation = BoardOrientation.WHITE
             if spec is not None and own_board and spec.side is PieceSide.BLACK:
@@ -455,6 +603,8 @@ class NetworkGameWidget(QWidget):
                 types=droppable_type_names(service.mode),
                 asset_family=service.mode.asset_family,
                 grid=True,
+                flip_map=drop_flip_map(service.mode),
+                facing_black=orientation is BoardOrientation.BLACK,
             )
             snapshot = self._clocks.get(board_id) or self._clocks.get(BOARD_MAIN)
             if snapshot is None and self._game_server is not None:
@@ -485,6 +635,7 @@ class NetworkGameWidget(QWidget):
                 blocked_squares=blocked,
             )
         if self._match_kind == "hand_and_brain":
+            spec = primary_spec
             if spec is None:
                 self._hnb_hint.setText("Вы зритель.")
             elif spec.duty is SeatDuty.BRAIN:
@@ -497,9 +648,142 @@ class NetworkGameWidget(QWidget):
         else:
             self._hnb_hint.setText("")
         if self._game_server is not None:
-            for occupant in self._game_server.lobby_state().occupants:
-                if occupant.session_id == self._own_session_id:
-                    self._seat = occupant.seat
+            lobby = self._game_server.lobby_state()
+            self._seats = {
+                occupant.seat
+                for occupant in lobby.occupants
+                if occupant.session_id == self._own_session_id
+                and occupant.seat != SPECTATOR
+            }
+            self._seat = next(iter(self._seats), SPECTATOR)
+        self._refresh_move_list()
+
+    def _active_service(self) -> NetworkedLocalGameService | None:
+        if self._analysis_board in self._services:
+            return self._services[self._analysis_board]
+        if BOARD_MAIN in self._services:
+            return self._services[BOARD_MAIN]
+        return next(iter(self._services.values()), None)
+
+    def _refresh_move_list(self) -> None:
+        service = self._active_service()
+        if service is None:
+            self.move_list.set_moves((), live_revision=0, view_revision=0)
+            self.live_button.setEnabled(False)
+            return
+        self.move_list.set_moves(
+            service.move_log_lines,
+            live_revision=service.record.live_revision,
+            view_revision=service.record.view_revision,
+        )
+        self.live_button.setEnabled(not service.is_live)
+
+    def _on_revision_selected(self, revision: int) -> None:
+        service = self._active_service()
+        if service is None:
+            return
+        service.go_to_revision(revision)
+        self._selected[service.board_id] = None
+        self._refresh()
+
+    def _go_live(self) -> None:
+        service = self._active_service()
+        if service is None:
+            return
+        service.go_live()
+        self._refresh()
+
+    def _ensure_bughouse_engines(self) -> None:
+        if not self._bot_sessions or self._bot_bridges:
+            return
+        mode = self._resolve(self._mode_id)
+        keys = (
+            (BOARD_A, BOARD_B)
+            if self.two_engine_processes.isChecked()
+            else ("shared",)
+        )
+        for key in keys:
+            service = EngineAnalysisService.for_mode(mode, self._discovered)
+            bridge = EngineBridge(service, self)
+            bridge.analysis_ready.connect(self._on_bughouse_bot_analysis)
+            self._bot_bridges[key] = bridge
+
+    def _schedule_bughouse_bots(self) -> None:
+        server = self._game_server
+        if (
+            server is None
+            or self._match_kind != "bughouse"
+            or server.match.state.phase.name != "PLAYING"
+            or not self._bot_sessions
+        ):
+            return
+        self._ensure_bughouse_engines()
+        shared = "shared" in self._bot_bridges
+        if shared and self._bot_busy:
+            return
+        for board_id in (BOARD_A, BOARD_B):
+            state = server.match.board(board_id)
+            side = "white" if state.side_to_move is PieceSide.WHITE else "black"
+            seat = f"{board_id.lower()}_{side}"
+            session_id = self._bot_sessions.get(seat)
+            if session_id is None:
+                continue
+            key = "shared" if shared else board_id
+            if key in self._bot_busy:
+                continue
+            bridge = self._bot_bridges.get(key)
+            if bridge is None:
+                continue
+            self._bot_busy.add(key)
+            partner = server.match.board(partner_board(board_id))
+            bridge.request_analysis(
+                EngineRequest(
+                    with_partner_engine_fen(state, partner),
+                    SearchLimit(movetime_ms=400),
+                    purpose=f"bughouse|{key}|{board_id}|{session_id}",
+                    revision=server.revision,
+                )
+            )
+            if shared:
+                break
+
+    def _on_bughouse_bot_analysis(self, result: BestMove) -> None:
+        parts = result.purpose.split("|")
+        if len(parts) != 4 or parts[0] != "bughouse":
+            return
+        _, key, board_id, session_id = parts
+        self._bot_busy.discard(key)
+        server = self._game_server
+        if (
+            server is None
+            or result.revision != server.revision
+            or result.turn is None
+            or server.match.state.phase.name != "PLAYING"
+        ):
+            QTimer.singleShot(0, self._schedule_bughouse_bots)
+            return
+        try:
+            server.apply_remote_turn(session_id, result.turn, board_id=board_id)
+        except (PermissionError, ValueError) as exc:
+            self.status.setText(f"Ход движка отклонён: {exc}")
+        self._drain_host_inbox()
+        tcp = self._tcp_server
+        thread = self._loop_thread
+        if tcp is not None and thread is not None and thread.loop is not None:
+            asyncio.run_coroutine_threadsafe(tcp.flush(), thread.loop)
+        self._refresh()
+        QTimer.singleShot(25, self._schedule_bughouse_bots)
+
+    def _shutdown_bot_engines(self) -> None:
+        for bridge in set(self._bot_bridges.values()):
+            try:
+                bridge.analysis_ready.disconnect(self._on_bughouse_bot_analysis)
+            except TypeError:
+                pass
+            bridge.shutdown()
+            bridge.deleteLater()
+        self._bot_bridges.clear()
+        self._bot_busy.clear()
 
     def _on_peer_ready(self) -> None:
         self._drain_host_inbox()
@@ -541,7 +825,7 @@ def _paint_board(board: BoardWidget, service: NetworkedLocalGameService) -> None
     shape = service.mode.board.shape
     board.set_shape(shape.files, shape.ranks)
     for index, piece in service.state.board_state.cells.items():
-        if piece is None or piece.side is PieceSide.NEUTRAL:
+        if piece is None:
             continue
         key = piece_asset_key(piece, service.mode.asset_family)
         if key is not None:

@@ -129,3 +129,56 @@ def test_byoyomi_snapshot_exposes_periods() -> None:
     snapshot = service.snapshot()
     assert snapshot.white_byoyomi_left == 3
     assert snapshot.running_side is None
+
+
+def test_reconfigure_before_start_replaces_remaining() -> None:
+    clock = FakeClock()
+    service = GameClockService(TimeControlConfig.blitz(), clock)
+    updated = service.reconfigure(
+        TimeControlConfig.from_parts(
+            TimeControlKind.BRONSTEIN,
+            main_minutes=10,
+            extra_seconds=5,
+        )
+    )
+    assert service.config.kind is TimeControlKind.BRONSTEIN
+    assert updated.white_remaining_ms == 600_000
+    assert updated.black_remaining_ms == 600_000
+    assert not service.has_started
+
+
+def test_reconfigure_after_first_move_resets_remaining() -> None:
+    service = GameClockService(TimeControlConfig.blitz(), FakeClock())
+    service.on_move_committed(PieceSide.WHITE, 0)
+    updated = service.reconfigure(TimeControlConfig.sudden_death(5))
+    assert service.config.kind is TimeControlKind.SIMPLE
+    assert updated.white_remaining_ms == 300_000
+    assert not service.has_started
+
+
+def test_reconfigure_to_none_stops_ticking() -> None:
+    clock = FakeClock()
+    service = GameClockService(TimeControlConfig.blitz(), clock)
+    service.on_move_committed(PieceSide.WHITE, 0)
+    clock.advance(2_000)
+    service.reconfigure(TimeControlConfig.none())
+    clock.advance(8_000)
+    snapshot = service.snapshot()
+    assert not service.config.is_timed
+    assert snapshot.running_side is None
+    assert snapshot.next_deadline_ms is None
+
+
+def test_reconfigure_start_now_ticks_current_side() -> None:
+    clock = FakeClock()
+    service = GameClockService(TimeControlConfig.none(), clock)
+    service.reconfigure(
+        TimeControlConfig.sudden_death(1),
+        start_now=True,
+        running_side=PieceSide.BLACK,
+    )
+    clock.advance(4_000)
+    snapshot = service.snapshot()
+    assert service.has_started
+    assert snapshot.running_side is PieceSide.BLACK
+    assert snapshot.black_remaining_ms == 56_000

@@ -61,7 +61,7 @@ def giveaway() -> GameMode:
         "giveaway",
         "Giveaway Chess",
         victory=VictoryCondition(VictoryKind.MATERIAL, lose_on_no_legal_moves=False),
-        extras={"castling_rights": set(), "promote_includes_king": True},
+        extras={"castling_rights": set(), "promote_includes_king": True, "empty_side_wins": True, "blocked_side_wins": True},
         legality=MustCaptureLegality(),
         checks_enabled=False,
     )
@@ -91,14 +91,23 @@ def cylindrical_chess() -> GameMode:
     )
 
 
-def duck_chess() -> GameMode:
-    """TurnScenario: MoveAction then PlaceBlockerAction (duck)."""
+def duck_chess(*, fairy_rules: bool = False) -> GameMode:
+    """Duck chess with either checkmate or official king-capture legality."""
     scenario = TurnScenario(
         (
             TurnStep(StepKind.MOVE_OR_CAPTURE, label="move"),
             TurnStep(StepKind.PLACE_BLOCKER, label="duck"),
         )
     )
+    if fairy_rules:
+        return _chess_mode(
+            "duck_chess",
+            "Duck Chess",
+            scenario=scenario,
+            victory=VictoryCondition(VictoryKind.KING_CAPTURE),
+            checks_enabled=False,
+            extras={"fairy_duck_rules": True},
+        )
     return _chess_mode("duck_chess", "Duck Chess", scenario=scenario)
 
 

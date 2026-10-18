@@ -5,12 +5,15 @@ from __future__ import annotations
 import random
 from collections import defaultdict
 
+from chess_core.app.tournament.dutch2026 import NativeDutch2026Engine
 from chess_core.app.tournament.models import (
     RESULT_BYE,
+    CrosstableCell,
     Pairing,
     PairingSystem,
     Player,
     Standing,
+    is_played_game,
     points_for,
 )
 
@@ -22,6 +25,10 @@ def pair_round(
     *,
     round_index: int,
     rng: random.Random | None = None,
+    declared_rounds: int = 0,
+    initial_color: str = "white",
+    rr_cycles: int = 1,
+    pairing_engine: NativeDutch2026Engine | None = None,
 ) -> tuple[Pairing, ...]:
     if len(players) < 2 and system is not PairingSystem.KNOCKOUT:
         raise ValueError("at least two players are required")
@@ -29,9 +36,18 @@ def pair_round(
     if system is PairingSystem.COLOR_DRAW:
         return _color_draw(players, round_index, rng)
     if system is PairingSystem.ROUND_ROBIN:
-        return _round_robin_round(players, round_index)
-    if system is PairingSystem.SWISS:
-        return _swiss_round(players, history, round_index)
+        return _round_robin_round(players, round_index, cycles=rr_cycles)
+    if system is PairingSystem.SWISS or system is PairingSystem.SWISS_NO_COLOR:
+        engine = pairing_engine or NativeDutch2026Engine()
+        rounds = declared_rounds or max(1, len(players).bit_length())
+        return engine.pair_round(
+            players,
+            history,
+            round_index=round_index,
+            declared_rounds=rounds,
+            initial_color=initial_color,
+            ignore_colours=system is PairingSystem.SWISS_NO_COLOR,
+        )
     if system is PairingSystem.KNOCKOUT:
         return _knockout_round(players, history, round_index)
     if system is PairingSystem.SCHEVENINGEN:
@@ -39,7 +55,189 @@ def pair_round(
     raise ValueError(f"unknown pairing system: {system}")
 
 
-def all_round_robin_rounds(players: tuple[Player, ...]) -> tuple[tuple[Pairing, ...], ...]:
+def all_round_robin_rounds(
+    players: tuple[Player, ...],
+    *,
+    cycles: int = 1,
+) -> tuple[tuple[Pairing, ...], ...]:
+    if cycles not in {1, 2}:
+        raise ValueError("round robin supports 1 or 2 cycles")
+    first = _berger_cycle(players)
+    if cycles == 1:
+        return first
+    shift = len(first)
+    second: list[tuple[Pairing, ...]] = []
+    for round_games in first:
+        flipped: list[Pairing] = []
+        for pairing in round_games:
+            if pairing.is_bye:
+                white = pairing.white_id or pairing.black_id
+                flipped.append(
+                    Pairing(
+                        round_index=pairing.round_index + shift,
+                        board=pairing.board,
+                        white_id=white,
+                        black_id=None,
+                        result=RESULT_BYE,
+                    )
+                )
+            else:
+                flipped.append(
+                    Pairing(
+                        round_index=pairing.round_index + shift,
+                        board=pairing.board,
+                        white_id=pairing.black_id,
+                        black_id=pairing.white_id,
+                    )
+                )
+        second.append(tuple(flipped))
+    return first + tuple(second)
+
+
+def standings(players: tuple[Player, ...], history: tuple[Pairing, ...]) -> tuple[Standing, ...]:
+    points: dict[str, float] = defaultdict(float)
+    games: dict[str, int] = defaultdict(int)
+    wins: dict[str, int] = defaultdict(int)
+    draws: dict[str, int] = defaultdict(int)
+    losses: dict[str, int] = defaultdict(int)
+    white_games: dict[str, int] = defaultdict(int)
+    black_games: dict[str, int] = defaultdict(int)
+    opponents: dict[str, list[str]] = defaultdict(list)
+    sb_parts: dict[str, float] = defaultdict(float)
+
+    for pairing in history:
+        if pairing.result is None:
+            continue
+        for player_id in pairing.player_ids():
+            score = points_for(pairing, player_id)
+            if score is None:
+                continue
+            points[player_id] += score
+            if pairing.result in {"zpb", "hpb"}:
+                continue
+            if pairing.is_bye:
+                continue
+            if is_played_game(pairing) or pairing.result in {"1-0F", "0-1F", "0-0"}:
+                games[player_id] += 1
+            if score == 1.0:
+                wins[player_id] += 1
+            elif score == 0.5:
+                draws[player_id] += 1
+            else:
+                losses[player_id] += 1
+            if is_played_game(pairing):
+                if pairing.white_id == player_id:
+                    white_games[player_id] += 1
+                if pairing.black_id == player_id:
+                    black_games[player_id] += 1
+            other = pairing.black_id if player_id == pairing.white_id else pairing.white_id
+            if other is not None:
+                opponents[player_id].append(other)
+
+    for pairing in history:
+        if pairing.result is None or pairing.is_bye:
+            continue
+        for player_id in pairing.player_ids():
+            score = points_for(pairing, player_id) or 0.0
+            other = pairing.black_id if player_id == pairing.white_id else pairing.white_id
+            if other is None:
+                continue
+            if score == 1.0:
+                sb_parts[player_id] += points[other]
+            elif score == 0.5:
+                sb_parts[player_id] += points[other] / 2.0
+
+    rows: list[Standing] = []
+    for player in players:
+        buchholz = sum(points[opponent] for opponent in opponents[player.player_id])
+        rows.append(
+            Standing(
+                player=player,
+                points=points[player.player_id],
+                games=games[player.player_id],
+                wins=wins[player.player_id],
+                draws=draws[player.player_id],
+                losses=losses[player.player_id],
+                buchholz=buchholz,
+                sonneborn_berger=sb_parts[player.player_id],
+                white_games=white_games[player.player_id],
+                black_games=black_games[player.player_id],
+            )
+        )
+    rows.sort(key=lambda row: (-row.points, -row.buchholz, -row.sonneborn_berger, -row.player.rating, row.player.name))
+    placed: list[Standing] = []
+    for index, row in enumerate(rows, start=1):
+        placed.append(
+            Standing(
+                player=row.player,
+                points=row.points,
+                games=row.games,
+                wins=row.wins,
+                draws=row.draws,
+                losses=row.losses,
+                buchholz=row.buchholz,
+                sonneborn_berger=row.sonneborn_berger,
+                white_games=row.white_games,
+                black_games=row.black_games,
+                place=index,
+            )
+        )
+    return tuple(placed)
+
+
+def crosstable(
+    players: tuple[Player, ...], history: tuple[Pairing, ...]
+) -> tuple[tuple[Standing, tuple[CrosstableCell | None, ...]], ...]:
+    """Ranking table plus one cell per played round (colour, opponent start number, score)."""
+
+    table = standings(players, history)
+    rounds = sorted({pairing.round_index for pairing in history})
+    start_of = {player.player_id: player.start_number for player in players}
+    rows: list[tuple[Standing, tuple[CrosstableCell | None, ...]]] = []
+    for standing in table:
+        cells: list[CrosstableCell | None] = []
+        for round_index in rounds:
+            cell: CrosstableCell | None = None
+            for pairing in history:
+                if pairing.round_index != round_index:
+                    continue
+                if standing.player.player_id not in pairing.player_ids():
+                    continue
+                score = points_for(pairing, standing.player.player_id)
+                if pairing.is_bye:
+                    bye_label = {"bye": "BYE 1", "hpb": "BYE ½", "zpb": "BYE 0"}.get(
+                        pairing.result or "", f"BYE {pairing.result or ''}".strip()
+                    )
+                    cell = CrosstableCell(round_index, None, "-", score, bye_label)
+                    break
+                opponent_id = (
+                    pairing.black_id
+                    if pairing.white_id == standing.player.player_id
+                    else pairing.white_id
+                )
+                color = "w" if pairing.white_id == standing.player.player_id else "b"
+                mark = "б" if color == "w" else "ч"
+                opp_start = start_of.get(opponent_id or "", 0)
+                if score is None:
+                    score_text = "…"
+                elif score == int(score):
+                    score_text = str(int(score))
+                else:
+                    score_text = str(score)
+                cell = CrosstableCell(
+                    round_index,
+                    opp_start or None,
+                    color,
+                    score,
+                    f"{mark}{opp_start} {score_text}",
+                )
+                break
+            cells.append(cell)
+        rows.append((standing, tuple(cells)))
+    return tuple(rows)
+
+
+def _berger_cycle(players: tuple[Player, ...]) -> tuple[tuple[Pairing, ...], ...]:
     n = len(players)
     if n < 2:
         raise ValueError("at least two players are required")
@@ -81,63 +279,6 @@ def all_round_robin_rounds(players: tuple[Player, ...]) -> tuple[tuple[Pairing, 
     return tuple(rounds)
 
 
-def standings(players: tuple[Player, ...], history: tuple[Pairing, ...]) -> tuple[Standing, ...]:
-    by_id = {player.player_id: player for player in players}
-    points: dict[str, float] = defaultdict(float)
-    games: dict[str, int] = defaultdict(int)
-    wins: dict[str, int] = defaultdict(int)
-    draws: dict[str, int] = defaultdict(int)
-    losses: dict[str, int] = defaultdict(int)
-    white_games: dict[str, int] = defaultdict(int)
-    black_games: dict[str, int] = defaultdict(int)
-    opponents: dict[str, list[str]] = defaultdict(list)
-
-    for pairing in history:
-        if pairing.result is None:
-            continue
-        for player_id in (pairing.white_id, pairing.black_id):
-            if player_id is None:
-                continue
-            score = points_for(pairing, player_id)
-            if score is None:
-                continue
-            points[player_id] += score
-            games[player_id] += 1
-            if score == 1.0:
-                wins[player_id] += 1
-            elif score == 0.5:
-                draws[player_id] += 1
-            else:
-                losses[player_id] += 1
-            if pairing.white_id == player_id and pairing.black_id is not None:
-                white_games[player_id] += 1
-            if pairing.black_id == player_id:
-                black_games[player_id] += 1
-            other = pairing.black_id if player_id == pairing.white_id else pairing.white_id
-            if other is not None:
-                opponents[player_id].append(other)
-
-    rows: list[Standing] = []
-    for player in players:
-        buchholz = sum(points[opponent] for opponent in opponents[player.player_id])
-        rows.append(
-            Standing(
-                player=player,
-                points=points[player.player_id],
-                games=games[player.player_id],
-                wins=wins[player.player_id],
-                draws=draws[player.player_id],
-                losses=losses[player.player_id],
-                buchholz=buchholz,
-                white_games=white_games[player.player_id],
-                black_games=black_games[player.player_id],
-            )
-        )
-    rows.sort(key=lambda row: (-row.points, -row.buchholz, -row.player.rating, row.player.name))
-    del by_id
-    return tuple(rows)
-
-
 def _color_draw(
     players: tuple[Player, ...],
     round_index: int,
@@ -163,47 +304,11 @@ def _color_draw(
     return tuple(pairings)
 
 
-def _round_robin_round(players: tuple[Player, ...], round_index: int) -> tuple[Pairing, ...]:
-    rounds = all_round_robin_rounds(players)
+def _round_robin_round(players: tuple[Player, ...], round_index: int, *, cycles: int = 1) -> tuple[Pairing, ...]:
+    rounds = all_round_robin_rounds(players, cycles=cycles)
     if not 1 <= round_index <= len(rounds):
         raise ValueError(f"round_robin has {len(rounds)} rounds")
     return rounds[round_index - 1]
-
-
-def _swiss_round(
-    players: tuple[Player, ...],
-    history: tuple[Pairing, ...],
-    round_index: int,
-) -> tuple[Pairing, ...]:
-    scores = {row.player.player_id: row.points for row in standings(players, history)}
-    played = _played_pairs(history)
-    colors = {row.player.player_id: (row.white_games, row.black_games) for row in standings(players, history)}
-    last_color = _last_colors(history)
-    ordered = sorted(
-        players,
-        key=lambda player: (-scores[player.player_id], -player.rating, player.player_id),
-    )
-    remaining = list(ordered)
-    pairings: list[Pairing] = []
-    board = 1
-    if len(remaining) % 2:
-        bye_player = _choose_bye(remaining, history)
-        remaining = [player for player in remaining if player.player_id != bye_player.player_id]
-        pairings.append(
-            Pairing(round_index, board, bye_player.player_id, None, RESULT_BYE)
-        )
-        board += 1
-    used: set[str] = set()
-    for player in list(remaining):
-        if player.player_id in used:
-            continue
-        partner = _choose_opponent(player, remaining, used, played)
-        used.add(player.player_id)
-        used.add(partner.player_id)
-        white, black = _prefer_colors(player, partner, colors, last_color)
-        pairings.append(Pairing(round_index, board, white.player_id, black.player_id))
-        board += 1
-    return tuple(pairings)
 
 
 def _knockout_round(
@@ -275,80 +380,11 @@ def _scheveningen_round(players: tuple[Player, ...], round_index: int) -> tuple[
     return tuple(pairings)
 
 
-def _played_pairs(history: tuple[Pairing, ...]) -> dict[str, set[str]]:
-    played: dict[str, set[str]] = defaultdict(set)
-    for pairing in history:
-        if pairing.white_id is None or pairing.black_id is None:
-            continue
-        played[pairing.white_id].add(pairing.black_id)
-        played[pairing.black_id].add(pairing.white_id)
-    return played
-
-
-def _last_colors(history: tuple[Pairing, ...]) -> dict[str, str]:
-    last: dict[str, str] = {}
-    for pairing in history:
-        if pairing.white_id is not None and pairing.black_id is not None:
-            last[pairing.white_id] = "white"
-            last[pairing.black_id] = "black"
-    return last
-
-
-def _choose_bye(players: list[Player], history: tuple[Pairing, ...]) -> Player:
-    had_bye = {
-        pairing.white_id or pairing.black_id
-        for pairing in history
-        if pairing.is_bye
-    }
-    for player in reversed(players):
-        if player.player_id not in had_bye:
-            return player
-    return players[-1]
-
-
-def _choose_opponent(
-    player: Player,
-    remaining: list[Player],
-    used: set[str],
-    played: dict[str, set[str]],
-) -> Player:
-    candidates = [
-        other
-        for other in remaining
-        if other.player_id not in used and other.player_id != player.player_id
-    ]
-    for other in candidates:
-        if other.player_id not in played[player.player_id]:
-            return other
-    if not candidates:
-        raise ValueError("no opponent available")
-    return candidates[0]
-
-
-def _prefer_colors(
-    first: Player,
-    second: Player,
-    colors: dict[str, tuple[int, int]],
-    last_color: dict[str, str],
-) -> tuple[Player, Player]:
-    first_white, first_black = colors.get(first.player_id, (0, 0))
-    second_white, second_black = colors.get(second.player_id, (0, 0))
-    first_pref = first_black - first_white
-    second_pref = second_black - second_white
-    if first_pref > second_pref:
-        return first, second
-    if second_pref > first_pref:
-        return second, first
-    if last_color.get(first.player_id) == "white":
-        return second, first
-    return first, second
-
-
 def _winner_id(pairing: Pairing) -> str | None:
     if pairing.is_bye:
         return pairing.white_id or pairing.black_id
-    if pairing.result == "1-0":
+    if pairing.result in {"1-0", "1-0F"}:
         return pairing.white_id
-    if pairing.result == "0-1":
+    if pairing.result in {"0-1", "0-1F"}:
         return pairing.black_id
     return None

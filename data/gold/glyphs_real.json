@@ -1,0 +1,1014 @@
+{
+  "seed": 0,
+  "rule": "only cells where MSER glyph count equals gold role count, left to right",
+  "sheets": [
+    "image_0006",
+    "image_0552"
+  ],
+  "n": 59,
+  "glyphs": [
+    {
+      "sheet_id": "image_0006",
+      "cell": "0000_r01_c01.png",
+      "cell_index": 0,
+      "ply": "c4",
+      "char": "c",
+      "role": "f_c",
+      "glyph_index": 0,
+      "bbox": [
+        60,
+        4,
+        106,
+        66
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0000_r01_c01_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0000_r01_c01.png",
+      "cell_index": 0,
+      "ply": "c4",
+      "char": "4",
+      "role": "r_4",
+      "glyph_index": 1,
+      "bbox": [
+        120,
+        4,
+        160,
+        66
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0000_r01_c01_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0001_r01_c02.png",
+      "cell_index": 1,
+      "ply": "c6",
+      "char": "c",
+      "role": "f_c",
+      "glyph_index": 0,
+      "bbox": [
+        41,
+        6,
+        95,
+        66
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0001_r01_c02_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0001_r01_c02.png",
+      "cell_index": 1,
+      "ply": "c6",
+      "char": "6",
+      "role": "r_6",
+      "glyph_index": 1,
+      "bbox": [
+        104,
+        4,
+        161,
+        66
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0001_r01_c02_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0002_r02_c01.png",
+      "cell_index": 2,
+      "ply": "Nc3",
+      "char": "N",
+      "role": "KN",
+      "glyph_index": 0,
+      "bbox": [
+        37,
+        4,
+        83,
+        64
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0002_r02_c01_0.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0002_r02_c01.png",
+      "cell_index": 2,
+      "ply": "Nc3",
+      "char": "c",
+      "role": "f_c",
+      "glyph_index": 1,
+      "bbox": [
+        83,
+        6,
+        127,
+        64
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0002_r02_c01_1.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0002_r02_c01.png",
+      "cell_index": 2,
+      "ply": "Nc3",
+      "char": "3",
+      "role": "r_3",
+      "glyph_index": 2,
+      "bbox": [
+        143,
+        4,
+        187,
+        62
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0002_r02_c01_2.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0003_r02_c02.png",
+      "cell_index": 3,
+      "ply": "g5",
+      "char": "g",
+      "role": "f_g",
+      "glyph_index": 0,
+      "bbox": [
+        50,
+        4,
+        93,
+        62
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0003_r02_c02_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0003_r02_c02.png",
+      "cell_index": 3,
+      "ply": "g5",
+      "char": "5",
+      "role": "r_5",
+      "glyph_index": 1,
+      "bbox": [
+        102,
+        4,
+        139,
+        66
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0003_r02_c02_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0005_r03_c02.png",
+      "cell_index": 5,
+      "ply": "Nf6",
+      "char": "N",
+      "role": "KN",
+      "glyph_index": 0,
+      "bbox": [
+        58,
+        17,
+        95,
+        63
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0005_r03_c02_0.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0005_r03_c02.png",
+      "cell_index": 5,
+      "ply": "Nf6",
+      "char": "f",
+      "role": "f_f",
+      "glyph_index": 1,
+      "bbox": [
+        97,
+        3,
+        159,
+        63
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0005_r03_c02_1.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0005_r03_c02.png",
+      "cell_index": 5,
+      "ply": "Nf6",
+      "char": "6",
+      "role": "r_6",
+      "glyph_index": 2,
+      "bbox": [
+        164,
+        6,
+        196,
+        63
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0005_r03_c02_2.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0006_r04_c01.png",
+      "cell_index": 6,
+      "ply": "b4",
+      "char": "b",
+      "role": "f_b",
+      "glyph_index": 0,
+      "bbox": [
+        67,
+        6,
+        120,
+        66
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0006_r04_c01_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0006_r04_c01.png",
+      "cell_index": 6,
+      "ply": "b4",
+      "char": "4",
+      "role": "r_4",
+      "glyph_index": 1,
+      "bbox": [
+        132,
+        4,
+        199,
+        66
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0006_r04_c01_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0008_r05_c01.png",
+      "cell_index": 8,
+      "ply": "d4",
+      "char": "d",
+      "role": "f_d",
+      "glyph_index": 0,
+      "bbox": [
+        87,
+        4,
+        111,
+        64
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0008_r05_c01_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0008_r05_c01.png",
+      "cell_index": 8,
+      "ply": "d4",
+      "char": "4",
+      "role": "r_4",
+      "glyph_index": 1,
+      "bbox": [
+        111,
+        4,
+        162,
+        62
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0008_r05_c01_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0009_r05_c02.png",
+      "cell_index": 9,
+      "ply": "h6",
+      "char": "h",
+      "role": "f_h",
+      "glyph_index": 0,
+      "bbox": [
+        48,
+        9,
+        84,
+        64
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0009_r05_c02_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0009_r05_c02.png",
+      "cell_index": 9,
+      "ply": "h6",
+      "char": "6",
+      "role": "r_6",
+      "glyph_index": 1,
+      "bbox": [
+        88,
+        21,
+        121,
+        64
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0009_r05_c02_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0010_r06_c01.png",
+      "cell_index": 10,
+      "ply": "b5",
+      "char": "b",
+      "role": "f_b",
+      "glyph_index": 0,
+      "bbox": [
+        54,
+        8,
+        129,
+        65
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0010_r06_c01_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0010_r06_c01.png",
+      "cell_index": 10,
+      "ply": "b5",
+      "char": "5",
+      "role": "r_5",
+      "glyph_index": 1,
+      "bbox": [
+        136,
+        10,
+        178,
+        65
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0010_r06_c01_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0012_r07_c01.png",
+      "cell_index": 12,
+      "ply": "Bb2",
+      "char": "B",
+      "role": "BS",
+      "glyph_index": 0,
+      "bbox": [
+        65,
+        21,
+        86,
+        59
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0012_r07_c01_0.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0012_r07_c01.png",
+      "cell_index": 12,
+      "ply": "Bb2",
+      "char": "b",
+      "role": "f_b",
+      "glyph_index": 1,
+      "bbox": [
+        86,
+        5,
+        141,
+        63
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0012_r07_c01_1.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0012_r07_c01.png",
+      "cell_index": 12,
+      "ply": "Bb2",
+      "char": "2",
+      "role": "r_2",
+      "glyph_index": 2,
+      "bbox": [
+        156,
+        5,
+        200,
+        63
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0012_r07_c01_2.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0013_r07_c02.png",
+      "cell_index": 13,
+      "ply": "Qc1",
+      "char": "Q",
+      "role": "QN",
+      "glyph_index": 0,
+      "bbox": [
+        46,
+        5,
+        94,
+        63
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0013_r07_c02_0.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0013_r07_c02.png",
+      "cell_index": 13,
+      "ply": "Qc1",
+      "char": "c",
+      "role": "f_c",
+      "glyph_index": 1,
+      "bbox": [
+        94,
+        5,
+        134,
+        63
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0013_r07_c02_1.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0013_r07_c02.png",
+      "cell_index": 13,
+      "ply": "Qc1",
+      "char": "1",
+      "role": "r_1",
+      "glyph_index": 2,
+      "bbox": [
+        134,
+        5,
+        180,
+        60
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0013_r07_c02_2.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0014_r08_c01.png",
+      "cell_index": 14,
+      "ply": "f4",
+      "char": "f",
+      "role": "f_f",
+      "glyph_index": 0,
+      "bbox": [
+        61,
+        6,
+        110,
+        62
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0014_r08_c01_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0014_r08_c01.png",
+      "cell_index": 14,
+      "ply": "f4",
+      "char": "4",
+      "role": "r_4",
+      "glyph_index": 1,
+      "bbox": [
+        155,
+        4,
+        194,
+        66
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0014_r08_c01_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0021_r11_c02.png",
+      "cell_index": 21,
+      "ply": "Bb7",
+      "char": "B",
+      "role": "BS",
+      "glyph_index": 0,
+      "bbox": [
+        3,
+        5,
+        32,
+        66
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0021_r11_c02_0.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0021_r11_c02.png",
+      "cell_index": 21,
+      "ply": "Bb7",
+      "char": "b",
+      "role": "f_b",
+      "glyph_index": 1,
+      "bbox": [
+        93,
+        4,
+        159,
+        66
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0021_r11_c02_1.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0021_r11_c02.png",
+      "cell_index": 21,
+      "ply": "Bb7",
+      "char": "7",
+      "role": "r_7",
+      "glyph_index": 2,
+      "bbox": [
+        167,
+        4,
+        195,
+        66
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0021_r11_c02_2.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0023_r12_c02.png",
+      "cell_index": 23,
+      "ply": "Qd2",
+      "char": "Q",
+      "role": "QN",
+      "glyph_index": 0,
+      "bbox": [
+        4,
+        27,
+        38,
+        65
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0023_r12_c02_0.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0023_r12_c02.png",
+      "cell_index": 23,
+      "ply": "Qd2",
+      "char": "d",
+      "role": "f_d",
+      "glyph_index": 1,
+      "bbox": [
+        88,
+        9,
+        115,
+        65
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0023_r12_c02_1.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0006",
+      "cell": "0023_r12_c02.png",
+      "cell_index": 23,
+      "ply": "Qd2",
+      "char": "2",
+      "role": "r_2",
+      "glyph_index": 2,
+      "bbox": [
+        141,
+        13,
+        182,
+        65
+      ],
+      "crop": "data/gold/glyphs_real/image_0006_0023_r12_c02_2.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0001_r01_c02.png",
+      "cell_index": 1,
+      "ply": "d5",
+      "char": "d",
+      "role": "f_d",
+      "glyph_index": 0,
+      "bbox": [
+        77,
+        4,
+        117,
+        55
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0001_r01_c02_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0001_r01_c02.png",
+      "cell_index": 1,
+      "ply": "d5",
+      "char": "5",
+      "role": "r_5",
+      "glyph_index": 1,
+      "bbox": [
+        118,
+        11,
+        170,
+        59
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0001_r01_c02_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0002_r02_c01.png",
+      "cell_index": 2,
+      "ply": "c4",
+      "char": "c",
+      "role": "f_c",
+      "glyph_index": 0,
+      "bbox": [
+        55,
+        23,
+        80,
+        50
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0002_r02_c01_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0002_r02_c01.png",
+      "cell_index": 2,
+      "ply": "c4",
+      "char": "4",
+      "role": "r_4",
+      "glyph_index": 1,
+      "bbox": [
+        88,
+        19,
+        117,
+        58
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0002_r02_c01_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0003_r02_c02.png",
+      "cell_index": 3,
+      "ply": "e6",
+      "char": "e",
+      "role": "f_e",
+      "glyph_index": 0,
+      "bbox": [
+        56,
+        13,
+        86,
+        48
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0003_r02_c02_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0003_r02_c02.png",
+      "cell_index": 3,
+      "ply": "e6",
+      "char": "6",
+      "role": "r_6",
+      "glyph_index": 1,
+      "bbox": [
+        93,
+        12,
+        128,
+        47
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0003_r02_c02_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0004_r03_c01.png",
+      "cell_index": 4,
+      "ply": "Nc3",
+      "char": "N",
+      "role": "KN",
+      "glyph_index": 0,
+      "bbox": [
+        40,
+        12,
+        71,
+        60
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0004_r03_c01_0.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0004_r03_c01.png",
+      "cell_index": 4,
+      "ply": "Nc3",
+      "char": "c",
+      "role": "f_c",
+      "glyph_index": 1,
+      "bbox": [
+        65,
+        14,
+        114,
+        50
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0004_r03_c01_1.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0004_r03_c01.png",
+      "cell_index": 4,
+      "ply": "Nc3",
+      "char": "3",
+      "role": "r_3",
+      "glyph_index": 2,
+      "bbox": [
+        129,
+        24,
+        157,
+        64
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0004_r03_c01_2.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0006_r04_c01.png",
+      "cell_index": 6,
+      "ply": "a3",
+      "char": "a",
+      "role": "f_a",
+      "glyph_index": 0,
+      "bbox": [
+        76,
+        16,
+        114,
+        65
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0006_r04_c01_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0006_r04_c01.png",
+      "cell_index": 6,
+      "ply": "a3",
+      "char": "3",
+      "role": "r_3",
+      "glyph_index": 1,
+      "bbox": [
+        134,
+        15,
+        166,
+        57
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0006_r04_c01_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0007_r04_c02.png",
+      "cell_index": 7,
+      "ply": "Be7",
+      "char": "B",
+      "role": "BS",
+      "glyph_index": 0,
+      "bbox": [
+        53,
+        8,
+        89,
+        49
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0007_r04_c02_0.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0007_r04_c02.png",
+      "cell_index": 7,
+      "ply": "Be7",
+      "char": "e",
+      "role": "f_e",
+      "glyph_index": 1,
+      "bbox": [
+        100,
+        3,
+        135,
+        46
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0007_r04_c02_1.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0007_r04_c02.png",
+      "cell_index": 7,
+      "ply": "Be7",
+      "char": "7",
+      "role": "r_7",
+      "glyph_index": 2,
+      "bbox": [
+        135,
+        12,
+        166,
+        47
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0007_r04_c02_2.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0009_r05_c02.png",
+      "cell_index": 9,
+      "ply": "Qd6",
+      "char": "Q",
+      "role": "QN",
+      "glyph_index": 0,
+      "bbox": [
+        37,
+        10,
+        87,
+        65
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0009_r05_c02_0.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0009_r05_c02.png",
+      "cell_index": 9,
+      "ply": "Qd6",
+      "char": "d",
+      "role": "f_d",
+      "glyph_index": 1,
+      "bbox": [
+        97,
+        9,
+        135,
+        53
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0009_r05_c02_1.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0009_r05_c02.png",
+      "cell_index": 9,
+      "ply": "Qd6",
+      "char": "6",
+      "role": "r_6",
+      "glyph_index": 2,
+      "bbox": [
+        143,
+        5,
+        197,
+        50
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0009_r05_c02_2.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0012_r07_c01.png",
+      "cell_index": 12,
+      "ply": "Qc2",
+      "char": "Q",
+      "role": "QN",
+      "glyph_index": 0,
+      "bbox": [
+        67,
+        20,
+        84,
+        48
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0012_r07_c01_0.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0012_r07_c01.png",
+      "cell_index": 12,
+      "ply": "Qc2",
+      "char": "c",
+      "role": "f_c",
+      "glyph_index": 1,
+      "bbox": [
+        84,
+        16,
+        132,
+        65
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0012_r07_c01_1.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0012_r07_c01.png",
+      "cell_index": 12,
+      "ply": "Qc2",
+      "char": "2",
+      "role": "r_2",
+      "glyph_index": 2,
+      "bbox": [
+        141,
+        11,
+        175,
+        54
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0012_r07_c01_2.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0013_r07_c02.png",
+      "cell_index": 13,
+      "ply": "O-O",
+      "char": "O",
+      "role": "O",
+      "glyph_index": 0,
+      "bbox": [
+        57,
+        20,
+        96,
+        53
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0013_r07_c02_0.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0013_r07_c02.png",
+      "cell_index": 13,
+      "ply": "O-O",
+      "char": "O",
+      "role": "O",
+      "glyph_index": 1,
+      "bbox": [
+        136,
+        18,
+        168,
+        51
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0013_r07_c02_1.png",
+      "n_roles": 2
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0015_r08_c02.png",
+      "cell_index": 15,
+      "ply": "Bd7",
+      "char": "B",
+      "role": "BS",
+      "glyph_index": 0,
+      "bbox": [
+        69,
+        14,
+        98,
+        59
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0015_r08_c02_0.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0015_r08_c02.png",
+      "cell_index": 15,
+      "ply": "Bd7",
+      "char": "d",
+      "role": "f_d",
+      "glyph_index": 1,
+      "bbox": [
+        102,
+        9,
+        134,
+        61
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0015_r08_c02_1.png",
+      "n_roles": 3
+    },
+    {
+      "sheet_id": "image_0552",
+      "cell": "0015_r08_c02.png",
+      "cell_index": 15,
+      "ply": "Bd7",
+      "char": "7",
+      "role": "r_7",
+      "glyph_index": 2,
+      "bbox": [
+        143,
+        18,
+        182,
+        61
+      ],
+      "crop": "data/gold/glyphs_real/image_0552_0015_r08_c02_2.png",
+      "n_roles": 3
+    }
+  ]
+}

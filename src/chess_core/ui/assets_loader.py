@@ -68,6 +68,10 @@ class AssetsLoader:
         if shogi_path.is_file():
             return shogi_path
 
+        boardgames_path = self.assets_root / "boardgames" / f"{stem}.svg"
+        if boardgames_path.is_file():
+            return boardgames_path
+
         raise FileNotFoundError(f"No SVG asset found for piece key: {piece_key!r}")
 
     def _required_dir(self, *parts: str) -> Path:

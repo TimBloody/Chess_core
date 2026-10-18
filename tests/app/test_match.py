@@ -6,6 +6,8 @@ from chess_core.core.board import Square
 from chess_core.core.move import MoveAction, Turn
 from chess_core.core.piece import Piece, PieceSide, PieceTypeId
 from chess_core.modes.bughouse import bughouse
+from chess_core.modes.chess import classic_chess
+from chess_core.tools.classical_demo import parse_move
 
 
 class _Clock:
@@ -50,3 +52,20 @@ def test_mate_on_one_board_ends_match() -> None:
     assert match.state.phase is MatchPhase.ENDED
     assert match.state.result is not None
     assert match.state.result.reason == "checkmate"
+
+
+def test_threefold_ends_match_as_draw() -> None:
+    mode = classic_chess()
+    match = MatchController(mode, mode.initial_state(), clock=_Clock())
+    match.start()
+    white = spec_by_id("single", "white")
+    black = spec_by_id("single", "black")
+    assert white is not None and black is not None
+    cycle = ("g1f3", "g8f6", "f3g1", "f6g8")
+    for token in (*cycle, *cycle):
+        mover = white if match.board("main").side_to_move is PieceSide.WHITE else black
+        match.apply_turn(mover, Turn(mover.side, [parse_move(token)]))
+    assert match.state.phase is MatchPhase.ENDED
+    assert match.state.result is not None
+    assert match.state.result.reason == "repetition"
+    assert match.state.result.winner_team is None

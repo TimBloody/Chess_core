@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QApplication
 
 from chess_core.core.registry import default_registry
 from chess_core.modes import register_builtin_modes
-from chess_core.ui.main_window import MainWindow
+from chess_core.ui.branches.server_play import ServerPlayWindow
 from chess_core.ui.mode_picker import UiSession
 from chess_core.ui.network_game import NetworkGameWidget
 from chess_core.ui.widgets.board_widget import BoardWidget
@@ -27,9 +27,10 @@ def _app() -> QApplication:
 def test_network_page_is_in_shell() -> None:
     _app()
     register_builtin_modes()
-    window = MainWindow(default_registry.list_modes(), UiSession("chess"))
+    window = ServerPlayWindow(default_registry.list_modes(), UiSession("chess"))
     assert isinstance(window._network_game, NetworkGameWidget)
     assert isinstance(window._network_game.lobby, MatchLobbyWidget)
+    assert window._network_game.move_list is not None
     window.close()
 
 

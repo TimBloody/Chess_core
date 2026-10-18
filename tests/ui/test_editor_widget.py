@@ -28,5 +28,17 @@ def test_editor_widget_loads_start_position() -> None:
     assert isinstance(widget.white_palette, EditorPaletteStrip)
     assert widget.white_palette.tokens
     assert all(token.piece_key for token in widget.white_palette.tokens)
+    assert widget.play_button.text() == "Играть с позиции"
+    assert widget.white_to_move_button.isChecked()
+    widget.black_to_move_button.click()
+    assert widget.current_state().side_to_move.name == "BLACK"
     widget._play()
+    widget.close()
+
+
+def test_editor_widget_uses_custom_play_button_text() -> None:
+    _app()
+    register_builtin_modes()
+    widget = EditorWidget(mode_id="chess", play_button_text="Анализировать позицию")
+    assert widget.play_button.text() == "Анализировать позицию"
     widget.close()

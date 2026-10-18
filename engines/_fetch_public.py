@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -23,18 +24,27 @@ ENGINES = {
         "tag": "sf_18",
         "source": "https://github.com/official-stockfish/Stockfish/releases/tag/sf_18",
     },
+    "fairystockfish": {
+        "url": "https://github.com/fairy-stockfish/Fairy-Stockfish/releases/download/fairy_sf_14/fairy-stockfish-largeboard_x86-64.exe",
+        "kind": "exe",
+        "tag": "fairy_sf_14",
+        "source": "https://github.com/fairy-stockfish/Fairy-Stockfish/releases/tag/fairy_sf_14",
+        "filename": "fairy-stockfish.exe",
+        "variants_url": "https://github.com/fairy-stockfish/Fairy-Stockfish/releases/download/fairy_sf_14/variants.ini",
+    },
+    "fairystockfish-all": {
+        "url": "https://github.com/gbtami/Fairy-Stockfish/releases/download/fishnet-260826/stockfish-windows-amd64.exe",
+        "kind": "exe",
+        "tag": "fishnet-260826",
+        "source": "https://github.com/gbtami/Fairy-Stockfish/commit/43b66c8abfebfcab893a3a4c349aa790d18df148",
+        "filename": "fairy-stockfish-all.exe",
+        "sha256": "dd2152ba82fe1787d81ec4c42acdfdbaaa97088ba059cab5d77eadfaece23127",
+    },
     "yaneuraou": {
         "url": "https://github.com/yaneurao/YaneuraOu/releases/download/V9.00/yaneuraou-V900-git-win64-all.7z",
         "kind": "7z",
         "tag": "V9.00",
         "source": "https://github.com/yaneurao/YaneuraOu/releases/tag/V9.00",
-    },
-    "scan": {
-        "url": "https://hjetten.home.xs4all.nl/scan/scan_31.zip",
-        "kind": "zip",
-        "tag": "3.1",
-        "source": "https://github.com/rhalbersma/scan",
-        "binary_host": "https://hjetten.home.xs4all.nl/scan/scan.html",
     },
 }
 
@@ -46,6 +56,12 @@ def download(url: str, dest: Path) -> None:
     with urllib.request.urlopen(request, timeout=120) as response, dest.open("wb") as out:
         shutil.copyfileobj(response, out)
     print(f"saved {dest} ({dest.stat().st_size} bytes)", flush=True)
+
+
+def verify_sha256(path: Path, expected: str) -> None:
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest.lower() != expected.lower():
+        raise RuntimeError(f"sha256 mismatch for {path.name}: {digest} != {expected}")
 
 
 def extract_zip(archive: Path, target: Path) -> None:
@@ -77,27 +93,6 @@ def pick_exe(extracted: Path, prefer: tuple[str, ...], fallback: tuple[str, ...]
     return exes[0]
 
 
-def flatten_scan(extracted: Path, dest: Path) -> Path:
-    dest.mkdir(parents=True, exist_ok=True)
-    # scan_31.zip usually contains a single top-level folder.
-    children = [p for p in extracted.iterdir() if p.name not in {".", ".."}]
-    root = children[0] if len(children) == 1 and children[0].is_dir() else extracted
-    for item in root.iterdir():
-        target = dest / item.name
-        if target.exists():
-            if target.is_dir():
-                shutil.rmtree(target)
-            else:
-                target.unlink()
-        shutil.move(str(item), str(target))
-    exe = dest / "scan.exe"
-    if not exe.is_file():
-        found = pick_exe(dest, ("scan.exe",), ("scan",))
-        exe = dest / "scan.exe"
-        shutil.copy2(found, exe)
-    return exe
-
-
 def install_named_exe(extracted: Path, dest: Path, filename: str, prefer: tuple[str, ...], fallback: tuple[str, ...] = ()) -> Path:
     dest.mkdir(parents=True, exist_ok=True)
     chosen = pick_exe(extracted, prefer, fallback)
@@ -118,6 +113,10 @@ def write_origin(dest: Path, meta: dict) -> None:
 
 
 def main() -> int:
+    wanted = set(sys.argv[1:]) or set(ENGINES)
+    unknown = wanted - set(ENGINES)
+    if unknown:
+        raise SystemExit(f"unknown engines: {', '.join(sorted(unknown))}")
     PUBLIC.mkdir(parents=True, exist_ok=True)
     (ROOT / "custom").mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="chess-core-engines-") as tmp:
@@ -126,10 +125,22 @@ def main() -> int:
         extracted = tmp_path / "extracted"
 
         for name, meta in ENGINES.items():
+            if name not in wanted:
+                continue
             archive = archives / Path(meta["url"]).name
             unpack = extracted / name
             dest = PUBLIC / name
             dest.mkdir(parents=True, exist_ok=True)
+            if meta["kind"] == "exe":
+                dest_exe = dest / meta.get("filename", "engine.exe")
+                download(meta["url"], dest_exe)
+                if expected := meta.get("sha256"):
+                    verify_sha256(dest_exe, expected)
+                if variants_url := meta.get("variants_url"):
+                    download(variants_url, dest / "variants.ini")
+                write_origin(dest, meta)
+                print(f"{name} executable: {dest_exe} ({dest_exe.stat().st_size} bytes)", flush=True)
+                continue
             download(meta["url"], archive)
             if meta["kind"] == "zip":
                 extract_zip(archive, unpack)
@@ -159,7 +170,7 @@ def main() -> int:
                 except FileNotFoundError:
                     pass
             else:
-                exe = flatten_scan(unpack, dest)
+                raise RuntimeError(f"unsupported engine package: {name}")
             print(f"{name} executable: {exe} ({exe.stat().st_size} bytes)", flush=True)
     return 0
 

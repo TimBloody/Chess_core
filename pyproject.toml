@@ -9,14 +9,22 @@ description = "Configurable multi-variant chess and shogi core"
 requires-python = ">=3.11"
 dependencies = [
     "PyQt6>=6.11.0",
+    "openpyxl>=3.1",
+    "xlrd>=2.0.1",
 ]
+
+[project.optional-dependencies]
+mcp = ["mcp>=1.12,<3"]
 
 [project.scripts]
 chess-core = "chess_core.ui.app_entry:main"
 chess-classic = "play_classic:main"
+chess-ocr = "chess_core.tools.ocr_scoresheet:main"
+chess-glyph-demo = "chess_core.tools.demo_glyph_ocr:main"
+chess-core-mcp = "chess_core.tools.mcp_server:main"
 
 [tool.setuptools.package-data]
-"chess_core" = ["data/masks/*.json", "data/puzzles/*"]
+"chess_core" = ["data/masks/*.json", "data/puzzles/*", "data/gobblet/*.ggb", "data/experiments/ocr/*"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -3,9 +3,36 @@
     {
       "id": "stockfish",
       "name": "Stockfish",
-      "path": "../engines/stockfish/stockfish.exe",
+      "path": "../engines/public/stockfish/stockfish.exe",
       "protocol": "uci",
-      "variants": ["chess"]
+      "variants": ["chess", "chess960", "hand_and_brain"]
+    },
+    {
+      "id": "fairy-stockfish",
+      "name": "Fairy-Stockfish",
+      "path": "../engines/public/fairystockfish/fairy-stockfish.exe",
+      "protocol": "uci",
+      "variants": [
+        "chess",
+        "chess960",
+        "crazyhouse",
+        "giveaway",
+        "shogi",
+        "kyoto_shogi",
+        "dobutsu_shogi",
+        "minichess",
+        "reversi"
+      ],
+      "options": {
+        "VariantPath": "variants.ini"
+      }
+    },
+    {
+      "id": "yaneuraou",
+      "name": "YaneuraOu",
+      "path": "../engines/public/yaneuraou/yaneuraou.exe",
+      "protocol": "usi",
+      "variants": ["shogi"]
     }
   ]
 }

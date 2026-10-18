@@ -20,13 +20,16 @@ from chess_core.core.piece import PieceSide
 from chess_core.infra.storage.lichess_puzzles import load_lichess_puzzles
 from chess_core.modes.chess import classic_chess
 from chess_core.ui.piece_keys import piece_asset_key
+from chess_core.ui.theme import tighten_wrapping_label
 from chess_core.ui.widgets.board_widget import BoardOrientation, BoardWidget
 
 _THEME_LABELS = {
+    "composition": "шахматная композиция",
     "mate": "мат",
     "mateIn1": "мат в 1",
     "mateIn2": "мат в 2",
     "mateIn3": "мат в 3",
+    "mateIn4": "мат в 4",
     "fork": "вилка",
     "pin": "связка",
     "skewer": "сквозной удар",
@@ -45,6 +48,9 @@ _THEME_LABELS = {
     "attraction": "завлечение",
     "deflection": "отвлечение",
     "quietMove": "тихий ход",
+    "clearance": "освобождение линии",
+    "xRayAttack": "рентген",
+    "intermezzo": "промежуточный ход",
     "exposedKing": "оголённый король",
     "advancedPawn": "проходная",
     "trappedPiece": "пойманная фигура",
@@ -68,22 +74,28 @@ class PuzzleWidget(QWidget):
         self._locked = False
         self._hint_move = None
         self.board = BoardWidget()
+        self.board.set_piece_drag_enabled(True)
         self.status = QLabel()
         self.status.setObjectName("gameStatus")
-        self.status.setWordWrap(True)
+        tighten_wrapping_label(self.status)
         self.feedback = QLabel()
         self.feedback.setObjectName("gameHint")
-        self.feedback.setWordWrap(True)
+        tighten_wrapping_label(self.feedback)
         self.instructions = QLabel(
-            "Найдите лучший ход. Подсказка подсвечивает фигуру. "
-            "Неверный ход показывает решение. F — перевернуть доску."
+            "Найдите лучший ход. Задачи перемешаны; тема и рейтинг сужают набор. "
+            "«Шахматная композиция» — авторские маты в 3–5 с тихим первым ходом, "
+            "не серия шахов; проверяется главный вариант. "
+            "Подсказка подсвечивает фигуру. Неверный ход показывает решение. "
+            "F — перевернуть доску."
         )
-        self.instructions.setWordWrap(True)
+        tighten_wrapping_label(self.instructions)
         self.rating_combo = QComboBox()
         self.rating_combo.addItem("Все рейтинги", None)
         self.rating_combo.addItem("До 1200", (0, 1200))
         self.rating_combo.addItem("1200–1800", (1200, 1800))
         self.rating_combo.addItem("1800+", (1800, 4000))
+        self.theme_combo = QComboBox()
+        self.theme_combo.addItem("Все темы", None)
         self.prev_button = QPushButton("Предыдущая")
         self.next_button = QPushButton("Следующая")
         self.retry_button = QPushButton("Эта же задача")
@@ -96,6 +108,7 @@ class PuzzleWidget(QWidget):
         layout.addWidget(self.instructions)
         controls = QHBoxLayout()
         controls.addWidget(self.rating_combo)
+        controls.addWidget(self.theme_combo)
         controls.addWidget(self.prev_button)
         controls.addWidget(self.next_button)
         controls.addWidget(self.retry_button)
@@ -108,7 +121,8 @@ class PuzzleWidget(QWidget):
         self.next_button.clicked.connect(self._go_next)
         self.retry_button.clicked.connect(self._reload_current)
         self.hint_button.clicked.connect(self._show_hint)
-        self.rating_combo.currentIndexChanged.connect(self._apply_rating_filter)
+        self.rating_combo.currentIndexChanged.connect(self._apply_filters)
+        self.theme_combo.currentIndexChanged.connect(self._apply_filters)
         self._flip_shortcut = QShortcut(QKeySequence("F"), self)
         self._flip_shortcut.activated.connect(self.board.flip_orientation)
         self._advance_timer = QTimer(self)
@@ -142,9 +156,23 @@ class PuzzleWidget(QWidget):
             self.hint_button.setEnabled(False)
             return
         self._all_puzzles = tuple(puzzles)
-        self._session = PuzzleSession(classic_chess(), puzzles)
+        self._fill_theme_combo(puzzles)
+        self._session = PuzzleSession(classic_chess(), puzzles, shuffle=True)
         self.board.set_shape(8, 8)
         self._show_current("Найдите ход.")
+
+    def _fill_theme_combo(self, puzzles: tuple) -> None:
+        present = {theme for puzzle in puzzles for theme in puzzle.themes}
+        self.theme_combo.blockSignals(True)
+        self.theme_combo.clear()
+        self.theme_combo.addItem("Все темы", None)
+        for key, label in _THEME_LABELS.items():
+            if key in present:
+                self.theme_combo.addItem(label, key)
+        for key in sorted(present):
+            if key not in _THEME_LABELS:
+                self.theme_combo.addItem(key, key)
+        self.theme_combo.blockSignals(False)
 
     def _reload_current(self) -> None:
         if self._session is None:
@@ -178,29 +206,33 @@ class PuzzleWidget(QWidget):
         self.feedback.setText("Подсказка: походите подсвеченной фигурой.")
         self._refresh()
 
-    def _apply_rating_filter(self) -> None:
+    def _apply_filters(self) -> None:
         if not self._all_puzzles:
             return
-        bounds = self.rating_combo.currentData()
-        if bounds is None:
-            filtered = list(self._all_puzzles)
-        else:
-            low, high = bounds
-            filtered = [
-                puzzle
-                for puzzle in self._all_puzzles
-                if low <= puzzle.rating < high
-            ]
+        filtered = self._filtered_puzzles()
         if not filtered:
-            self.status.setText("В этом диапазоне задач нет. Выберите другой рейтинг.")
+            self.status.setText("В этом фильтре задач нет. Выберите другую тему или рейтинг.")
             return
         current_id = self._session.puzzle.puzzle_id if self._session is not None else ""
-        self._session = PuzzleSession(classic_chess(), filtered)
-        for index, puzzle in enumerate(filtered):
+        self._session = PuzzleSession(classic_chess(), filtered, shuffle=True)
+        for index, puzzle in enumerate(self._session.puzzles):
             if puzzle.puzzle_id == current_id:
                 self._session.load_index(index)
                 break
         self._show_current("Найдите ход.")
+
+    def _filtered_puzzles(self) -> list:
+        puzzles = list(self._all_puzzles)
+        bounds = self.rating_combo.currentData()
+        if bounds is not None:
+            low, high = bounds
+            puzzles = [
+                puzzle for puzzle in puzzles if low <= puzzle.rating < high
+            ]
+        theme = self.theme_combo.currentData()
+        if theme:
+            puzzles = [puzzle for puzzle in puzzles if theme in puzzle.themes]
+        return puzzles
 
     def _show_current(self, message: str) -> None:
         self._locked = False
@@ -291,10 +323,14 @@ class PuzzleWidget(QWidget):
         )
         rating = f"{puzzle.rating}" if puzzle.rating else "?"
         ply, total = self.session.player_progress
+        composer = ""
+        if "composition" in puzzle.themes and puzzle.opening_tags:
+            composer = " · " + " ".join(puzzle.opening_tags)
         self.status.setText(
             f"Задача {self.session.index + 1}/{self.session.total} · {puzzle.puzzle_id} · "
             f"{rating} · ход {side} · {ply}/{total}"
             + (f" · {themes}" if themes else "")
+            + composer
         )
 
         files = game.mode.board.shape.files

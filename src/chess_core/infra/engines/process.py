@@ -3,14 +3,35 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 import threading
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import TextIO
+
+
+def hidden_popen_kwargs() -> dict[str, object]:
+    """Start engine binaries without a flashing Windows console."""
+    kwargs: dict[str, object] = {
+        "stdin": subprocess.PIPE,
+        "stdout": subprocess.PIPE,
+        "stderr": subprocess.DEVNULL,
+        "text": True,
+        "bufsize": 1,
+    }
+    if sys.platform == "win32":
+        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = 0
+        kwargs["startupinfo"] = startupinfo
+    return kwargs
 
 
 @dataclass
 class EngineProcess:
     command: list[str]
+    cwd: str | None = None
     _process: subprocess.Popen[str] | None = None
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
@@ -18,13 +39,15 @@ class EngineProcess:
         with self._lock:
             if self._process is not None and self._process.poll() is None:
                 return
+            workdir = self.cwd
+            if workdir is None and self.command:
+                parent = Path(self.command[0]).resolve().parent
+                if parent.is_dir():
+                    workdir = str(parent)
             self._process = subprocess.Popen(
                 self.command,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1,
+                cwd=workdir,
+                **hidden_popen_kwargs(),
             )
 
     def stop(self) -> None:

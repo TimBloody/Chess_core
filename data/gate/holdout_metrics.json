@@ -1,0 +1,38 @@
+{
+  "used": "model",
+  "train_recall": 1.0,
+  "train_precision": 0.6646525679758308,
+  "holdout": {
+    "pr_auc": 0.9182371275801643,
+    "ece": 0.2961728004877924,
+    "precision": 0.6534810126582279,
+    "recall": 1.0,
+    "deployed_threshold": 0.5,
+    "positives_eaten": 0,
+    "n_pos": 413,
+    "n_neg": 440,
+    "operating_point": {
+      "threshold": 0.9404761904761905,
+      "precision": 0.6586921850079744,
+      "recall": 1.0,
+      "tp": 413,
+      "fp": 214,
+      "fn": 0
+    }
+  },
+  "platt": {
+    "a": -6.231883976334923,
+    "b": -9.027866769438129,
+    "apply": false
+  },
+  "thresholds": {
+    "t_elongation": 40.0,
+    "t_aspect": 4.0,
+    "t_bbox_fill_line": 0.4,
+    "t_ink_junk": 0.002,
+    "t_bbox_junk": 0.01,
+    "t_edge_hug": 0.8,
+    "t_curvature": 0.12
+  },
+  "model": true
+}

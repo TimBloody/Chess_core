@@ -26,10 +26,11 @@ from chess_core.app.training.memory import (
     ShapePrompt,
 )
 from chess_core.core.gamemode import GameMode
-from chess_core.core.registry import default_registry
+from chess_core.modes import resolve_mode
 from chess_core.core.state import GameState
 from chess_core.ui.editor import EditorWidget
 from chess_core.ui.piece_keys import piece_asset_key
+from chess_core.ui.theme import tighten_wrapping_label
 from chess_core.ui.widgets.board_widget import BoardOrientation, BoardWidget
 
 
@@ -50,7 +51,7 @@ _FORMAT_LABELS = {
 class MemoryTrainingWidget(QWidget):
     def __init__(
         self,
-        mode_resolver: Callable[[str], GameMode] = default_registry.get,
+        mode_resolver: Callable[[str], GameMode] = resolve_mode,
         mode_id: str = "chess",
         parent: QWidget | None = None,
     ) -> None:
@@ -80,6 +81,10 @@ class MemoryTrainingWidget(QWidget):
         self._timer.timeout.connect(self._on_timer)
 
         self.format_combo = QComboBox()
+        self.format_combo.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+        )
+        self.format_combo.setMinimumContentsLength(12)
         for fmt, label in _FORMAT_LABELS.items():
             self.format_combo.addItem(label, fmt)
         self.size_spin = QSpinBox()
@@ -98,10 +103,10 @@ class MemoryTrainingWidget(QWidget):
         self.check_button.setEnabled(False)
         self.status = QLabel("Выберите формат и нажмите «Новый раунд».")
         self.status.setObjectName("gameStatus")
-        self.status.setWordWrap(True)
+        tighten_wrapping_label(self.status)
         self.hint = QLabel()
         self.hint.setObjectName("gameHint")
-        self.hint.setWordWrap(True)
+        tighten_wrapping_label(self.hint)
 
         self.board = BoardWidget()
         self.board.set_coordinates_visible(False)

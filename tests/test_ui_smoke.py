@@ -16,7 +16,6 @@ from chess_core.modes import register_builtin_modes
 from chess_core.tools.classical_demo import parse_move
 from chess_core.ui.assets_loader import AssetsLoader
 from chess_core.ui.local_game import LocalGameWidget
-from chess_core.ui.main_window import MainWindow
 from chess_core.ui.mode_picker import UiSession
 from chess_core.ui.widgets.board_widget import (
     BoardNotation,
@@ -141,20 +140,59 @@ def test_notation_uses_upright_text_and_layout_survives_resize() -> None:
                 assert board.square_at_position(center) == expected
 
 
-def test_main_window_contains_working_local_game_page() -> None:
+def test_local_play_window_contains_working_local_game_page() -> None:
     _app()
     register_builtin_modes()
-    window = MainWindow(default_registry.list_modes(), UiSession("chess"))
+    from chess_core.ui.branches.local_play import LocalPlayWindow
+
+    window = LocalPlayWindow(default_registry.list_modes(), UiSession("chess"))
     assert isinstance(window._local_game, LocalGameWidget)
     assert window._local_game.board.position[4] == "wK"
+    assert window._editor.play_button.text() == "Играть с позиции"
     window._local_game.set_mode("cylindrical")
     assert window._local_game.board.files == 8
-    from chess_core.ui.puzzles import PuzzleWidget
-    from chess_core.ui.training.memory_widget import MemoryTrainingWidget
+    window.close()
 
+
+def test_education_window_contains_puzzles_and_memory() -> None:
+    _app()
+    register_builtin_modes()
+    from chess_core.ui.branches.education import EducationWindow
+    from chess_core.ui.puzzles import PuzzleWidget
+    from chess_core.ui.pgn_analysis import PgnAnalysisWidget
+    from chess_core.ui.editor import EditorWidget
+    from chess_core.ui.training.memory_widget import MemoryTrainingWidget
+    from chess_core.ui.training.maze_widget import MazeTrainingWidget
+
+    window = EducationWindow(default_registry.list_modes(), UiSession("chess"))
     assert isinstance(window._puzzles, PuzzleWidget)
+    assert window._puzzles.theme_combo.count() > 1
+    assert window._puzzles.session.total >= 20
     assert isinstance(window._memory, MemoryTrainingWidget)
+    assert isinstance(window.page_widget("Редактор"), EditorWidget)
+    assert window.page_widget("Редактор").play_button.text() == "Анализировать позицию"
+    assert isinstance(window.page_widget("Анализ"), PgnAnalysisWidget)
+    assert isinstance(window.page_widget("Лабиринт"), MazeTrainingWidget)
     assert window._puzzles.board.files == 8
+    window.close()
+
+
+def test_window_width_is_not_forced_by_unwrapped_hint_text() -> None:
+    app = _app()
+    register_builtin_modes()
+    from chess_core.ui.branches.local_play import LocalPlayWindow
+
+    window = LocalPlayWindow(default_registry.list_modes(), UiSession("chess"))
+    window.show()
+    app.processEvents()
+    assert window.minimumSizeHint().width() < 1400
+    assert window.width() <= 1400
+    window._local_game.set_mode("gobblet")
+    app.processEvents()
+    assert window.minimumSizeHint().width() < 1400
+    window._local_game.set_mode("shogi")
+    app.processEvents()
+    assert window.minimumSizeHint().width() < 1400
     window.close()
 
 

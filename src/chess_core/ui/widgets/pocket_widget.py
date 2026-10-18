@@ -16,7 +16,7 @@ from chess_core.ui.assets_loader import AssetsLoader
 from chess_core.ui.piece_keys import (
     FACING_ASSET_FAMILIES,
     hand_piece_key,
-    parse_display_key,
+    should_rotate_facing_art,
 )
 
 _STRIP_TOKEN = 36
@@ -61,6 +61,10 @@ class PocketWidget(QWidget):
         self._interactive = False
         self._grid = False
         self._columns = 3
+        self._asset_family = "chess"
+        self._facing_black = False
+        self._flip_map: dict[str, str] = {}
+        self._shown_face: dict[str, str] = {}
         self._assets = assets_loader or AssetsLoader()
         self._renderers: dict[str, QSvgRenderer] = {}
         self._apply_size_policy()
@@ -88,9 +92,14 @@ class PocketWidget(QWidget):
         asset_family: str = "chess",
         grid: bool | None = None,
         labels: dict[str, str] | None = None,
+        flip_map: dict[str, str] | None = None,
+        facing_black: bool = False,
     ) -> None:
         del labels
         self._side = side
+        self._asset_family = asset_family
+        self._facing_black = facing_black
+        self._flip_map = dict(flip_map or {})
         counts: dict[str, int] = {}
         if hands is not None:
             for piece in hands.by_side.get(side, ()):
@@ -106,6 +115,11 @@ class PocketWidget(QWidget):
             if key is None:
                 continue
             stacks.append(PocketStack(piece_key=key, piece_type=name, count=count))
+        self._shown_face = {
+            name: face
+            for name, face in self._shown_face.items()
+            if name in {stack.piece_type for stack in stacks}
+        }
         use_grid = asset_family in FACING_ASSET_FAMILIES if grid is None else grid
         columns = 2 if asset_family == "dobutsu" else 3
         self.set_grid(use_grid, columns=columns)
@@ -146,6 +160,21 @@ class PocketWidget(QWidget):
     def selected_type(self) -> str | None:
         return self._selected
 
+    def selected_face(self) -> str | None:
+        if self._selected is None:
+            return None
+        return self._shown_face.get(self._selected, self._selected)
+
+    def shown_face(self, piece_type: str) -> str:
+        return self._shown_face.get(piece_type, piece_type)
+
+    @property
+    def facing_black(self) -> bool:
+        return self._facing_black
+
+    def should_rotate_key(self, piece_key: str) -> bool:
+        return should_rotate_facing_art(piece_key, facing_black=self._facing_black)
+
     def clear_selection(self) -> None:
         self.set_selected(None)
 
@@ -156,18 +185,33 @@ class PocketWidget(QWidget):
         return self._desired_size()
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        if event.button() != Qt.MouseButton.LeftButton or not self._interactive:
+        if not self._interactive:
             return
         index = self._token_at(event.position())
         if index is None:
             return
         name = self._stacks[index].piece_type
+        if event.button() == Qt.MouseButton.RightButton:
+            self._flip_stack(name)
+            return
+        if event.button() != Qt.MouseButton.LeftButton:
+            return
         if self._selected == name:
             self.clear_selection()
             return
         self._selected = name
         self.update()
         self.piece_chosen.emit(name)
+
+    def _flip_stack(self, piece_type: str) -> None:
+        pair = self._flip_map.get(piece_type)
+        if pair is None:
+            return
+        current = self.shown_face(piece_type)
+        self._shown_face[piece_type] = pair if current == piece_type else piece_type
+        self.update()
+        if self._selected == piece_type:
+            self.piece_chosen.emit(piece_type)
 
     def paintEvent(self, event) -> None:  # noqa: ANN001
         del event
@@ -186,10 +230,10 @@ class PocketWidget(QWidget):
                 painter.setBrush(QColor(0, 0, 0, 0))
                 painter.setPen(_SELECT)
                 painter.drawRoundedRect(token.adjusted(-3, -3, 3, 3), 6, 6)
-            renderer = self._renderer(stack.piece_key)
+            display_key = self._display_key(stack)
+            renderer = self._renderer(display_key)
             token_inner = token.adjusted(2, 2, -2, -2)
-            _stem, owner = parse_display_key(stack.piece_key)
-            if owner is PieceSide.BLACK:
+            if self.should_rotate_key(display_key):
                 painter.save()
                 painter.translate(token_inner.center())
                 painter.rotate(180)
@@ -200,6 +244,10 @@ class PocketWidget(QWidget):
                 renderer.render(painter, token_inner)
             if stack.count > 1:
                 self._draw_count(painter, token, stack.count)
+
+    def _display_key(self, stack: PocketStack) -> str:
+        face = self.shown_face(stack.piece_type)
+        return hand_piece_key(face, self._side, self._asset_family) or stack.piece_key
 
     def _draw_count(self, painter: QPainter, token: QRectF, count: int) -> None:
         badge = QRectF(token.right() - 16, token.bottom() - 16, 16, 16)

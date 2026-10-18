@@ -1,0 +1,22 @@
+{
+  "train_sheets": [
+    "image_0001",
+    "image_0007",
+    "image_0551"
+  ],
+  "holdout_sheets": [
+    "image_0008",
+    "image_0009"
+  ],
+  "eval_sheets": [
+    "image_0006",
+    "image_0552"
+  ],
+  "n_train": 1320,
+  "n_holdout": 853,
+  "n_pos": 1073,
+  "n_neg": 1100,
+  "seed": 0,
+  "method": "split-by-sheet",
+  "note": "0006/0552 не входят в корпус гейта: они золотые eval-листы."
+}

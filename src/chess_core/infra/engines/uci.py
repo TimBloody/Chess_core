@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import time
 from dataclasses import dataclass
+from pathlib import Path
 
 from chess_core.infra.engines.process import EngineProcess
 
@@ -18,23 +19,85 @@ class UciInfo:
 
 
 class UciClient:
-    def __init__(self, executable: str, *, movetime_ms: int = 500) -> None:
-        self._process = EngineProcess([executable])
+    def __init__(
+        self,
+        executable: str,
+        *,
+        movetime_ms: int = 500,
+        depth: int | None = None,
+        options: dict[str, str] | None = None,
+    ) -> None:
+        cwd = str(Path(executable).resolve().parent) if executable else None
+        self._process = EngineProcess([executable], cwd=cwd)
         self._movetime_ms = movetime_ms
+        self._depth = depth
+        self._options = dict(options or {})
+        self._hello = "uci"
+        self._hello_token = "uciok"
+        self._newgame = "ucinewgame"
+        self._ready_timeout = 8.0
+        self._handshook = False
 
     def handshake(self) -> None:
         self._process.start()
-        self._write("uci")
-        self._wait_for("uciok", timeout=5.0)
+        if self._handshook and self._process.is_running():
+            return
+        self._write(self._hello)
+        self._wait_for(self._hello_token, timeout=8.0)
+        for name, value in self._options.items():
+            self._write(f"setoption name {name} value {value}")
+        self._write(self._newgame)
         self._write("isready")
-        self._wait_for("readyok", timeout=5.0)
+        self._wait_for("readyok", timeout=self._ready_timeout)
+        self._handshook = True
 
-    def analyze_fen(self, fen: str) -> tuple[str | None, UciInfo | None]:
-        self._write(f"position fen {fen}")
-        self._write(f"go movetime {self._movetime_ms}")
+    def analyze_fen(
+        self,
+        fen: str,
+        *,
+        movetime_ms: int | None = None,
+        depth: int | None = None,
+    ) -> tuple[str | None, UciInfo | None]:
+        self.handshake()
+        previous = (self._movetime_ms, self._depth)
+        if movetime_ms is not None:
+            self._movetime_ms = movetime_ms
+        if depth is not None:
+            self._depth = depth
+        try:
+            self._write(f"position fen {fen}")
+            return self._go()
+        finally:
+            self._movetime_ms, self._depth = previous
+
+    def stop_search(self) -> None:
+        if not self._process.is_running():
+            return
+        try:
+            self._write("stop")
+        except RuntimeError:
+            pass
+
+    def shutdown(self) -> None:
+        self._handshook = False
+        self._process.stop()
+
+    def _go(self, command: str | None = None) -> tuple[str | None, UciInfo | None]:
+        if command is None:
+            if self._depth is not None:
+                command = f"go depth {self._depth}"
+            else:
+                command = f"go movetime {self._movetime_ms}"
+        self._write(command)
+        return self._read_bestmove()
+
+    def _read_bestmove(self) -> tuple[str | None, UciInfo | None]:
+        extra = 3.0 if self._depth is not None else 2.0
+        deadline = time.monotonic() + self._movetime_ms / 1000 + extra
+        if self._depth is not None:
+            deadline = time.monotonic() + 12.0
         bestmove: str | None = None
         last_info: UciInfo | None = None
-        deadline = time.monotonic() + self._movetime_ms / 1000 + 2.0
         stdout = self._process.stdout
         if stdout is None:
             return None, None
@@ -45,16 +108,13 @@ class UciClient:
             line = line.strip()
             if line.startswith("bestmove"):
                 parts = line.split()
-                if len(parts) >= 2:
+                if len(parts) >= 2 and parts[1] != "(none)":
                     bestmove = parts[1]
                 break
             info = self._parse_info(line)
             if info is not None:
                 last_info = info
         return bestmove, last_info
-
-    def shutdown(self) -> None:
-        self._process.stop()
 
     def _write(self, command: str) -> None:
         stdin = self._process.stdin

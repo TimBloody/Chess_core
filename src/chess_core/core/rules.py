@@ -14,8 +14,11 @@ class VictoryKind(Enum):
     CHECKMATE = auto()
     KING_CAPTURE = auto()
     KING_REACHES_ZONE = auto()
+    OCCUPY_ZONE = auto()
     STALEMATE = auto()
     MATERIAL = auto()
+    MAJORITY = auto()
+    ALIGN = auto()
     RESIGNATION = auto()
     CUSTOM = auto()
 

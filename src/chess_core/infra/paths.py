@@ -42,7 +42,30 @@ def engines_dir() -> Path:
     env = os.environ.get("CHESS_CORE_ENGINES_DIR")
     if env:
         return Path(env)
+    local_public = project_root() / "engines" / "public"
+    if local_public.is_dir():
+        return local_public
     return project_root().parent / "engines"
+
+
+def engine_search_roots() -> tuple[Path, ...]:
+    """All locations that may contain engine binaries."""
+    roots: list[Path] = []
+    env = os.environ.get("CHESS_CORE_ENGINES_DIR")
+    if env:
+        roots.append(Path(env))
+    roots.append(project_root() / "engines" / "public")
+    roots.append(project_root() / "engines")
+    roots.append(project_root().parent / "engines")
+    seen: set[Path] = set()
+    unique: list[Path] = []
+    for root in roots:
+        resolved = root.resolve() if root.exists() else root
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        unique.append(root)
+    return tuple(unique)
 
 
 def config_dir() -> Path:

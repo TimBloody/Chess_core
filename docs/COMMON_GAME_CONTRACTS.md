@@ -101,6 +101,17 @@ class BestMove:
 - Composite actions within one turn joined by `·`
 - Drop: `N@e4`; duck placement: `@e4`
 
+## Game transcript (required for every playable mode)
+
+Every finished or in-progress local game must be exportable as plain text. This is a `GameRecord` contract, not a per-mode feature.
+
+- Source of truth: the turn journal (`list[TurnRecord]`), never a UI-only log.
+- `LocalGameService.export_transcript()` formats tags + numbered moves + result.
+- Tags always include `Mode`, `ModeName`, `Date`, `Result`, `PlyCount`.
+- Result uses `1-0` / `0-1` / `1/2-1/2` / `*` plus a termination comment.
+- UI offers copy-to-clipboard and save-to-`.txt` for all modes, including Gobblet, draughts, shogi, and reversi.
+- New modes must keep using `LocalGameService` / `GameRecord.append_turn` with `format_turn`. Do not invent a parallel history.
+
 ## Engine discovery
 
 Search order:
@@ -109,3 +120,16 @@ Search order:
 3. `../engines/` sibling directory
 
 Engine binaries never bundled in exe.
+
+## Tournament manager
+
+Application-layer only: no game rules, no PyQt inside `app/tournament`.
+
+- Snapshot JSON version `1` via `infra.storage.tournament_files` (atomic replace).
+- Swiss uses native FIDE Dutch 2026 (`NativeDutch2026Engine`). It is **not FIDE-endorsed**.
+- `ExternalOfficialEngineAdapter` is a dummy boundary (TRF26 in/out). If an official executable is missing, generation continues with the native engine and writes a diagnostic report; it never silently replaces pairings.
+- Round robin is Berger, 1 or 2 cycles; the second cycle reverses colours.
+- Manual pair edits require a reason and are stored in the audit log with FIDE-violation warnings.
+- Player import: typed list, CSV (UTF-8 BOM, RU/EN headers), public Google Sheets CSV URL only (no OAuth).
+- Excel export: sheets «Пары», «Положение», «Кросс-таблица», «По алфавиту». TRF export for rating reports.
+- Scheduled ½-point / zero-point byes apply to the next generated round.

@@ -1,0 +1,24 @@
+{
+  "id": "rotated",
+  "moves": [
+    "e4",
+    "e5",
+    "Nf3",
+    "Nc6",
+    "Bc4",
+    "Bc5"
+  ],
+  "white": "Алиса",
+  "black": "Борис",
+  "event": "Фикстура OCR / deskew",
+  "result": "*",
+  "rotate_deg": 3.2,
+  "grid": {
+    "left": 28,
+    "top": 96,
+    "number_width": 40,
+    "move_width": 212.0,
+    "cell_height": 33.8,
+    "rows": 20
+  }
+}

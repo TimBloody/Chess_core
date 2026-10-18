@@ -30,11 +30,18 @@ class EngineBridge(QObject):
 
     def request_analysis(self, request: EngineRequest) -> None:
         if self._worker is not None and self._worker.isRunning():
-            self._worker.terminate()
-            self._worker.wait(100)
+            self._service.stop_search()
+            self._worker.wait(400)
         self._worker = _EngineWorker(self._service, request)
         self._worker.finished_analysis.connect(self._on_finished)
         self._worker.start()
+
+    def shutdown(self) -> None:
+        if self._worker is not None and self._worker.isRunning():
+            self._service.stop_search()
+            self._worker.wait(400)
+        self._service.close()
+        self._worker = None
 
     def _on_finished(self, result: BestMove) -> None:
         self.analysis_ready.emit(result)

@@ -7,13 +7,13 @@ from dataclasses import dataclass
 from enum import Enum
 
 from PyQt6.QtCore import QPointF, QSize, QRectF, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QPainter
+from PyQt6.QtGui import QColor, QFont, QPainter, QPixmap
 from PyQt6.QtSvg import QSvgRenderer
-from PyQt6.QtWidgets import QSizePolicy, QWidget
+from PyQt6.QtWidgets import QLabel, QSizePolicy, QWidget
 
-from chess_core.core.piece import PieceSide
 from chess_core.ui.assets_loader import AssetsLoader
-from chess_core.ui.piece_keys import parse_display_key
+from chess_core.ui.piece_keys import should_rotate_facing_art
+from chess_core.ui.theme import notation_ink
 
 
 class BoardOrientation(Enum):
@@ -122,6 +122,9 @@ class BoardNotation:
         return self.rank_labels[rank]
 
 
+_DRAG_THRESHOLD_PX = 8.0
+
+
 class BoardWidget(QWidget):
     """Render a board grid and SVG pieces without embedding game rules."""
 
@@ -132,6 +135,22 @@ class BoardWidget(QWidget):
         self._files = 8
         self._ranks = 8
         self._position: dict[int, str] = {}
+        self._piece_drag_enabled = False
+        self._press_square: int | None = None
+        self._press_pos = QPointF()
+        self._drag_active = False
+        self._drag_hidden_square: int | None = None
+        self._drag_overlay = QLabel()
+        self._drag_overlay.setWindowFlags(
+            Qt.WindowType.Tool
+            | Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.WindowStaysOnTopHint
+            | Qt.WindowType.WindowTransparentForInput
+        )
+        self._drag_overlay.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self._drag_overlay.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self._drag_overlay.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
+        self._drag_overlay.hide()
         self._selected_square: int | None = None
         self._legal_destinations: set[int] = set()
         self._check_squares: set[int] = set()
@@ -170,6 +189,7 @@ class BoardWidget(QWidget):
             if 0 <= square < self._cell_count
         }
         self.clear_highlights()
+        self._cancel_piece_drag(restore_piece=False)
         self.update()
 
     def set_position(self, position: Mapping[int, str]) -> None:
@@ -292,6 +312,15 @@ class BoardWidget(QWidget):
         return self._coordinates_visible
 
     @property
+    def piece_drag_enabled(self) -> bool:
+        return self._piece_drag_enabled
+
+    def set_piece_drag_enabled(self, enabled: bool) -> None:
+        if not enabled:
+            self._cancel_piece_drag(restore_piece=True)
+        self._piece_drag_enabled = enabled
+
+    @property
     def notation(self) -> BoardNotation:
         return self._notation
 
@@ -306,6 +335,7 @@ class BoardWidget(QWidget):
         if orientation is not self._orientation:
             self._orientation = orientation
             self._transform = BoardTransform(self._files, self._ranks, orientation)
+            self._cancel_piece_drag(restore_piece=True)
             self.update()
 
     def flip_orientation(self) -> None:
@@ -383,7 +413,49 @@ class BoardWidget(QWidget):
         square = self.square_at_position(event.position())
         if square is not None:
             self.square_clicked.emit(square)
+        if (
+            self._piece_drag_enabled
+            and event.button() is Qt.MouseButton.LeftButton
+            and square is not None
+            and square in self._position
+        ):
+            self._press_square = square
+            self._press_pos = QPointF(event.position())
+            self._drag_active = False
+        else:
+            self._press_square = None
         super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:  # noqa: ANN001 - Qt override signature
+        if self._piece_drag_enabled and self._press_square is not None:
+            if not self._drag_active:
+                delta = event.position() - self._press_pos
+                if delta.manhattanLength() >= _DRAG_THRESHOLD_PX:
+                    self._begin_piece_drag()
+            if self._drag_active:
+                self._move_drag_overlay(event.position())
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: ANN001 - Qt override signature
+        if event.button() is Qt.MouseButton.LeftButton and self._drag_active:
+            dest = self.square_at_position(event.position())
+            source = self._press_square
+            drop = dest is not None and dest != source
+            self._cancel_piece_drag(restore_piece=not drop)
+            if drop:
+                self.square_clicked.emit(dest)
+        self._press_square = None
+        self._drag_active = False
+        super().mouseReleaseEvent(event)
+
+    def hideEvent(self, event) -> None:  # noqa: ANN001 - Qt override signature
+        self._cancel_piece_drag(restore_piece=False)
+        super().hideEvent(event)
+
+    def closeEvent(self, event) -> None:  # noqa: ANN001 - Qt override signature
+        self._cancel_piece_drag(restore_piece=False)
+        self._drag_overlay.close()
+        super().closeEvent(event)
 
     def square_at_position(self, point: QPointF) -> int | None:
         """Map a widget point to a logical row-major square."""
@@ -449,8 +521,13 @@ class BoardWidget(QWidget):
         piece_margin = cell_size * 0.08
 
         for square, piece_key in self._position.items():
+            if square == self._drag_hidden_square:
+                continue
             square_rect = self._logical_square_rect(board_rect, cell_size, square)
             piece_rect = square_rect.adjusted(piece_margin, piece_margin, -piece_margin, -piece_margin)
+            if piece_key == "blocker":
+                self._draw_blocker(painter, piece_rect)
+                continue
             renderer = self._renderer(f"piece:{piece_key}", str(self._assets_loader.piece_path(piece_key)))
             if self._should_rotate_piece(piece_key):
                 painter.save()
@@ -462,14 +539,24 @@ class BoardWidget(QWidget):
             else:
                 renderer.render(painter, piece_rect)
 
+    def _draw_blocker(self, painter: QPainter, piece_rect: QRectF) -> None:
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setBrush(QColor(236, 176, 32))
+        painter.setPen(QColor(90, 58, 12))
+        painter.drawEllipse(piece_rect.adjusted(
+            piece_rect.width() * 0.12,
+            piece_rect.height() * 0.18,
+            -piece_rect.width() * 0.12,
+            -piece_rect.height() * 0.12,
+        ))
+        painter.restore()
+
     def _should_rotate_piece(self, piece_key: str) -> bool:
-        _stem, owner = parse_display_key(piece_key)
-        if owner is None:
-            return False
-        facing_black = self._orientation is BoardOrientation.BLACK
-        if facing_black:
-            return owner is PieceSide.WHITE
-        return owner is PieceSide.BLACK
+        return should_rotate_facing_art(
+            piece_key,
+            facing_black=self._orientation is BoardOrientation.BLACK,
+        )
 
     def _draw_highlights(self, painter: QPainter, board_rect: QRectF, cell_size: float) -> None:
         for square in self._blocked_squares:
@@ -533,7 +620,7 @@ class BoardWidget(QWidget):
         font.setBold(True)
         font.setPixelSize(max(1, min(18, int(cell_size * 0.20))))
         painter.setFont(font)
-        painter.setPen(self.palette().color(self.foregroundRole()))
+        painter.setPen(notation_ink())
         left_units, bottom_units = self._notation_gutter_units()
         bottom_files, left_ranks = self.edge_labels()
 
@@ -596,6 +683,67 @@ class BoardWidget(QWidget):
 
     def _validate_square(self, square: int) -> None:
         self._transform.logical_index_to_display(square)
+
+    def invalidate_renderers(self) -> None:
+        self._renderers.clear()
+        self._cancel_piece_drag(restore_piece=True)
+        self.update()
+
+    def _begin_piece_drag(self) -> None:
+        source = self._press_square
+        if source is None:
+            return
+        piece_key = self._position.get(source)
+        if piece_key is None:
+            return
+        _board_rect, cell_size = self._board_geometry()
+        pixmap = self._piece_pixmap(piece_key, max(1, int(cell_size)))
+        self._drag_overlay.setPixmap(pixmap)
+        self._drag_overlay.resize(pixmap.size())
+        self._drag_hidden_square = source
+        self._drag_active = True
+        self._drag_overlay.show()
+        self._drag_overlay.raise_()
+        self._move_drag_overlay(self._press_pos)
+        self.update()
+
+    def _move_drag_overlay(self, pos: QPointF) -> None:
+        global_pos = self.mapToGlobal(pos.toPoint())
+        self._drag_overlay.move(
+            global_pos.x() - self._drag_overlay.width() // 2,
+            global_pos.y() - self._drag_overlay.height() // 2,
+        )
+
+    def _cancel_piece_drag(self, *, restore_piece: bool) -> None:
+        hidden = self._drag_hidden_square
+        was_active = self._drag_active
+        self._drag_active = False
+        self._drag_hidden_square = None
+        self._drag_overlay.hide()
+        self._drag_overlay.clear()
+        if restore_piece and (was_active or hidden is not None):
+            self.update()
+
+    def _piece_pixmap(self, piece_key: str, cell_size: int) -> QPixmap:
+        pixmap = QPixmap(cell_size, cell_size)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        margin = cell_size * 0.08
+        piece_rect = QRectF(margin, margin, cell_size - 2 * margin, cell_size - 2 * margin)
+        if piece_key == "blocker":
+            self._draw_blocker(painter, piece_rect)
+            painter.end()
+            return pixmap
+        renderer = self._renderer(f"piece:{piece_key}", str(self._assets_loader.piece_path(piece_key)))
+        if self._should_rotate_piece(piece_key):
+            painter.translate(piece_rect.center())
+            painter.rotate(180)
+            painter.translate(-piece_rect.center())
+        renderer.render(painter, piece_rect)
+        painter.end()
+        return pixmap
 
     def _renderer(self, cache_key: str, path: str) -> QSvgRenderer:
         renderer = self._renderers.get(cache_key)

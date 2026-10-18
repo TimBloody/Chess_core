@@ -1,0 +1,16 @@
+---
+description: Use the Chess_core MCP before exploring or guessing rules
+alwaysApply: true
+---
+
+# Chess_core MCP
+
+This repo has a project MCP server named `chess-core`. Use it before broad file search.
+
+- `project_brief` / `search_docs` — architecture and onboarding facts. Do not reread all of `for_agent.me` unless the answer is still missing. `search_docs` also searches the mode rules catalog.
+- `list_modes` / `mode_details` / `mode_docs` — mode ids **and rule descriptions**. `mode_details` returns live `GameMode` fields plus `rules`/`description`. `mode_docs` covers education-branch modes even when they are not registered on master. Do not guess how pieces move from tests alone.
+- `legal_moves` / `apply_move` — real legality and FEN. Engine tokens look like `e2e4`, `P@e4`, duck `e2e4,e4e6`.
+- `where_to_change` — put rules in `core`/`modes`, scenarios in `app`, I/O in `infra`, drawing in `ui`.
+- `related_tests` / `check_layer_imports` — pick tests and keep `ui -> app -> core`.
+
+Do not implement Capablanca 10x8, portals, or AlphaZero unless the user asks.

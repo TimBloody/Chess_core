@@ -76,6 +76,7 @@ class GameState:
     hands: HandsState | None = None
     history: HistoryState = field(default_factory=HistoryState)
     extras: dict[str, Any] = field(default_factory=dict)
+    repetition_log: tuple[object, ...] = ()
 
     def clone(self, *, include_history: bool = True) -> GameState:
         # A GameMode is position-independent configuration and can be large
@@ -115,9 +116,12 @@ class GameState:
             ),
             history=history,
             extras=extras,
+            repetition_log=self.repetition_log,
         )
 
-    def apply_turn(self, turn: Turn, *, record_history: bool = True) -> GameState:
+    def apply_turn(
+        self, turn: Turn, *, record_history: bool = True, require_complete: bool = True
+    ) -> GameState:
         if turn.side is not self.side_to_move:
             raise ValueError("turn side does not match side_to_move")
         if not turn.actions:
@@ -127,7 +131,11 @@ class GameState:
         mode = result.extras.get("mode")
         result.extras["outbound_gifts"] = []
         turn_actions: list[Action] = []
-        if mode is not None and not mode.turn_scenario.validate_turn(turn):
+        if (
+            require_complete
+            and mode is not None
+            and not mode.turn_scenario.validate_turn(turn)
+        ):
             raise ValueError("turn does not match the game mode turn scenario")
         shape = result.board_state.board.shape
         for action in turn.actions:
@@ -139,6 +147,16 @@ class GameState:
                     raise ValueError("cannot move from an empty square")
                 if piece.side is not turn.side:
                     raise ValueError("cannot move another side's piece")
+                if _uses_stack_covers(mode):
+                    _apply_stack_move(result, source, target, piece)
+                    turn_actions.append(action)
+                    if mode is not None:
+                        for transition in mode.transitions:
+                            transitioned = transition.apply_after_action(action, result)
+                            if not isinstance(transitioned, GameState):
+                                raise TypeError("state transition must return GameState")
+                            result = transitioned
+                    continue
                 captured = result.board_state.piece_at(target)
                 if _is_chess960_castle(piece, captured, result.extras):
                     _apply_chess960_castle(result, action, piece, captured, shape)
@@ -150,7 +168,21 @@ class GameState:
                                 raise TypeError("state transition must return GameState")
                             result = transitioned
                     continue
-                if captured is not None and captured.side is turn.side:
+                if action.jumped:
+                    if captured is not None:
+                        raise ValueError("jump landing must be empty")
+                    for jumped_square in action.jumped:
+                        jumped_index = jumped_square.index(shape.files)
+                        victim = result.board_state.piece_at(jumped_index)
+                        if (
+                            victim is None
+                            or victim.side is turn.side
+                            or victim.side is PieceSide.NEUTRAL
+                        ):
+                            raise ValueError("invalid jump capture")
+                        _deposit_capture(result, turn.side, victim, mode)
+                        result.board_state.cells[jumped_index] = None
+                elif captured is not None and captured.side is turn.side:
                     raise ValueError("cannot capture a friendly piece")
                 if captured is not None and captured.side is PieceSide.NEUTRAL:
                     raise ValueError("cannot capture a neutral blocker")
@@ -214,7 +246,8 @@ class GameState:
                         result.board_state.cells[target] = transformed
             elif isinstance(action, DropAction):
                 target = action.to_square.index(shape.files)
-                if result.board_state.piece_at(target) is not None:
+                covering = _uses_stack_covers(mode)
+                if result.board_state.piece_at(target) is not None and not covering:
                     raise ValueError("cannot drop onto an occupied square")
                 if result.hands is None:
                     raise ValueError("position does not support pieces in hand")
@@ -238,7 +271,10 @@ class GameState:
                 dropped = hand.pop(index)
                 if action.face is not None:
                     dropped.piece_type = PieceTypeId(action.face)
-                result.board_state.cells[target] = dropped
+                if covering:
+                    _stack_push(result, target, dropped)
+                else:
+                    result.board_state.cells[target] = dropped
             elif isinstance(action, TransformAction):
                 target = action.square.index(shape.files)
                 piece = result.board_state.piece_at(target)
@@ -277,6 +313,16 @@ class GameState:
             if result.side_to_move is PieceSide.WHITE
             else PieceSide.WHITE
         )
+        from chess_core.core.repetition import position_key
+
+        before = position_key(self)
+        if self.repetition_log and self.repetition_log[-1] == before:
+            prior = self.repetition_log
+        elif self.repetition_log:
+            prior = (*self.repetition_log, before)
+        else:
+            prior = (before,)
+        result.repetition_log = (*prior, position_key(result))
         return result
 
 
@@ -299,6 +345,62 @@ class _TransformContext:
 def _clone_piece(piece: Piece) -> Piece:
     """Copy mutable per-piece state while sharing immutable identifiers."""
     return Piece(piece.piece_type, piece.side, deepcopy(piece.state))
+
+
+def _uses_stack_covers(mode: object) -> bool:
+    extras = getattr(mode, "initial_extras", None)
+    return bool(isinstance(extras, dict) and extras.get("stack_covers"))
+
+
+def _cover_sizes(mode: object) -> dict[str, int]:
+    extras = getattr(mode, "initial_extras", None)
+    raw = extras.get("cover_sizes") if isinstance(extras, dict) else None
+    if not isinstance(raw, dict):
+        return {}
+    return {str(name): int(value) for name, value in raw.items()}
+
+
+def _cell_stack(state: GameState, index: int) -> list[Piece]:
+    stacks = state.extras.setdefault("stacks", {})
+    if not isinstance(stacks, dict):
+        raise TypeError("extras['stacks'] must be a dict")
+    if index not in stacks:
+        occupant = state.board_state.piece_at(index)
+        stacks[index] = [_clone_piece(occupant)] if occupant is not None else []
+    return stacks[index]
+
+
+def _sync_stack_cell(state: GameState, index: int) -> None:
+    stack = _cell_stack(state, index)
+    state.board_state.cells[index] = _clone_piece(stack[-1]) if stack else None
+
+
+def _can_cover_piece(moving: Piece, occupant: Piece | None, sizes: dict[str, int]) -> bool:
+    if occupant is None:
+        return True
+    return sizes.get(moving.piece_type.name, 0) > sizes.get(occupant.piece_type.name, 0)
+
+
+def _stack_push(state: GameState, index: int, piece: Piece) -> None:
+    mode = state.extras.get("mode")
+    sizes = _cover_sizes(mode)
+    stack = _cell_stack(state, index)
+    top = stack[-1] if stack else None
+    if not _can_cover_piece(piece, top, sizes):
+        raise ValueError("cannot cover this piece")
+    stack.append(_clone_piece(piece))
+    _sync_stack_cell(state, index)
+
+
+def _apply_stack_move(state: GameState, source: int, target: int, piece: Piece) -> None:
+    if source == target:
+        raise ValueError("cannot move to the same square")
+    from_stack = _cell_stack(state, source)
+    if not from_stack or from_stack[-1].side is not piece.side:
+        raise ValueError("cannot move from this square")
+    moving = from_stack.pop()
+    _sync_stack_cell(state, source)
+    _stack_push(state, target, moving)
 
 
 def _deposit_capture(state: GameState, mover: PieceSide, captured: Piece, mode: object) -> None:

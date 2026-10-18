@@ -1,0 +1,56 @@
+{
+  "id": 300000,
+  "stipulation": "#3",
+  "authors": [
+    "Сыгуров, Александр Ильич"
+  ],
+  "algebraic": {
+    "white": [
+      "Ka3",
+      "Qc6",
+      "Rf5",
+      "Rb5",
+      "Bg5",
+      "Bd5",
+      "Sh6",
+      "Se5",
+      "Pg2",
+      "Pd2",
+      "Pc4"
+    ],
+    "black": [
+      "Kd4",
+      "Qd8",
+      "Rh3",
+      "Rf8",
+      "Be7",
+      "Sb7",
+      "Pf7",
+      "Pe4",
+      "Pd7",
+      "Pd3",
+      "Pc7",
+      "Pc5",
+      "Pa7"
+    ]
+  },
+  "options": [
+    "defence 1"
+  ],
+  "keywords": [
+    "Logical problem",
+    "Keller paradox",
+    "Pickabish",
+    "Clearance sacrifice"
+  ],
+  "solution": "1.g2*h3 ? threat:\n       2.Bg5-e3 #\n but\n   1...Be7*g5 !\n1.Bd5*f7 ? threat:\n       2.Qc6-d5 #\n but\n   1...d7-d5 !\n1.Bg5-f4 ! threat:\n       2.Se5-f3 +\n           2...Rh3*f3\n               3.Bf4-e5 #\n   1...d7-d6\n       2.Qc6*c5 +\n           2...d6*c5 {(Sxc5)}\n               3.Se5-c6 #\n   1...Be7-d6\n       2.Bd5*f7 threat:\n               3.Qc6-d5 #\n           2...d7*c6\n               3.Se5*c6 #\n   1...f7-f6\n       2.g2*h3 threat:\n               3.Bf4-e3 #\n   1...Be7-f6\n       2.Rf5-g5 threat:\n               3.Sh6-f5 #\n           2...Rh3*h6\n               3.Bf4-e3 #\n           2...Sb7-d6\n               3.Qc6*c5 #",
+  "source": {
+    "name": "64 — Шахматное обозрение",
+    "date": {
+      "year": 2007,
+      "month": 11
+    },
+    "issue": 11,
+    "problemid": 95
+  }
+}

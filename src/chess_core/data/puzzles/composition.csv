@@ -1,0 +1,41 @@
+PuzzleId,FEN,Moves,Rating,RatingDeviation,Popularity,NbPlays,Themes,GameUrl,OpeningTags,Diagram
+Y207000,8/3p2N1/8/4N3/4kp2/7p/3Q1P2/7K w - - 0 1,e5g4 e4f3 d2d1 f3e4 f2f3,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#207000,"White, Alain Campbell",1
+Y208400,4N3/4r2n/2p1p2Q/R1N1k2P/1pp1P3/4P3/3P2n1/2K5 w - - 0 1,a5a4 b4b3 d2d4 c4d3 c5d3,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#208400,"Frankenstein, Edward Nathan",1
+Y210500,8/q1pQn3/1pr3p1/2p1P2b/p1k1N3/1pB1p2r/1P2N3/2K2Bb1 w - - 0 1,e4g5 c6d6 d7b5 c4b5 e2d4,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#210500,"Beale, John Lindsay",1
+Y212600,8/5p2/1p2pQ2/8/1P2p3/4k3/3pP2P/1n1K1B2 w - - 0 1,f1h3 b1c3 f6c3 e3f4 c3g3,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#212600,"Lawton, Howard",1
+Y214000,8/p6K/p4p2/2Pk1P2/B1N5/4pNP1/Q1P3n1/8 w - - 0 1,a2a3 g2e1 c4e3 d5e4 a4c6,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#214000,"Soederberg, H",1
+Y214700,6K1/3B4/2ppp3/3k4/8/1Pp5/2p2Q2/2B5 w - - 0 1,d7c8 d5e4 f2e3 e4d5 c8e6,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#214700,"Martindale, Frank W.",1
+Y216100,8/1N1K1ppN/1p2P1b1/3Rb3/4kn2/Qp1pPn1P/1B1P2R1/5B2 w - - 0 1,a3b3 f3d2 d5e5 e4f3 h7g5,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#216100,"Gilberg, Charles Alexander",1
+Y219600,2r5/n1p2pb1/1N2kP2/N4RpP/6B1/3P4/2pK4/2B5 w - - 0 1,d2c3 a7b5 f5b5 e6f6 c1g5,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#219600,"de Jong, Leonard Nicolaas",1
+Y227300,4r2b/1B5N/R3P3/2p1kpQR/p1r2n2/KP2p2P/N1b1P2B/n7 w - - 0 1,g5g1 c2e4 h2f4 e5f4 g1h2,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#227300,"Kwiatkowski, Marek",1
+Y232900,8/1Kpr4/2R1Pp2/2N1kp2/1p1N1np1/4bR1n/7B/3Q4 w - - 0 1,d1d3 e3d4 f3e3 e5d5 d3b3,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#232900,"Рычков, Владимир Николаевич",1
+Y235000,3N4/3Kp1b1/3nP3/2pkN3/P5pq/2Q5/4P3/1B4n1 w - - 0 1,e5c4 g7c3 d8c6 g1h3 c4e3,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#235000,"Drtina, Jan",1
+Y265100,5K2/1B2R3/3k4/2p5/3N4/R4p2/5N2/1b3q2 w - - 0 1,a3d3 b1d3 d4b5 d3b5 f2e4,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#265100,"Giegold, Fritz Emil",1
+Y268600,5K2/3pn1Q1/6b1/2p5/8/8/p5R1/7k w - - 0 1,g2e2 a2a1q g7a1 g6b1 a1b1,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#268600,"Pachman, Vladimír",1
+Y269300,8/8/3kPp2/2p2p2/2Q5/2N5/3BK3/8 w - - 0 1,c4b5 d6e6 b5e8 e6d6 d2f4,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#269300,"Рангелов, Владимир Петров",1
+Y270000,8/p7/N7/1N6/kP6/6K1/2P2Q2/5b2 w - - 0 1,f2e3 a4b5 e3c5 b5a6 c5c6,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#270000,"Soukup, Miroslav",1
+Y270700,Q7/n7/1p1RN2K/1p1Bk1P1/3p4/3pp2p/7P/3r4 w - - 0 1,e6f4 d1f1 f4d3 e5f5 d5e6,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#270700,"Vetešník, Ladislav",1
+Y272100,7K/6Rp/7k/6R1/6P1/P6r/8/7r w - - 0 1,g5a5 h1b1 a5a6 b1b6 a6b6,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#272100,"Вовнейко, Виктор Иванович",1
+Y307800,K4b2/NpB1p3/6r1/2kp4/R3nN2/1n5Q/5p2/3q4 w - - 0 1,h3e6 e4d6 e6e3 d1d4 f4d3,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#307800,"Bachl, Ernst",1
+Y308500,5B2/8/1N3K2/p7/Rp1kB3/N7/3P2P1/3R4 w - - 0 1,f8h6 d4e4 d2d4 b4b3 d4d5,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#308500,"Priepke, Wolfgang",1
+Y327400,4R3/K1N3P1/PR4P1/N1kP1P2/p3n1rb/2pnP3/8/1b1r2B1 w - - 0 1,d5d6 b1a2 a5b7 c5c4 g7g8q,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#327400,"Кутуков, Юрий Алексеевич",1
+Y328100,k7/p4p2/1PK1ppp1/7b/p5p1/p7/Q5nb/8 w - - 0 1,a2e2 a7b6 e2a6 a8b8 a6b7,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#328100,"Weiß, Ottmar",1
+Y332300,8/2B1K1p1/1ppN4/r3kN2/1P2P2p/nb5r/1P4Pb/2Q2B2 w - - 0 1,c1g5 h2g1 d6b5 e5e4 f5d6,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#332300,"Агапов, Игорь Алексеевич",1
+Y351900,K3bN2/1p4r1/3PR2n/QB3kP1/p3N1p1/q3b1P1/4P2R/3r4 w - - 0 1,h2h5 d1h1 b5d3 a3c5 e4c3,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#351900,"Миронов, Василий Алексеевич",1
+Y362400,8/8/8/8/P7/1PQK4/N2P4/1k6 w - - 0 1,c3b4 b1a2 d3c2 a2a1 b4a3,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#362400,"Агапов, Игорь Алексеевич",1
+Y370100,8/8/8/8/4p2p/1K6/5k2/2QR2N1 w - - 0 1,c1c7 f2g2 d1d2 g2f1 c7c1,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#370100,"Vəlixanov, Kənan",1
+Y374300,4Q3/p6p/3K1p2/3N4/2pk4/2R5/n2P3p/6bb w - - 0 1,e8e1 g1f2 e1f2 d4e4 d5f6,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#374300,"Dubbe, Friedrich",1
+Y377100,8/5p2/1Q6/3pkp1b/Kp2P1p1/p5N1/2P1P2P/2B5 w - - 0 1,e4f5 a3a2 c1b2 d5d4 b6d4,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#377100,"Makaronez, Leonid",1
+Y427500,1b2BB2/2p1pr2/Pp1P1pp1/3k1pR1/1P1P4/2PR3b/2p1Q3/2K5 w - - 0 1,d3f3 f6g5 e2e5 d5c4 e5e6,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#427500,"Keeney, Palmer Gunkel",1
+Y440100,2k2K2/8/N1P2B2/5Pbp/7P/7B/8/8 w - - 0 1,f8e7 g5f6 e7e8 f6a1 f5f6,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#440100,"Baumann, Hannes",1
+Y442200,7q/p5R1/1Bbkr2P/1p2N1p1/6K1/2p2p2/1P5b/2n1Q3 w - - 0 1,e1e4 c6e4 g7d7 d6e5 b6d4,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#442200,"Gold, Sámuel",1
+Y446400,K6Q/6p1/2pPp1P1/4B3/4kP2/7P/1N5N/8 w - - 0 1,h8h4 e4d5 h4e1 d5c5 e1a5,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#446400,"Brenzinger, Francis Eugene",1
+Y459700,2n4K/1bb2pQ1/1n1p3P/1R3p2/r1prkpp1/p2pB1P1/3P1P2/q3R1N1 w - - 0 1,g7f6 d4d5 f6a1 f4g3 e3g5,1900,0,100,0,composition mateIn3 quietMove long,https://www.yacpdb.org/#459700,"Hertmann, Sándor",1
+Y256000,nQ2Br2/8/1n6/R4r2/P1p2P1R/2Kp1bN1/N2p1B2/3k4 w - - 0 1,b8b7 f5d5 e8h5 b6a4 a5a4 d5e5 b7b1,2200,0,100,0,composition mateIn4 quietMove long,https://www.yacpdb.org/#256000,"Gerbec, Theodor",1
+Y257400,2R4n/b3p3/rp1p1p2/1N1k1P1B/pP3p1P/1b2pP2/1B6/2K5 w - - 0 1,h5e8 e3e2 e8c6 d5c4 c6d7 c4d5 d7e6,2200,0,100,0,composition mateIn4 quietMove long,https://www.yacpdb.org/#257400,"Панков, Владимир Александрович",1
+Y258100,K6k/1n6/3pN2p/pp1BP3/1p3p2/q1b2p1p/1P6/5Q2 w - - 0 1,f1c1 c3e5 c1c8 b7d8 c8d8 h8h7 d5e4,2200,0,100,0,composition mateIn4 quietMove long,https://www.yacpdb.org/#258100,"Zepler, Erich Ernest",1
+Y310600,B5r1/4BNb1/2q5/4N3/3Pk2n/2r1Pn1Q/b1P2P2/7K w - - 0 1,h3e6 g8a8 e5c6 a2e6 f7d6 e4d5 c6b4,2200,0,100,0,composition mateIn4 quietMove long,https://www.yacpdb.org/#310600,"Brewster, E. S.",1
+Y341400,6bN/3B4/4npRP/3ppk2/5p1P/3PP1pK/7b/1rR3B1 w - - 0 1,g6g4 b1b8 e3e4 d5e4 g4f4 e5f4 c1c5,2200,0,100,0,composition mateIn4 quietMove long,https://www.yacpdb.org/#341400,"Атаянц, Григорий Сергеевич",1
+Y365200,8/1NK5/1p1N1B2/1P1k4/8/8/8/8 w - - 0 1,f6g7 d5e6 c7c6 e6e7 b7d8 e7d8 g7f6,2200,0,100,0,composition mateIn4 quietMove long,https://www.yacpdb.org/#365200,"Däubler, Heinz",1
+Y419800,N1k1K3/8/8/3p4/3P4/8/8/1R6 w - - 0 1,a8c7 c8c7 e8e7 c7c6 e7d8 c6d6 b1b6,2200,0,100,0,composition mateIn4 quietMove long,https://www.yacpdb.org/#419800,"Желтухов, Виктор Иванович",1
+Y373600,8/3p1B2/8/5K2/1B1k4/8/P2PP3/8 w - - 0 1,b4a3 d7d5 f7e8 d4c4 f5e5 d5d4 e5e4 d4d3 e2d3,2500,0,100,0,composition mateIn5 quietMove long,https://www.yacpdb.org/#373600,"Коблов, Николай Александрович",1

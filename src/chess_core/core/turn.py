@@ -57,6 +57,9 @@ class TurnScenario:
             if actual == step.kind or (
                 step.kind is StepKind.MOVE_OR_DROP
                 and actual in {StepKind.MOVE_OR_CAPTURE, StepKind.DROP}
+            ) or (
+                actual is StepKind.OPTIONAL_PASS
+                and step.kind in {StepKind.DROP, StepKind.MOVE_OR_DROP, StepKind.MOVE_OR_CAPTURE}
             ):
                 action_index += 1
             elif not step.optional:

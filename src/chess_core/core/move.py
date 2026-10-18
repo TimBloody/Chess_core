@@ -22,6 +22,7 @@ class MoveAction:
     from_square: Square
     to_square: Square
     promotion_choice: PieceTypeId | None = None
+    jumped: tuple[Square, ...] = ()
 
     @property
     def kind(self) -> ActionKind:

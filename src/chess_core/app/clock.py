@@ -67,6 +67,10 @@ class GameClockService:
         return self._revision
 
     @property
+    def config(self) -> TimeControlConfig:
+        return self._config
+
+    @property
     def is_paused(self) -> bool:
         return self._state.paused
 
@@ -74,6 +78,33 @@ class GameClockService:
     def has_started(self) -> bool:
         """True after the first committed turn; the clock is idle until then."""
         return self._state.started
+
+    def reconfigure(
+        self,
+        config: TimeControlConfig,
+        *,
+        start_now: bool = False,
+        running_side: PieceSide | None = None,
+    ) -> ClockSnapshot:
+        """Replace the control. ``start_now`` starts ticking for ``running_side``."""
+        self._config = config
+        self._state.white_ms = config.initial_ms[0]
+        self._state.black_ms = config.initial_ms[1]
+        self._state.white_byoyomi_left = config.byoyomi_periods
+        self._state.black_byoyomi_left = config.byoyomi_periods
+        if running_side is not None:
+            self._state.running_side = running_side
+        if config.kind is TimeControlKind.NONE:
+            self._state.started = False
+            self._state.started_at_ms = None
+        elif start_now:
+            self._state.started = True
+            self._state.started_at_ms = None if self._state.paused else self._clock.now_ms()
+        else:
+            self._state.started = False
+            self._state.started_at_ms = None
+        self._revision += 1
+        return self.snapshot()
 
     def snapshot(self) -> ClockSnapshot:
         """Read-only view. Remaining already includes elapsed; increment is not applied."""
@@ -130,6 +161,8 @@ class GameClockService:
         return self.snapshot()
 
     def _active_side(self) -> PieceSide | None:
+        if self._config.kind is TimeControlKind.NONE:
+            return None
         if self._state.paused or not self._state.started:
             return None
         return self._state.running_side

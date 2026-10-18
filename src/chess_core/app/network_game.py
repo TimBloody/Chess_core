@@ -8,6 +8,7 @@ from typing import Protocol
 from chess_core.app.game import LocalGameService
 from chess_core.core.gamemode import GameMode
 from chess_core.core.move import Turn
+from chess_core.core.notation import to_fen
 from chess_core.core.state import GameState
 from chess_core.infra.network import GameServer
 from chess_core.infra.network_messages import (
@@ -196,20 +197,46 @@ class NetworkedLocalGameService(LocalGameService):
             self._undo_pending = None
             self._server_revision = message.revision
             if message.accepted and message.state is not None:
-                self.load_position(message.state)
+                self._sync_server_state(message.revision, message.state)
 
     def apply_envelope(self, envelope: StateEnvelope) -> None:
-        self._server_revision = envelope.revision
-        self.load_position(envelope.state)
+        self._sync_server_state(envelope.revision, envelope.state)
 
     def apply_match_envelope(self, envelope: MatchEnvelopeDTO) -> None:
-        self._server_revision = envelope.revision
         self.chosen_piece_type = envelope.chosen_piece_type
         board = envelope.boards.get(self.board_id)
         if board is None and envelope.boards:
             board = next(iter(envelope.boards.values()))
         if board is not None:
-            self.load_position(board)
+            self._sync_server_state(envelope.revision, board)
+        else:
+            self._server_revision = envelope.revision
         from chess_core.app.match import MatchPhase
 
         self._match_ready = envelope.phase is MatchPhase.PLAYING
+
+    def _sync_server_state(self, revision: int, state: GameState) -> None:
+        keep_view = not self.is_live
+        view = self.record.view_revision
+        incoming = to_fen(state)
+        live_fen = to_fen(self.record.live_state())
+        if incoming == live_fen:
+            self._server_revision = revision
+            if keep_view:
+                self.record.go_to(view)
+            return
+        for rev in range(self.record.live_revision - 1, -1, -1):
+            if to_fen(self.record.state_at(rev)) == incoming:
+                self.record.truncate_to(rev)
+                self._server_revision = revision
+                self._revision += 1
+                self._invalidate_caches()
+                if keep_view and view <= rev:
+                    self.record.go_to(view)
+                return
+        self.record.append_snapshot(state, keep_view=keep_view)
+        self._server_revision = revision
+        self._revision += 1
+        self._invalidate_caches()
+        if keep_view:
+            self.record.go_to(min(view, self.record.live_revision))

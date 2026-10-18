@@ -22,6 +22,8 @@ class MustCaptureLegality:
 
 
 def _is_capture(action: MoveAction, state: GameState) -> bool:
+    if action.jumped:
+        return True
     shape = state.board_state.board.shape
     target = action.to_square.index(shape.files)
     occupant = state.board_state.piece_at(target)

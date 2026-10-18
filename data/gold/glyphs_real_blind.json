@@ -1,0 +1,1430 @@
+{
+  "method": "Blind pass on shuffled sheets. Each level was a separate page set; the sheet showed only g-id and pixels. pad28 was labeled before pad28x4, pad28x4 before raw. The labeler had seen the P5.0b contact sheet in an earlier session, so memory is a residual bias.",
+  "n": 59,
+  "glyphs": [
+    {
+      "id": "g001",
+      "role": "f_e",
+      "readable": true,
+      "notes": "e"
+    },
+    {
+      "id": "g002",
+      "role": "r_4",
+      "readable": true,
+      "notes": "4"
+    },
+    {
+      "id": "g003",
+      "role": "f_c",
+      "readable": true,
+      "notes": "C"
+    },
+    {
+      "id": "g004",
+      "role": "r_5",
+      "readable": true,
+      "notes": "5"
+    },
+    {
+      "id": "g005",
+      "role": "f_c",
+      "readable": true,
+      "notes": "c, сверху точки"
+    },
+    {
+      "id": "g006",
+      "role": "f_c",
+      "readable": true,
+      "notes": "C"
+    },
+    {
+      "id": "g007",
+      "role": "r_4",
+      "readable": true,
+      "notes": "4"
+    },
+    {
+      "id": "g008",
+      "role": "f_c",
+      "readable": true,
+      "notes": "C"
+    },
+    {
+      "id": "g009",
+      "role": "r_6",
+      "readable": true,
+      "notes": "6"
+    },
+    {
+      "id": "g010",
+      "role": "KN",
+      "readable": true,
+      "notes": "k"
+    },
+    {
+      "id": "g011",
+      "role": "f_c",
+      "readable": true,
+      "notes": "c"
+    },
+    {
+      "id": "g012",
+      "role": "r_6",
+      "readable": true,
+      "notes": "6"
+    },
+    {
+      "id": "g013",
+      "role": "KN",
+      "readable": true,
+      "notes": "k"
+    },
+    {
+      "id": "g014",
+      "role": "KN",
+      "readable": true,
+      "notes": "k"
+    },
+    {
+      "id": "g015",
+      "role": "O",
+      "readable": true,
+      "notes": "овал"
+    },
+    {
+      "id": "g016",
+      "role": "r_4",
+      "readable": true,
+      "notes": "4"
+    },
+    {
+      "id": "g017",
+      "role": "f_c",
+      "readable": true,
+      "notes": "C"
+    },
+    {
+      "id": "g018",
+      "role": "f_d",
+      "readable": true,
+      "notes": "d"
+    },
+    {
+      "id": "g019",
+      "role": "KN",
+      "readable": true,
+      "notes": "k"
+    },
+    {
+      "id": "g020",
+      "role": "f_g",
+      "readable": true,
+      "notes": "g"
+    },
+    {
+      "id": "g021",
+      "role": "f_c",
+      "readable": true,
+      "notes": "C"
+    },
+    {
+      "id": "g022",
+      "role": "r_6",
+      "readable": true,
+      "notes": "6, сверху штрих"
+    },
+    {
+      "id": "g023",
+      "role": "r_5",
+      "readable": true,
+      "notes": "5"
+    },
+    {
+      "id": "g024",
+      "role": "r_4",
+      "readable": true,
+      "notes": "4"
+    },
+    {
+      "id": "g025",
+      "role": "r_2",
+      "readable": true,
+      "notes": "2"
+    },
+    {
+      "id": "g026",
+      "role": "r_7",
+      "readable": true,
+      "notes": "7"
+    },
+    {
+      "id": "g027",
+      "role": "O",
+      "readable": true,
+      "notes": "0"
+    },
+    {
+      "id": "g028",
+      "role": "O",
+      "readable": true,
+      "notes": "овал"
+    },
+    {
+      "id": "g029",
+      "role": "r_4",
+      "readable": true,
+      "notes": "4"
+    },
+    {
+      "id": "g030",
+      "role": "f_a",
+      "readable": true,
+      "notes": "a"
+    },
+    {
+      "id": "g031",
+      "role": "r_6",
+      "readable": true,
+      "notes": "6, сверху штрих"
+    },
+    {
+      "id": "g032",
+      "role": null,
+      "readable": false,
+      "notes": "два знака"
+    },
+    {
+      "id": "g033",
+      "role": "r_1",
+      "readable": true,
+      "notes": "1"
+    },
+    {
+      "id": "g034",
+      "role": "r_5",
+      "readable": true,
+      "notes": "5"
+    },
+    {
+      "id": "g035",
+      "role": "f_d",
+      "readable": true,
+      "notes": "d"
+    },
+    {
+      "id": "g036",
+      "role": "r_5",
+      "readable": true,
+      "notes": "5"
+    },
+    {
+      "id": "g037",
+      "role": "f_c",
+      "readable": true,
+      "notes": "C"
+    },
+    {
+      "id": "g038",
+      "role": "r_4",
+      "readable": true,
+      "notes": "4"
+    },
+    {
+      "id": "g039",
+      "role": "f_e",
+      "readable": true,
+      "notes": "e"
+    },
+    {
+      "id": "g040",
+      "role": "r_6",
+      "readable": true,
+      "notes": "6"
+    },
+    {
+      "id": "g041",
+      "role": "r_2",
+      "readable": true,
+      "notes": "2"
+    },
+    {
+      "id": "g042",
+      "role": "r_4",
+      "readable": true,
+      "notes": "4"
+    },
+    {
+      "id": "g043",
+      "role": "r_3",
+      "readable": true,
+      "notes": "3"
+    },
+    {
+      "id": "g044",
+      "role": "QN",
+      "readable": true,
+      "notes": "q"
+    },
+    {
+      "id": "g045",
+      "role": "r_3",
+      "readable": true,
+      "notes": "3"
+    },
+    {
+      "id": "g046",
+      "role": "f_c",
+      "readable": true,
+      "notes": "c"
+    },
+    {
+      "id": "g047",
+      "role": "f_b",
+      "readable": true,
+      "notes": "b"
+    },
+    {
+      "id": "g048",
+      "role": "r_4",
+      "readable": true,
+      "notes": "4"
+    },
+    {
+      "id": "g049",
+      "role": "r_4",
+      "readable": true,
+      "notes": "4"
+    },
+    {
+      "id": "g050",
+      "role": "f_c",
+      "readable": true,
+      "notes": "C"
+    },
+    {
+      "id": "g051",
+      "role": null,
+      "readable": false,
+      "notes": "двоеточие и d"
+    },
+    {
+      "id": "g052",
+      "role": "f_c",
+      "readable": true,
+      "notes": "C"
+    },
+    {
+      "id": "g053",
+      "role": "r_3",
+      "readable": true,
+      "notes": "3 и левый штрих"
+    },
+    {
+      "id": "g054",
+      "role": "r_2",
+      "readable": true,
+      "notes": "2"
+    },
+    {
+      "id": "g055",
+      "role": "O",
+      "readable": true,
+      "notes": "0"
+    },
+    {
+      "id": "g056",
+      "role": "O",
+      "readable": true,
+      "notes": "0"
+    },
+    {
+      "id": "g057",
+      "role": "f_c",
+      "readable": true,
+      "notes": "C"
+    },
+    {
+      "id": "g058",
+      "role": "f_d",
+      "readable": true,
+      "notes": "d"
+    },
+    {
+      "id": "g059",
+      "role": "r_7",
+      "readable": true,
+      "notes": "7"
+    }
+  ],
+  "levels": {
+    "raw": [
+      {
+        "id": "g001",
+        "role": "f_e",
+        "readable": true,
+        "notes": "e"
+      },
+      {
+        "id": "g002",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g003",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g004",
+        "role": "r_5",
+        "readable": true,
+        "notes": "5"
+      },
+      {
+        "id": "g005",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c, сверху точки"
+      },
+      {
+        "id": "g006",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g007",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g008",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g009",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6"
+      },
+      {
+        "id": "g010",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g011",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c"
+      },
+      {
+        "id": "g012",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6"
+      },
+      {
+        "id": "g013",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g014",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g015",
+        "role": "O",
+        "readable": true,
+        "notes": "овал"
+      },
+      {
+        "id": "g016",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g017",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g018",
+        "role": "f_d",
+        "readable": true,
+        "notes": "d"
+      },
+      {
+        "id": "g019",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g020",
+        "role": "f_g",
+        "readable": true,
+        "notes": "g"
+      },
+      {
+        "id": "g021",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g022",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6, сверху штрих"
+      },
+      {
+        "id": "g023",
+        "role": "r_5",
+        "readable": true,
+        "notes": "5"
+      },
+      {
+        "id": "g024",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g025",
+        "role": "r_2",
+        "readable": true,
+        "notes": "2"
+      },
+      {
+        "id": "g026",
+        "role": "r_7",
+        "readable": true,
+        "notes": "7"
+      },
+      {
+        "id": "g027",
+        "role": "O",
+        "readable": true,
+        "notes": "0"
+      },
+      {
+        "id": "g028",
+        "role": "O",
+        "readable": true,
+        "notes": "овал"
+      },
+      {
+        "id": "g029",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g030",
+        "role": "f_a",
+        "readable": true,
+        "notes": "a"
+      },
+      {
+        "id": "g031",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6, сверху штрих"
+      },
+      {
+        "id": "g032",
+        "role": null,
+        "readable": false,
+        "notes": "два знака"
+      },
+      {
+        "id": "g033",
+        "role": "r_1",
+        "readable": true,
+        "notes": "1"
+      },
+      {
+        "id": "g034",
+        "role": "r_5",
+        "readable": true,
+        "notes": "5"
+      },
+      {
+        "id": "g035",
+        "role": "f_d",
+        "readable": true,
+        "notes": "d"
+      },
+      {
+        "id": "g036",
+        "role": "r_5",
+        "readable": true,
+        "notes": "5"
+      },
+      {
+        "id": "g037",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g038",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g039",
+        "role": "f_e",
+        "readable": true,
+        "notes": "e"
+      },
+      {
+        "id": "g040",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6"
+      },
+      {
+        "id": "g041",
+        "role": "r_2",
+        "readable": true,
+        "notes": "2"
+      },
+      {
+        "id": "g042",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g043",
+        "role": "r_3",
+        "readable": true,
+        "notes": "3"
+      },
+      {
+        "id": "g044",
+        "role": "QN",
+        "readable": true,
+        "notes": "q"
+      },
+      {
+        "id": "g045",
+        "role": "r_3",
+        "readable": true,
+        "notes": "3"
+      },
+      {
+        "id": "g046",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c"
+      },
+      {
+        "id": "g047",
+        "role": "f_b",
+        "readable": true,
+        "notes": "b"
+      },
+      {
+        "id": "g048",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g049",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g050",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g051",
+        "role": null,
+        "readable": false,
+        "notes": "двоеточие и d"
+      },
+      {
+        "id": "g052",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g053",
+        "role": "r_3",
+        "readable": true,
+        "notes": "3 и левый штрих"
+      },
+      {
+        "id": "g054",
+        "role": "r_2",
+        "readable": true,
+        "notes": "2"
+      },
+      {
+        "id": "g055",
+        "role": "O",
+        "readable": true,
+        "notes": "0"
+      },
+      {
+        "id": "g056",
+        "role": "O",
+        "readable": true,
+        "notes": "0"
+      },
+      {
+        "id": "g057",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g058",
+        "role": "f_d",
+        "readable": true,
+        "notes": "d"
+      },
+      {
+        "id": "g059",
+        "role": "r_7",
+        "readable": true,
+        "notes": "7"
+      }
+    ],
+    "pad28": [
+      {
+        "id": "g001",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c/e"
+      },
+      {
+        "id": "g002",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c"
+      },
+      {
+        "id": "g003",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g004",
+        "role": "r_5",
+        "readable": true,
+        "notes": "5"
+      },
+      {
+        "id": "g005",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c"
+      },
+      {
+        "id": "g006",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g007",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g008",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g009",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6"
+      },
+      {
+        "id": "g010",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g011",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c"
+      },
+      {
+        "id": "g012",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6/b"
+      },
+      {
+        "id": "g013",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g014",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g015",
+        "role": "O",
+        "readable": true,
+        "notes": "овал"
+      },
+      {
+        "id": "g016",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g017",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c"
+      },
+      {
+        "id": "g018",
+        "role": "f_d",
+        "readable": true,
+        "notes": "d"
+      },
+      {
+        "id": "g019",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g020",
+        "role": null,
+        "readable": false,
+        "notes": "y/4/q, класс не выбрать"
+      },
+      {
+        "id": "g021",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c"
+      },
+      {
+        "id": "g022",
+        "role": "f_b",
+        "readable": true,
+        "notes": "b/6"
+      },
+      {
+        "id": "g023",
+        "role": "r_5",
+        "readable": true,
+        "notes": "5"
+      },
+      {
+        "id": "g024",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g025",
+        "role": "r_7",
+        "readable": true,
+        "notes": "7/2"
+      },
+      {
+        "id": "g026",
+        "role": "r_7",
+        "readable": true,
+        "notes": "7"
+      },
+      {
+        "id": "g027",
+        "role": "O",
+        "readable": true,
+        "notes": "0"
+      },
+      {
+        "id": "g028",
+        "role": "O",
+        "readable": true,
+        "notes": "0/D"
+      },
+      {
+        "id": "g029",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g030",
+        "role": "f_b",
+        "readable": true,
+        "notes": "b/6"
+      },
+      {
+        "id": "g031",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6"
+      },
+      {
+        "id": "g032",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g033",
+        "role": "r_1",
+        "readable": true,
+        "notes": "1"
+      },
+      {
+        "id": "g034",
+        "role": "r_5",
+        "readable": true,
+        "notes": "5"
+      },
+      {
+        "id": "g035",
+        "role": "f_d",
+        "readable": true,
+        "notes": "d"
+      },
+      {
+        "id": "g036",
+        "role": "r_5",
+        "readable": true,
+        "notes": "5"
+      },
+      {
+        "id": "g037",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g038",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g039",
+        "role": "f_e",
+        "readable": true,
+        "notes": "e"
+      },
+      {
+        "id": "g040",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6"
+      },
+      {
+        "id": "g041",
+        "role": "r_2",
+        "readable": true,
+        "notes": "2"
+      },
+      {
+        "id": "g042",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g043",
+        "role": "r_3",
+        "readable": true,
+        "notes": "3"
+      },
+      {
+        "id": "g044",
+        "role": "f_a",
+        "readable": true,
+        "notes": "a/q"
+      },
+      {
+        "id": "g045",
+        "role": "r_3",
+        "readable": true,
+        "notes": "3"
+      },
+      {
+        "id": "g046",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c"
+      },
+      {
+        "id": "g047",
+        "role": "f_b",
+        "readable": true,
+        "notes": "b"
+      },
+      {
+        "id": "g048",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g049",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g050",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g051",
+        "role": "f_d",
+        "readable": true,
+        "notes": "d"
+      },
+      {
+        "id": "g052",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c"
+      },
+      {
+        "id": "g053",
+        "role": null,
+        "readable": false,
+        "notes": "3/7/2, класс не выбрать"
+      },
+      {
+        "id": "g054",
+        "role": "r_2",
+        "readable": true,
+        "notes": "2"
+      },
+      {
+        "id": "g055",
+        "role": "O",
+        "readable": true,
+        "notes": "0"
+      },
+      {
+        "id": "g056",
+        "role": "O",
+        "readable": true,
+        "notes": "0"
+      },
+      {
+        "id": "g057",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g058",
+        "role": "f_d",
+        "readable": true,
+        "notes": "d"
+      },
+      {
+        "id": "g059",
+        "role": "r_7",
+        "readable": true,
+        "notes": "7"
+      }
+    ],
+    "pad28x4": [
+      {
+        "id": "g001",
+        "role": "f_e",
+        "readable": true,
+        "notes": "e"
+      },
+      {
+        "id": "g002",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g003",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g004",
+        "role": "r_5",
+        "readable": true,
+        "notes": "5"
+      },
+      {
+        "id": "g005",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c"
+      },
+      {
+        "id": "g006",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g007",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g008",
+        "role": "f_e",
+        "readable": true,
+        "notes": "e"
+      },
+      {
+        "id": "g009",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6"
+      },
+      {
+        "id": "g010",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g011",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c"
+      },
+      {
+        "id": "g012",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6"
+      },
+      {
+        "id": "g013",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g014",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g015",
+        "role": "O",
+        "readable": true,
+        "notes": "овал"
+      },
+      {
+        "id": "g016",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g017",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g018",
+        "role": "f_d",
+        "readable": true,
+        "notes": "d"
+      },
+      {
+        "id": "g019",
+        "role": "KN",
+        "readable": true,
+        "notes": "k"
+      },
+      {
+        "id": "g020",
+        "role": "f_g",
+        "readable": true,
+        "notes": "g"
+      },
+      {
+        "id": "g021",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g022",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6"
+      },
+      {
+        "id": "g023",
+        "role": "r_5",
+        "readable": true,
+        "notes": "5"
+      },
+      {
+        "id": "g024",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g025",
+        "role": "r_2",
+        "readable": true,
+        "notes": "2"
+      },
+      {
+        "id": "g026",
+        "role": "r_7",
+        "readable": true,
+        "notes": "7"
+      },
+      {
+        "id": "g027",
+        "role": "O",
+        "readable": true,
+        "notes": "0"
+      },
+      {
+        "id": "g028",
+        "role": "O",
+        "readable": true,
+        "notes": "овал"
+      },
+      {
+        "id": "g029",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g030",
+        "role": "f_a",
+        "readable": true,
+        "notes": "a"
+      },
+      {
+        "id": "g031",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6"
+      },
+      {
+        "id": "g032",
+        "role": null,
+        "readable": false,
+        "notes": "два знака"
+      },
+      {
+        "id": "g033",
+        "role": "r_1",
+        "readable": true,
+        "notes": "1"
+      },
+      {
+        "id": "g034",
+        "role": "r_5",
+        "readable": true,
+        "notes": "5"
+      },
+      {
+        "id": "g035",
+        "role": "f_d",
+        "readable": true,
+        "notes": "d"
+      },
+      {
+        "id": "g036",
+        "role": "r_5",
+        "readable": true,
+        "notes": "5"
+      },
+      {
+        "id": "g037",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g038",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g039",
+        "role": "f_e",
+        "readable": true,
+        "notes": "e"
+      },
+      {
+        "id": "g040",
+        "role": "r_6",
+        "readable": true,
+        "notes": "6"
+      },
+      {
+        "id": "g041",
+        "role": "r_2",
+        "readable": true,
+        "notes": "2"
+      },
+      {
+        "id": "g042",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g043",
+        "role": "r_3",
+        "readable": true,
+        "notes": "3"
+      },
+      {
+        "id": "g044",
+        "role": "QN",
+        "readable": true,
+        "notes": "q"
+      },
+      {
+        "id": "g045",
+        "role": "r_3",
+        "readable": true,
+        "notes": "3"
+      },
+      {
+        "id": "g046",
+        "role": "f_c",
+        "readable": true,
+        "notes": "c"
+      },
+      {
+        "id": "g047",
+        "role": "f_b",
+        "readable": true,
+        "notes": "b"
+      },
+      {
+        "id": "g048",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g049",
+        "role": "r_4",
+        "readable": true,
+        "notes": "4"
+      },
+      {
+        "id": "g050",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g051",
+        "role": null,
+        "readable": false,
+        "notes": "двоеточие и d"
+      },
+      {
+        "id": "g052",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g053",
+        "role": "r_3",
+        "readable": true,
+        "notes": "3"
+      },
+      {
+        "id": "g054",
+        "role": "r_2",
+        "readable": true,
+        "notes": "2"
+      },
+      {
+        "id": "g055",
+        "role": "O",
+        "readable": true,
+        "notes": "0"
+      },
+      {
+        "id": "g056",
+        "role": "O",
+        "readable": true,
+        "notes": "0"
+      },
+      {
+        "id": "g057",
+        "role": "f_c",
+        "readable": true,
+        "notes": "C"
+      },
+      {
+        "id": "g058",
+        "role": "f_d",
+        "readable": true,
+        "notes": "d"
+      },
+      {
+        "id": "g059",
+        "role": "r_7",
+        "readable": true,
+        "notes": "7"
+      }
+    ]
+  }
+}

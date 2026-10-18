@@ -11,7 +11,7 @@ from chess_core.core.move import Turn
 from chess_core.core.piece import PieceSide
 from chess_core.core.state import GameState
 
-PROTOCOL_VERSION = 2
+PROTOCOL_VERSION = 3
 DEFAULT_GAME_PORT = 17474
 MAX_SESSIONS = 8
 
@@ -86,6 +86,7 @@ class LobbyOccupant:
     session_id: str
     seat: str
     is_host: bool
+    is_bot: bool = False
 
 
 @dataclass(frozen=True, slots=True)

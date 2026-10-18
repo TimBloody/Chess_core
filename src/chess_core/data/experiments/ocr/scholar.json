@@ -1,0 +1,25 @@
+{
+  "id": "scholar",
+  "moves": [
+    "e4",
+    "e5",
+    "Qh5",
+    "Nc6",
+    "Bc4",
+    "Nf6",
+    "Qxf7#"
+  ],
+  "white": "Вера",
+  "black": "Глеб",
+  "event": "Фикстура OCR / Scholar",
+  "result": "1-0",
+  "rotate_deg": 0.0,
+  "grid": {
+    "left": 28,
+    "top": 96,
+    "number_width": 40,
+    "move_width": 212.0,
+    "cell_height": 33.8,
+    "rows": 20
+  }
+}

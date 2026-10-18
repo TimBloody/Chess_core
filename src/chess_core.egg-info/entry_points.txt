@@ -1,0 +1,5 @@
+[console_scripts]
+chess-classic = play_classic:main
+chess-core = chess_core.ui.app_entry:main
+chess-core-mcp = chess_core.tools.mcp_server:main
+chess-ocr = chess_core.tools.ocr_scoresheet:main

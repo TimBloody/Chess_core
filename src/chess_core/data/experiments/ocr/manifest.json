@@ -1,0 +1,24 @@
+{
+  "samples": [
+    {
+      "id": "italian",
+      "file": "italian.png"
+    },
+    {
+      "id": "scholar",
+      "file": "scholar.png"
+    },
+    {
+      "id": "rotated",
+      "file": "rotated.png"
+    }
+  ],
+  "grid": {
+    "left": 28,
+    "top": 96,
+    "number_width": 40,
+    "move_width": 212.0,
+    "cell_height": 33.8,
+    "rows": 20
+  }
+}
